@@ -1,14 +1,32 @@
-const { Client, GatewayIntentBits, Collection, InteractionType, ComponentType } = require("discord.js");
-const { TOKEN, MYSQL } = require("./config-template.json");
+const { Client, GatewayIntentBits, Collection, ComponentType, Events } = require("discord.js");
 const fs = require("fs");
-const { checkPermissions, connectToMySQL } = require("./util");
+const { checkPermissions, connectToMSSQL } = require("./util");
 const {fork} = require('child_process');
+const process = require("process");
+
+require('dotenv').config();
+const TOKEN = process.env.TOKEN;
+const SQL = {
+	user: process.env.MSSQL_USER,
+	password: process.env.MSSQL_PASSWORD,
+	database: process.env.MSSQL_DATABASE,
+	server: process.env.MSSQL_SERVER,
+	pool: {
+		max: 10,
+		min: 0,
+		idleTimeoutMillis: 30000
+	},
+	options: {
+		encrypt: true,
+		trustServerCertificate: true
+	}
+}
 
 /*
  *	Launch a second process executing deploy-commands.js to ensure all 
  *	commands are up to date on Discord's end
  */
-fork('./desploy-commands.js');
+fork('./deploy-commands.js');
 
 // Holy crap that's a lot of intention :flushed:
 const intent_flags = [
@@ -32,7 +50,7 @@ const client = new Client({ intents: intent_flags });
   ** WARNING ** Only supports MySQL for now - Will add MSSQL later
 */
 console.log('[Startup]: Connecting to database');
-const con = await connectToMySQL(MYSQL); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
+const con = async () => await connectToMSSQL(SQL); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
 console.log('[Startup]: Database connection ready');
 
 
@@ -81,13 +99,13 @@ console.log(`  [SelectMenus]: Finished`);
 /**
  * Bot's listeners
  */
-client.on("ready", () => {
+client.on(Events.ClientReady, () => {
 	console.log("Bot Ready.");
 });
 
 // Command Handling
-client.on("interactionCreate", async (interaction) => {
-	if (!interaction.type === InteractionType.ApplicationCommand) return;
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (!interaction.isChatInputCommand()) return;
 
 	const command = client.commands.get(interaction.commandName);
 	if (!command) return;
@@ -115,10 +133,9 @@ client.on("interactionCreate", async (interaction) => {
 		});
 });
 
-client.on("interactionCreate", (interaction) => {
-	if (!interaction.type === InteractionType.MessageComponent) return;
-
-	if (!interaction.componentType === ComponentType.StringSelect) return;
+// STRING select menus
+client.on(Events.InteractionCreate, async (interaction) => {
+	if (!interaction.isStringSelectMenu()) return;
 
 	// Handle selectmenus here...
 	const smCommand = smCommands.get(interaction.customId);
@@ -153,8 +170,8 @@ client.on("interactionCreate", (interaction) => {
 });
 
 // Button interactions
-client.on("interactionCreate", (interaction) => {
-	if (!interaction.type === InteractionType.MessageComponent) return;
+client.on(Events.InteractionCreate, (interaction) => {
+	if (!interaction.isButton()) return;
 
 	if (!interaction.componentType === ComponentType.Button) return;
 
