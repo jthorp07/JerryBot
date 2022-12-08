@@ -118,13 +118,13 @@ client.on("interactionCreate", async (interaction) => {
 client.on("interactionCreate", (interaction) => {
 	if (!interaction.type === InteractionType.MessageComponent) return;
 
-	if (!interaction.componentType === ComponentType.SelectMenu) return;
+	if (!interaction.componentType === ComponentType.StringSelect) return;
 
 	// Handle selectmenus here...
-	const smCommand = smCommands.get(interaction.selectMenuId);
+	const smCommand = smCommands.get(interaction.customId);
 	if (!smCommand) {
 		interaction.reply(
-			`This SelectMenu doesn't have a registered command. (ID = '${interaction.selectMenuId}')\nPlease send a report to a bot developer to have this fixed.`
+			`This SelectMenu doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
 		);
 		return;
 	}
