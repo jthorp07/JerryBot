@@ -1,0 +1,1 @@
+CREATE TYPE DiscordSnowflake FROM VARCHAR(20)

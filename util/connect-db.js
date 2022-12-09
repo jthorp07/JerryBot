@@ -43,7 +43,7 @@ module.exports = {
             console.log('  [MS SQL Database]: Preparing args for connection request');
 
             // If not all arguments received, reject
-            if (!options.password || !options.username || !options.database || !options.server) {
+            if (!options.password || !options.user || !options.database || !options.server) {
                 reject('INVALID_ARGS');
             }
 
@@ -88,7 +88,7 @@ module.exports = {
             // Start connecting to the database
             console.log('  [MS SQL Database]: Requesting database connection');
             let pool = new ConnectionPool(sql);
-            pool.connect.then(conPool => {
+            pool.connect().then(conPool => {
                 console.log('  [MS SQL Database]: Connection established');
                 resolve(conPool);
             })

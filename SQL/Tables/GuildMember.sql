@@ -1,8 +1,8 @@
 CREATE TABLE GuildMember(
 
     -- Columns --
-    GuildId CHAR(18) NOT NULL,
-    MemberId CHAR(18) NOT NULL,
+    GuildId DiscordSnowflake NOT NULL,
+    MemberId DiscordSnowflake NOT NULL,
     IsOwner BIT NOT NULL
 
     -- Keys --

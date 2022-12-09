@@ -50,8 +50,16 @@ const client = new Client({ intents: intent_flags });
   ** WARNING ** Only supports MySQL for now - Will add MSSQL later
 */
 console.log('[Startup]: Connecting to database');
-const con = async () => await connectToMSSQL(SQL); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
-console.log('[Startup]: Database connection ready');
+/** @type {ConnectionPool} */
+var con;
+connectToMSSQL(SQL).then(conPool => {
+	con = conPool;
+	console.log('[Startup]: Database connection ready');
+})
+.catch(err => {
+	console.log(err);
+}); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
+
 
 
 /*

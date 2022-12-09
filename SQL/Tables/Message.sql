@@ -1,9 +1,9 @@
 CREATE TABLE [Message](
 
     -- Columns --
-    Id CHAR(18) NOT NULL,
-    ChannelId CHAR(18) NOT NULL,
-    GuildId CHAR(18) NOT NULL,
+    Id DiscordSnowflake NOT NULL,
+    ChannelId DiscordSnowflake NOT NULL,
+    GuildId DiscordSnowflake NOT NULL,
     [Name] CHAR(32) NOT NULL
 
     -- Keys --
