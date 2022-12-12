@@ -8,7 +8,7 @@ CREATE TABLE [Message](
 
     -- Keys --
     CONSTRAINT PK_Message PRIMARY KEY (Id, ChannelId, GuildId),
-    CONSTRAINT FK_Message_Channel FOREIGN KEY(ChannelId) REFERENCES [Channel](Id),
+    --CONSTRAINT FK_Message_Channel FOREIGN KEY(ChannelId) REFERENCES [Channel](Id),
     CONSTRAINT FK_Message_Guild FOREIGN KEY(GuildId) REFERENCES [Guild](Id)
 
 )
