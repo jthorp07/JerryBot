@@ -1,8 +1,10 @@
 const { Client, GatewayIntentBits, Collection, ComponentType, Events } = require("discord.js");
 const fs = require("fs");
-const { checkPermissions, connectToMSSQL } = require("./util");
-const {fork} = require('child_process');
+const { checkPermissions, Handlers } = require("./util");
+const { fork } = require('child_process');
 const process = require("process");
+const { ConnectionPool, VarChar } = require('mssql');
+
 
 require('dotenv').config();
 const TOKEN = process.env.TOKEN;
@@ -52,13 +54,14 @@ const client = new Client({ intents: intent_flags });
 console.log('[Startup]: Connecting to database');
 /** @type {ConnectionPool} */
 var con;
-connectToMSSQL(SQL).then(conPool => {
+var pool = new ConnectionPool(SQL);
+pool.connect().then(conPool => {
 	con = conPool;
 	console.log('[Startup]: Database connection ready');
 })
-.catch(err => {
-	console.log(err);
-}); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
+	.catch(err => {
+		console.log(err);
+	}); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
 
 
 
@@ -110,6 +113,16 @@ console.log(`  [SelectMenus]: Finished`);
 client.on(Events.ClientReady, () => {
 	console.log("Bot Ready.");
 });
+
+// On joining a new Discord server
+client.on(Events.GuildCreate, async (guild) => {
+	await Handlers.onGuildCreate(guild, con);
+});
+
+// Events to handle on users joining/moving channels
+client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+	await Handlers.onVoiceStateUpdate(oldState, newState, con);
+})
 
 // Command Handling
 client.on(Events.InteractionCreate, async (interaction) => {
@@ -170,11 +183,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 			console.log(`Insufficient permissions: Halting button handler`);
 		}
 	})
-	.catch(err => {
-		interaction.reply("Uh oh, something went wrong...");
-		console.log(err);
-		return;
-	});
+		.catch(err => {
+			interaction.reply("Uh oh, something went wrong...");
+			console.log(err);
+			return;
+		});
 });
 
 // Button interactions
@@ -209,11 +222,11 @@ client.on(Events.InteractionCreate, (interaction) => {
 			interaction.reply(`Insufficient user permissions:\nPermission \'${btnCommand.data.permissions}\'`);
 		}
 	})
-	.catch(err => {
-		interaction.reply("Uh oh, something went wrong...");
-		console.log(err);
-		return;
-	});
+		.catch(err => {
+			interaction.reply("Uh oh, something went wrong...");
+			console.log(err);
+			return;
+		});
 });
 
 client.login(TOKEN);

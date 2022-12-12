@@ -70,7 +70,7 @@ module.exports = {
 
             // Construct SQL Config object
             let sql = {
-                user: options.username,
+                user: options.user,
                 password: options.password,
                 database: options.database,
                 server: options.server,
