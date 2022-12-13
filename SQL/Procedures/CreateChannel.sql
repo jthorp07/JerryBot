@@ -2,7 +2,8 @@ CREATE OR ALTER PROCEDURE CreateChannel(
     @GuildId DiscordSnowflake,
     @ChannelName VARCHAR(32),
     @ChannelId DiscordSnowflake,
-    @ChannelType VARCHAR(20)
+    @ChannelType VARCHAR(20),
+    @Triggerable BIT
 ) AS BEGIN
 
     -- Validate Arg --
@@ -12,7 +13,7 @@ CREATE OR ALTER PROCEDURE CreateChannel(
     END
 
     -- Do it --
-    INSERT INTO Channel(Id, [Name], GuildId, [Type]) VALUES(@ChannelId, @ChannelName, @GuildId, @ChannelType)
+    INSERT INTO Channel(Id, [Name], GuildId, [Type], Triggerable) VALUES(@ChannelId, @ChannelName, @GuildId, @ChannelType, @Triggerable)
     RETURN 0
 
 END

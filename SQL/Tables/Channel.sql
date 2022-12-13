@@ -5,6 +5,7 @@ CREATE TABLE Channel(
     GuildId DiscordSnowflake NOT NULL,
     [Name] VARCHAR(32) NOT NULL,
     [Type] VARCHAR(20) NOT NULL,
+    Triggerable BIT NOT NULL
     
     -- Key --
     CONSTRAINT PK_Channel PRIMARY KEY(Id, GuildId),
