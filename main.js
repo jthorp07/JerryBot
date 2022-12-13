@@ -1,9 +1,8 @@
-const { Client, GatewayIntentBits, Collection, ComponentType, Events } = require("discord.js");
-const fs = require("fs");
-const { checkPermissions, Handlers } = require("./util");
+const { Client, GatewayIntentBits, ComponentType, Events } = require("discord.js");
+const { checkPermissions, Handlers, readCommands, readStringSelectMenus, readButtons } = require("./util");
 const { fork } = require('child_process');
 const process = require("process");
-const { ConnectionPool, VarChar } = require('mssql');
+const { ConnectionPool } = require('mssql');
 
 
 require('dotenv').config();
@@ -42,14 +41,13 @@ const intent_flags = [
 	GatewayIntentBits.DirectMessages,
 	GatewayIntentBits.DirectMessageReactions,
 	GatewayIntentBits.DirectMessageTyping,
+	GatewayIntentBits.GuildVoiceStates
 ];
 
-const client = new Client({ intents: intent_flags });
+var client = new Client({ intents: intent_flags });
 
 /*
   Log in to database 
-
-  ** WARNING ** Only supports MySQL for now - Will add MSSQL later
 */
 console.log('[Startup]: Connecting to database');
 /** @type {ConnectionPool} */
@@ -61,51 +59,13 @@ pool.connect().then(conPool => {
 })
 	.catch(err => {
 		console.log(err);
-	}); // For MS SQL -> Change the ./util require statement to grab connectToMSSQL() and use config's MSSQL object as arg
+	});
 
 
-
-/*
- * Registering Commands
- */
-client.commands = new Collection();
-console.log(`[Startup]: Reading in slash commands`);
-const commandFiles = fs.readdirSync("./commands").filter((file) => file.endsWith(".js"));
-
-for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	console.log(`  [Slash Commands]: Set command '${command.data.name}'`);
-	client.commands.set(command.data.name, command);
-}
-console.log(`  [Slash Commands]: Finished`);
-
-/*
-  Preparing button commands for potential button handling
-*/
-let btnCommandsTemp = new Collection();
-console.log(`[Startup]: Reading in button commands`);
-const btnFiles = fs.readdirSync("./buttons").filter((file) => file.endsWith(".js"));
-for (const file of btnFiles) {
-	const btnCmd = require(`./buttons/${file}`);
-	console.log(`  [Buttons]: Set button with ID '${btnCmd.data.buttonId}'`);
-	btnCommandsTemp.set(btnCmd.data.buttonId, btnCmd);
-}
-const btnCommands = btnCommandsTemp;
-console.log(`  [Buttons]: Finished`);
-
-/*
-  Preparing selectmenu commands for potential selectmenu handling
-*/
-let smCommandsTemp = new Collection();
-console.log(`[Startup]: Reading in SelectMenu commands`);
-const smFiles = fs.readdirSync("./selectmenus").filter((file) => file.endsWith(".js"));
-for (const file of smFiles) {
-	const smCmd = require(`./selectmenus/${file}`);
-	console.log(`  [SelectMenus]: Set menu with ID '${smCmd.data.selectMenuId}'`);
-	smCommandsTemp.set(smCmd.data.selectMenuId, smCmd);
-}
-const smCommands = smCommandsTemp;
-console.log(`  [SelectMenus]: Finished`);
+// Read commands and interactable components into the bot's main memory
+client = readCommands(client);
+const btnCommands = readButtons();
+const smCommands = readStringSelectMenus();
 
 /**
  * Bot's listeners
@@ -121,6 +81,7 @@ client.on(Events.GuildCreate, async (guild) => {
 
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
+	console.log('vc')
 	await Handlers.onVoiceStateUpdate(oldState, newState, con);
 })
 
