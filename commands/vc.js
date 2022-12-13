@@ -55,16 +55,24 @@ module.exports = {
                             .input('GuildId', interaction.guildId)
                             .input('ChannelId', channel.id)
                             .input('ChannelName', channel.name)
+                            .input('ChannelType', 'voice')
+                            .input('Triggerable', 1)
                             .execute('CreateChannel');
 
-            interaction.deleteReply();
+            trans.commit(err => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+            })
+
+            interaction.editReply({content:"All done! Your channel should be in the VC Category now!"}).then(message => {
+                setTimeout(() => {
+                    message.delete();
+                }, 5000)
+            });
 
         })
-        .catch(err => {
-            //fuck
-            return;
-        })
-
     },
     permissions: "all"
 }
