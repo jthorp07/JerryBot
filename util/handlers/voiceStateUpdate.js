@@ -9,7 +9,13 @@ const { ConnectionPool } = require('mssql');
  */
 async function tenMans(oldState, newState, con) {
 
-    
+    /**
+     * 10 MANS
+     * 
+     * 
+     * 
+     */
+
 }
 
 
