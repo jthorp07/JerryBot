@@ -35,6 +35,11 @@ module.exports = {
         let guildId = oldState.guild.id;
         let channelId = oldState.channelId;
 
+        /**
+         * TEMPORARY: If no oldState channel -> Return to prevent crash
+         */
+        if (!channelId) return;
+
         let trans = con.transaction();
         trans.begin(async (err) => {
 
