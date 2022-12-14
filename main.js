@@ -81,7 +81,6 @@ client.on(Events.GuildCreate, async (guild) => {
 
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-	console.log('vc')
 	await Handlers.onVoiceStateUpdate(oldState, newState, con);
 })
 
