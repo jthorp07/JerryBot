@@ -18,6 +18,24 @@ module.exports = {
         return new Promise((resolve, reject) => {
             if (permissionLevel == 'all') {
                 resolve(true);
+                return;
+            }
+
+            if (permissionLevel = 'admin') {
+
+                let admins = [];
+                admins.push(process.env.JACK);
+                admins.push(process.env.UNI);
+                admins.push(process.env.ANIMUZ);
+                
+                for (let admin of admins) {
+                    if (user == admin) {
+                        resolve(true);
+                        return;
+                    }
+                }
+                resolve(false);
+                return;
             }
 
             // TODO: Add permission rules here
