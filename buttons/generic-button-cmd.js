@@ -4,7 +4,7 @@ const { ConnectionPool } = require('mssql');
 
 module.exports = {
     data: {
-        buttonId: "genericid", // customId of buttons that will execute this command
+        customId: "genericid", // customId of buttons that will execute this command
         permissions: "all" //TODO: Implement other permission options
     },
     /**

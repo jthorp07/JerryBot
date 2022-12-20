@@ -12,7 +12,6 @@ const { ConnectionPool } = require('mssql');
  */
 async function onSlashCommand(interaction, con, knownInteractions) {
 	// Prepare command for execution
-	await interaction.deferReply();
 	let command = knownInteractions.commands.get(interaction.commandName);
 	if (!command) {
 		interaction.editReply({ content: 'Unknown Command' });
@@ -41,7 +40,6 @@ async function onSlashCommand(interaction, con, knownInteractions) {
  */
 async function onButton(interaction, con, knownInteractions) {
 
-	await interaction.deferReply();
 	let btn = knownInteractions.buttons.get(interaction.customId);
 	if (!btn) {
 		interaction.editReply({content: 'Unknown Button'});
@@ -70,11 +68,10 @@ async function onButton(interaction, con, knownInteractions) {
  */
 async function onStringSelect(interaction, con, knownInteractions) {
 	
-	await interaction.deferReply();
 	let smCommand = knownInteractions.stringSelects.get(interaction.customId);
 
 	if (!smCommand) {
-		await interaction.editReply({content: `Unknwon Select Menu`});
+		await interaction.editReply({content: `Unknown Select Menu`});
 		return;
 	}
 	
@@ -87,6 +84,21 @@ async function onStringSelect(interaction, con, knownInteractions) {
 	}
 }
 
+/**
+ * @param {StringSelectMenuInteraction} interaction 
+ * @param {ConnectionPool} con
+ */
+async function onModal(interaction, con, knownInteractions) {
+	let modal = knownInteractions.modals.get(interaction.customId);
+
+	if (!modal) {
+		await interaction.editReply({content: `Unknown Modal`});
+		return;
+	}
+		
+	modal.execute(interaction, con);
+	console.log('  [Bot]: Modal Handled');
+}
 
 module.exports = {
 
@@ -111,6 +123,11 @@ module.exports = {
 		// String Select Menu
 		if (interaction.isStringSelectMenu()) {
 			onStringSelect(interaction, con, knownInteractions);
+		}
+
+		// Modals
+		if (interaction.isModalSubmit()) {
+			onModal(interaction, con, knownInteractions);
 		}
 	}
 }

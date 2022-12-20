@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, Events } = require("discord.js");
-const { Handlers, readCommands, readStringSelectMenus, readButtons } = require("./util");
+const { Handlers, readCommands, readStringSelectMenus, readButtons, readModals } = require("./util");
 const { fork } = require('child_process');
 const process = require("process");
 const { ConnectionPool } = require('mssql');
@@ -66,11 +66,13 @@ pool.connect().then(conPool => {
 client = readCommands(client);
 const btnCommands = readButtons();
 const smCommands = readStringSelectMenus();
+const modalInteractions = readModals();
 
 const knownInteractions = {
 	commands: client.commands,
 	stringSelects: smCommands,
-	buttons: btnCommands
+	buttons: btnCommands,
+	modals: modalInteractions
 }
 
 /**

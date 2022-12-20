@@ -1,7 +1,7 @@
 const {connectToMSSQL, connectToMySQL} = require('./connect-db');
 const {checkPermissions} = require('./permission');
 const Handlers = require('./handlers');
-const {readCommands, readStringSelectMenus, readButtons} = require('./startup');
+const {readCommands, readStringSelectMenus, readButtons, readModals} = require('./startup');
 
 module.exports = {
     connectToMSSQL,
@@ -10,5 +10,6 @@ module.exports = {
     Handlers,
     readCommands,
     readStringSelectMenus,
-    readButtons
+    readButtons,
+    readModals
 }
