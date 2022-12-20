@@ -1,4 +1,5 @@
 const { ButtonInteraction } = require('discord.js');
+const { ConnectionPool } = require('mssql');
 
 
 module.exports = {
@@ -8,9 +9,10 @@ module.exports = {
     },
     /**
      * 
-     * @param {ButtonInteraction} interaction 
+     * @param {ButtonInteraction} interaction
+     * @param {ConnectionPool} con
      */
-    async btnExecute(interaction) {
+    async execute(interaction, con) {
 
         //TODO: Implement button command
         await interaction.reply("You pressed a generic button!");

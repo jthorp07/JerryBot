@@ -1,3 +1,8 @@
+# Universal ignores
+
 config.json
 /node_modules
 .env
+
+# Jack's Ignores
+/commands/modaltest.js

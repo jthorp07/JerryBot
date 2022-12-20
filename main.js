@@ -67,6 +67,12 @@ client = readCommands(client);
 const btnCommands = readButtons();
 const smCommands = readStringSelectMenus();
 
+const knownInteractions = {
+	commands: client.commands,
+	stringSelects: smCommands,
+	buttons: btnCommands
+}
+
 /**
  * Bot's listeners
  */
@@ -76,42 +82,44 @@ client.on(Events.ClientReady, () => {
 
 // On joining a new Discord server
 client.on(Events.GuildCreate, async (guild) => {
-	await Handlers.onGuildCreate(guild, con);
+	Handlers.onGuildCreate(guild, con);
 });
 
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-	await Handlers.onVoiceStateUpdate(oldState, newState, con);
+	Handlers.onVoiceStateUpdate(oldState, newState, con);
 })
 
 // Command Handling
 client.on(Events.InteractionCreate, async (interaction) => {
-	if (!interaction.isChatInputCommand()) return;
+	// if (!interaction.isChatInputCommand()) return;
 
-	const command = client.commands.get(interaction.commandName);
-	if (!command) return;
+	// const command = client.commands.get(interaction.commandName);
+	// if (!command) return;
 
-	// Check user permissions
-	checkPermissions(con, command.permissions, interaction.member.id)
-		.then((perms) => {
-			if (!perms) {
-				interaction.reply(`Insufficient user permissions:\n\`\`\`Permission \'${command.permissions}\' required\`\`\``);
-				return;
-			}
-			try {
-				command.execute(interaction, con).then(() => {
-					console.log(`Command executed`);
-				});
-			} catch (error) {
-				console.error(error);
-				interaction.reply({ content: "There was an error while executing this command!", ephemeral: true });
-				return;
-			}
-		})
-		.catch((err) => {
-			console.log(err);
-			return;
-		});
+	// // Check user permissions
+	// checkPermissions(con, command.permissions, interaction.member.id)
+	// 	.then((perms) => {
+	// 		if (!perms) {
+	// 			interaction.reply(`Insufficient user permissions:\n\`\`\`Permission \'${command.permissions}\' required\`\`\``);
+	// 			return;
+	// 		}
+	// 		try {
+	// 			command.execute(interaction, con).then(() => {
+	// 				console.log(`Command executed`);
+	// 			});
+	// 		} catch (error) {
+	// 			console.error(error);
+	// 			interaction.reply({ content: "There was an error while executing this command!", ephemeral: true });
+	// 			return;
+	// 		}
+	// 	})
+	// 	.catch((err) => {
+	// 		console.log(err);
+	// 		return;
+	// 	});
+	Handlers.onInteractionCreate(interaction, con, knownInteractions);
+
 });
 
 // STRING select menus
@@ -150,43 +158,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
 		});
 });
 
-// Button interactions
-client.on(Events.InteractionCreate, (interaction) => {
-	if (!interaction.isButton()) return;
+// // Button interactions
+// client.on(Events.InteractionCreate, (interaction) => {
+// 	if (!interaction.isButton()) return;
 
-	if (!interaction.componentType === ComponentType.Button) return;
+// 	// Handle buttons here...
+// 	var btnCommand;
 
-	// Handle buttons here...
-	var btnCommand;
+// 	btnCommand = btnCommands.get(interaction.customId);
+// 	if (!btnCommand) {
+// 		interaction.reply(
+// 			`This button doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
+// 		);
+// 		return;
+// 	}
 
-	btnCommand = btnCommands.get(interaction.buttonId);
-	if (!btnCommand) {
-		interaction.reply(
-			`This button doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
-		);
-		return;
-	}
-
-	// permission check
-	checkPermissions(con, btnCommand.data.permissions, interaction.user.id).then((result) => {
-		if (result == true) {
-			try {
-				btnCommand.btnExecute(interaction, con);
-				console.log(`Button handled`);
-			} catch (err) {
-				console.error(err);
-				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
-				return;
-			}
-		} else {
-			interaction.reply(`Insufficient user permissions:\nPermission \'${btnCommand.data.permissions}\'`);
-		}
-	})
-		.catch(err => {
-			interaction.reply("Uh oh, something went wrong...");
-			console.log(err);
-			return;
-		});
-});
+// 	// permission check
+// 	checkPermissions(con, btnCommand.data.permissions, interaction.user.id).then((result) => {
+// 		if (result == true) {
+// 			try {
+// 				btnCommand.btnExecute(interaction, con);
+// 				console.log(`Button handled`);
+// 			} catch (err) {
+// 				console.error(err);
+// 				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
+// 				return;
+// 			}
+// 		} else {
+// 			interaction.reply(`Insufficient user permissions:\nPermission \'${btnCommand.data.permissions}\'`);
+// 		}
+// 	})
+// 		.catch(err => {
+// 			interaction.reply("Uh oh, something went wrong...");
+// 			console.log(err);
+// 			return;
+// 		});
+// });
 
 client.login(TOKEN);
