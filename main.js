@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, Events } = require("discord.js");
-const { checkPermissions, Handlers, readCommands, readStringSelectMenus, readButtons } = require("./util");
+const { Handlers, readCommands, readStringSelectMenus, readButtons } = require("./util");
 const { fork } = require('child_process');
 const process = require("process");
 const { ConnectionPool } = require('mssql');
@@ -92,107 +92,8 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 
 // Command Handling
 client.on(Events.InteractionCreate, async (interaction) => {
-	// if (!interaction.isChatInputCommand()) return;
-
-	// const command = client.commands.get(interaction.commandName);
-	// if (!command) return;
-
-	// // Check user permissions
-	// checkPermissions(con, command.permissions, interaction.member.id)
-	// 	.then((perms) => {
-	// 		if (!perms) {
-	// 			interaction.reply(`Insufficient user permissions:\n\`\`\`Permission \'${command.permissions}\' required\`\`\``);
-	// 			return;
-	// 		}
-	// 		try {
-	// 			command.execute(interaction, con).then(() => {
-	// 				console.log(`Command executed`);
-	// 			});
-	// 		} catch (error) {
-	// 			console.error(error);
-	// 			interaction.reply({ content: "There was an error while executing this command!", ephemeral: true });
-	// 			return;
-	// 		}
-	// 	})
-	// 	.catch((err) => {
-	// 		console.log(err);
-	// 		return;
-	// 	});
 	Handlers.onInteractionCreate(interaction, con, knownInteractions);
-
 });
 
-// // STRING select menus
-// client.on(Events.InteractionCreate, async (interaction) => {
-// 	if (!interaction.isStringSelectMenu()) return;
-
-// 	// Handle selectmenus here...
-// 	const smCommand = smCommands.get(interaction.customId);
-// 	if (!smCommand) {
-// 		interaction.reply(
-// 			`This SelectMenu doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
-// 		);
-// 		return;
-// 	}
-
-// 	// WITH PERMISSIONS
-// 	checkPermissions(con, smCommand.data.permissions, interaction.user.id).then((result) => {
-// 		if (result == true) {
-// 			try {
-// 				smCommand.btnExecute(interaction, con);
-// 				console.log(`SelectMenu handled`);
-// 			} catch (err) {
-// 				console.error(err);
-// 				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
-// 				return;
-// 			}
-// 		} else {
-// 			interaction.reply(`Insufficient user permissions:\nPermission \'${smCommand.data.permissions}\'`);
-// 			console.log(`Insufficient permissions: Halting button handler`);
-// 		}
-// 	})
-// 		.catch(err => {
-// 			interaction.reply("Uh oh, something went wrong...");
-// 			console.log(err);
-// 			return;
-// 		});
-// });
-
-// // Button interactions
-// client.on(Events.InteractionCreate, (interaction) => {
-// 	if (!interaction.isButton()) return;
-
-// 	// Handle buttons here...
-// 	var btnCommand;
-
-// 	btnCommand = btnCommands.get(interaction.customId);
-// 	if (!btnCommand) {
-// 		interaction.reply(
-// 			`This button doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
-// 		);
-// 		return;
-// 	}
-
-// 	// permission check
-// 	checkPermissions(con, btnCommand.data.permissions, interaction.user.id).then((result) => {
-// 		if (result == true) {
-// 			try {
-// 				btnCommand.btnExecute(interaction, con);
-// 				console.log(`Button handled`);
-// 			} catch (err) {
-// 				console.error(err);
-// 				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
-// 				return;
-// 			}
-// 		} else {
-// 			interaction.reply(`Insufficient user permissions:\nPermission \'${btnCommand.data.permissions}\'`);
-// 		}
-// 	})
-// 		.catch(err => {
-// 			interaction.reply("Uh oh, something went wrong...");
-// 			console.log(err);
-// 			return;
-// 		});
-// });
 
 client.login(TOKEN);
