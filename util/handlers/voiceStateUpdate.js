@@ -55,7 +55,7 @@ async function checkForDeletion(oldState, con) {
             // QUERY: Delete channel in DB
             result = await con.request(trans)
                 .input('GuildId', guildId)
-                .input('ChannelId', oldChannelId)
+                .input('ChannelId', channelId)
                 .execute('DeleteChannelById');
 
             // ERROR Handling
@@ -89,7 +89,7 @@ module.exports = {
         let newChannelId = newState.channelId;
 
         // Check if oldState channel triggers a delete
-        if (oldChannelId) {
+        if (oldChannelId !== null) {
             await checkForDeletion(oldState, con);
         }
 

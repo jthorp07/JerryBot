@@ -10,7 +10,7 @@ module.exports = {
      * @param {mssql.ConnectionPool} con 
      */
 	async execute(interaction, con) {
-		await interaction.reply('Pong!');
+		await interaction.editReply({content: 'Pong!'});
 	},
 	permissions: 'all'
 };

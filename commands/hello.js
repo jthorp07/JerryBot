@@ -17,7 +17,7 @@ module.exports = {
     async execute(interaction, con) {
 
         let stringoption = interaction.options.getString('stringone');
-        await interaction.reply(`Hello ${stringoption}`);
+        await interaction.editReply(`Hello ${stringoption}`);
 
     },
     permissions: "all"

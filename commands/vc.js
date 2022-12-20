@@ -18,8 +18,6 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        await interaction.deferReply();
-
         // Create the channel in the Discord server
         let cap = interaction.options.getNumber('capacity');
         /**@type {VoiceChannel} */

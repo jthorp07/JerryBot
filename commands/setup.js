@@ -11,8 +11,6 @@ module.exports = {
      */
 	async execute(interaction, con) {
 
-		interaction.deferReply();
-
 		let trans = con.transaction();
 		trans.begin(async (err) => {
 

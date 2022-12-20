@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, ComponentType, Events } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 const { checkPermissions, Handlers, readCommands, readStringSelectMenus, readButtons } = require("./util");
 const { fork } = require('child_process');
 const process = require("process");
@@ -122,41 +122,41 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 });
 
-// STRING select menus
-client.on(Events.InteractionCreate, async (interaction) => {
-	if (!interaction.isStringSelectMenu()) return;
+// // STRING select menus
+// client.on(Events.InteractionCreate, async (interaction) => {
+// 	if (!interaction.isStringSelectMenu()) return;
 
-	// Handle selectmenus here...
-	const smCommand = smCommands.get(interaction.customId);
-	if (!smCommand) {
-		interaction.reply(
-			`This SelectMenu doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
-		);
-		return;
-	}
+// 	// Handle selectmenus here...
+// 	const smCommand = smCommands.get(interaction.customId);
+// 	if (!smCommand) {
+// 		interaction.reply(
+// 			`This SelectMenu doesn't have a registered command. (ID = '${interaction.customId}')\nPlease send a report to a bot developer to have this fixed.`
+// 		);
+// 		return;
+// 	}
 
-	// WITH PERMISSIONS
-	checkPermissions(con, smCommand.data.permissions, interaction.user.id).then((result) => {
-		if (result == true) {
-			try {
-				smCommand.btnExecute(interaction, con);
-				console.log(`SelectMenu handled`);
-			} catch (err) {
-				console.error(err);
-				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
-				return;
-			}
-		} else {
-			interaction.reply(`Insufficient user permissions:\nPermission \'${smCommand.data.permissions}\'`);
-			console.log(`Insufficient permissions: Halting button handler`);
-		}
-	})
-		.catch(err => {
-			interaction.reply("Uh oh, something went wrong...");
-			console.log(err);
-			return;
-		});
-});
+// 	// WITH PERMISSIONS
+// 	checkPermissions(con, smCommand.data.permissions, interaction.user.id).then((result) => {
+// 		if (result == true) {
+// 			try {
+// 				smCommand.btnExecute(interaction, con);
+// 				console.log(`SelectMenu handled`);
+// 			} catch (err) {
+// 				console.error(err);
+// 				interaction.reply({ content: "There was an error while executing this button's command!", ephemeral: true });
+// 				return;
+// 			}
+// 		} else {
+// 			interaction.reply(`Insufficient user permissions:\nPermission \'${smCommand.data.permissions}\'`);
+// 			console.log(`Insufficient permissions: Halting button handler`);
+// 		}
+// 	})
+// 		.catch(err => {
+// 			interaction.reply("Uh oh, something went wrong...");
+// 			console.log(err);
+// 			return;
+// 		});
+// });
 
 // // Button interactions
 // client.on(Events.InteractionCreate, (interaction) => {
