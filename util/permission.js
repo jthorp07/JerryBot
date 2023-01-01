@@ -21,7 +21,7 @@ module.exports = {
                 return;
             }
 
-            if (permissionLevel = 'admin') {
+            if (permissionLevel == 'admin') {
 
                 let admins = [];
                 admins.push(process.env.JACK);
