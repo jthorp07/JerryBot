@@ -32,11 +32,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("join-tenman-spec")
           .setLabel("Join Spectators")
-          .setStyle(ButtonStyle.Secondary),
-        new ButtonBuilder()
-          .setCustomId("leave-tenman-spec")
-          .setLabel("Leave Spectators")
-          .setStyle(ButtonStyle.Danger)
+          .setStyle(ButtonStyle.Secondary)
       ),
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()

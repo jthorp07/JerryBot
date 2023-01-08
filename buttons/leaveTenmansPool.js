@@ -22,7 +22,10 @@ module.exports = {
         playerList.splice(i, 1);
       }
     });
-    embed.fields[0].value = playerList.join('\n');
+
+    let newValue = playerList.join('\n');
+
+    embed.fields[0].value = (newValue === '') ? 'N/A\n\nplayers will show up here when they join':newValue;
 
     let trans = con.transaction();
     trans.begin(async (err) => {

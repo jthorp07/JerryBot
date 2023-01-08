@@ -77,8 +77,7 @@ module.exports = {
 
           // Update: Update queue board with new player
           let embed = interaction.message.embeds[0];
-          let playerList = embed.fields[0].value.split('\n');
-          if (playerList.length === 0) {
+          if (embed.fields[0].value === 'N/A\n\nplayers will show up here when they join') {
             embed.fields[0].value = newEntry;
           } else {
             embed.fields[0].value = `${embed.fields[0].value}\n${newEntry}`;

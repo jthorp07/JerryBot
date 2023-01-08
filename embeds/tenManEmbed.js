@@ -22,13 +22,13 @@ module.exports = {
       {
         name: "Player Pool",
         value:
-          "-Some username\n-Some username\n-Some username\n-Some username\n-Some username\n-Some username\n-Some username\n-Some username",
+        'N/A\n\nplayers will show up here when they join',
         inline: true,
       },
 
       {
         name: "Spectators",
-        value: "-Some username\n-Some username\n-Some username\n-Some username",
+        value: 'N/A\n\nplayers will show up here when they join',
         inline: true,
       }
     ),
