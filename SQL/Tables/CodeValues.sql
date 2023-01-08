@@ -3,6 +3,9 @@
 -- 
 -- As a solution to simulating ENUMs in SQL Server
 -- 
+DROP TABLE IF EXISTS CodeValues
+GO
+
 CREATE TABLE [CodeValue] (
 
     -- Columns --
@@ -15,3 +18,4 @@ CREATE TABLE [CodeValue] (
     CONSTRAINT [PK_CodeValue] PRIMARY KEY CLUSTERED ([CodeNamespaceId], [Value]),
     CONSTRAINT [FK_CodeValue_CodeNamespace] FOREIGN KEY ([CodeNamespaceId]) REFERENCES [CodeNamespace] ([Id])
 )
+GO
