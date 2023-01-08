@@ -12,10 +12,60 @@ module.exports = {
    * @param {ConnectionPool} con
    */
   async execute(interaction, con) {
-    //TODO: Implement button command
-    console.log(interaction.user.id, interaction.user.username);
-    await interaction.reply(
-      `${interaction.user.username} left the player pool!`
-    );
+
+    // Go ahead and edit embed
+    let userToRemove = interaction.member.displayName;
+    let embed = interaction.message.embeds[0];
+    let playerList = embed.fields[0].value.split('\n');
+    playerList.forEach((player, i) => {
+      if (player.includes(userToRemove)) {
+        playerList.splice(i, 1);
+      }
+    });
+    embed.fields[0].value = playerList.join('\n');
+
+    let trans = con.transaction();
+    trans.begin(async (err) => {
+
+      // DBMS error handling
+      let rolledBack = false;
+      trans.on("rollback", (aborted) => {
+        if (aborted) {
+          console.log("This rollback was triggered by SQL server");
+        }
+        rolledBack = true;
+        return;
+      });
+
+      let result = await con.request(trans)
+        .input('GuildId', interaction.guildId)
+        .input('UserId', interaction.user.id)
+        .execute('LeaveTenmans');
+
+      if (result.returnValue !== 0) {
+        trans.rollback();
+        interaction.editReply({ ephemeral: true, content: 'Something went wrong o-o' });
+        return;
+      }
+
+      trans.commit(async (err) => {
+        if (err) {
+          console.log(err);
+          return;
+        }
+
+        interaction.message.edit({
+          embeds: [embed]
+        });
+
+        await interaction.reply(
+          `${interaction.user.username} left the player pool!`
+        );
+
+      });
+
+    })
+
+
   },
 };
