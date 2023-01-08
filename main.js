@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events } = require("discord.js");
+const { Client, GatewayIntentBits, Events, ActivityType } = require("discord.js");
 const {
   Handlers,
   readCommands,
@@ -88,6 +88,7 @@ const knownInteractions = {
  * Bot's listeners
  */
 client.on(Events.ClientReady, () => {
+  client.user.setActivity('over Gamer\'s Coaching Academy', {type: ActivityType.Watching});
   console.log("Bot Ready.");
 });
 
