@@ -1,5 +1,5 @@
-const { CommandInteraction, SlashCommandBuilder } = require('discord.js');
-const mssql = require('mssql');
+const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
+const {ConnectionPool} = require('mssql');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -11,8 +11,8 @@ module.exports = {
                 .setRequired(true)),
     /**
      * 
-     * @param {CommandInteraction} interaction 
-     * @param {mssql.ConnectionPool} con 
+     * @param {ChatInputCommandInteraction} interaction 
+     * @param {ConnectionPool} con 
      */
     async execute(interaction, con) {
 

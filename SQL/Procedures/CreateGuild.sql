@@ -4,14 +4,16 @@ CREATE OR ALTER PROCEDURE CreateGuild(
 ) AS BEGIN
 
     -- Validate Arg --
-    IF @GuildId IS NULL BEGIN
+    IF @GuildId IS NULL OR @GuildName IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
     END
 
-    IF @GuildName IS NULL BEGIN
-        PRINT 'Args cannot be null'
-        RETURN 1
+    IF EXISTS
+    (SELECT * FROM Guild WHERE Id=@GuildId)
+    BEGIN
+        PRINT 'Guild already exists'
+        RETURN 2
     END
 
     -- Do it --

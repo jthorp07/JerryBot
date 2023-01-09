@@ -1,5 +1,5 @@
 const {
-  CommandInteraction,
+  ChatInputCommandInteraction,
   SlashCommandBuilder,
   ButtonBuilder,
   ActionRowBuilder,
@@ -13,7 +13,7 @@ module.exports = {
     .setDescription("Testing button use"),
   /**
    *
-   * @param {CommandInteraction} interaction
+   * @param {ChatInputCommandInteraction} interaction
    * @param {mssql.ConnectionPool} con
    */
   async execute(interaction, con) {

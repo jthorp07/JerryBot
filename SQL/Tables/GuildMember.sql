@@ -6,7 +6,7 @@ CREATE TABLE GuildMember(
     IsOwner BIT NOT NULL,
 
     -- Columns: User Prefs --
-    CanBeCaptain BIT NOT NULL,
+    CanBeCaptain BIT NOT NULL DEFAULT 1,
     CurrentRank BIT NOT NULL DEFAULT 0,
     QueueStatus SMALLINT NOT NULL DEFAULT 0, -- 0=Not in queue, 1=10mans player pool, 2=10mans spectator, 3-100 reserved for other queues, 30000->20000 team id
 

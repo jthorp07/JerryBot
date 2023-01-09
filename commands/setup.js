@@ -1,4 +1,4 @@
-const { CommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors, ButtonBuilder, ButtonStyle } = require('discord.js');
 const mssql = require('mssql');
 
 module.exports = {
@@ -6,7 +6,7 @@ module.exports = {
 		.setName('setup')
 		.setDescription('Sets the bot up if it has not already done so'),
 	/**
-     * @param {CommandInteraction} interaction 
+     * @param {ChatInputCommandInteraction} interaction 
      * @param {mssql.ConnectionPool} con 
      */
 	async execute(interaction, con) {
