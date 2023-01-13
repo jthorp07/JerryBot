@@ -37,23 +37,6 @@ function readButtons() {
   return btnCommandsTemp;
 }
 
-//Embeds
-function readEmbeds(client) {
-  embeds = new Collection();
-  console.log(`[Startup]: Reading in embeds`);
-  const embedFiles = fs
-    .readdirSync("./embeds")
-    .filter((file) => file.endsWith(".js"));
-
-  for (const file of embedFiles) {
-    const embed = require(`../embeds/${file}`);
-    console.log(`  [Embeds]: Set embed '${embed.data.name}'`);
-    embeds.set(embed.data.name, embed);
-  }
-  console.log(`  [Embeds]: Finished`);
-  return embeds;
-}
-
 // Select Menus
 function readStringSelectMenus() {
   let smCommandsTemp = new Collection();
@@ -90,6 +73,5 @@ module.exports = {
   readButtons,
   readStringSelectMenus,
   readCommands,
-  readEmbeds,
   readModals,
 };

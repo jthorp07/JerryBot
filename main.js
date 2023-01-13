@@ -5,7 +5,6 @@ const {
   readStringSelectMenus,
   readButtons,
   readModals,
-  readEmbeds,
 } = require("./util");
 const { fork } = require("child_process");
 const process = require("process");
@@ -74,14 +73,12 @@ client = readCommands(client);
 const btnCommands = readButtons();
 const smCommands = readStringSelectMenus();
 const modalInteractions = readModals();
-const embedCreation = readEmbeds();
 
 const knownInteractions = {
   commands: client.commands,
   stringSelects: smCommands,
   buttons: btnCommands,
   modals: modalInteractions,
-  embeds: embedCreation,
 };
 
 /**
