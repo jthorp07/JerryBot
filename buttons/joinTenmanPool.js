@@ -72,8 +72,8 @@ module.exports = {
           result = await con.request(trans)
             .input('GuildId', interaction.guildId)
             .output('NumCaptains', Int)
+            .output('PlayerCount', Int)
             .execute('GetTenmansQueue');
-
           let draftInfo = await selectCaptains(result, rankedRoles, interaction, embed);
           let newEmbed = makeDraftEmbed(draftInfo, embed);
         } else {
