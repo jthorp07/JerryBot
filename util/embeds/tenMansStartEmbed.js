@@ -44,7 +44,7 @@ module.exports = {
       .setTitle("Ten Mans Queue")
       .setDescription("Waiting for players...")
       .setAuthor({
-        name: host ? host : "Unknown Host",
+        name: host ? `Host: ${host}` : "Unknown Host",
         iconURL: hostPfp ? hostPfp : undefined,
       })
       .addFields(

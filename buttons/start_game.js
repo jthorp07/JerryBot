@@ -13,6 +13,6 @@ module.exports = {
    */
   async execute(interaction, con) {
     //TODO: Implement button command
-    await interaction.reply("Starting the team selection process...");
+    await interaction.reply({ephemeral: true, content: 'force starting game'});
   },
 };

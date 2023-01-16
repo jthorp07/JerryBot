@@ -14,6 +14,7 @@ module.exports = {
   async execute(interaction, con) {
 
     // Go ahead and edit embed
+    await interaction.deferReply({ephemeral: true});
     let userToRemove = interaction.member.displayName;
     let embed = interaction.message.embeds[0];
     let playerList = embed.fields[0].value.split('\n');
@@ -61,14 +62,12 @@ module.exports = {
           embeds: [embed]
         });
 
-        await interaction.reply(
-          `${interaction.user.username} left the player pool!`
-        );
+        await interaction.editReply({
+          ephemeral: true,
+          content: `${interaction.user.username} left the player pool!`
+        });
 
       });
-
     })
-
-
   },
 };

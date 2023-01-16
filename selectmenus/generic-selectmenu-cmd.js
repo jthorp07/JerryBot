@@ -1,6 +1,5 @@
 const { SelectMenuInteraction } = require('discord.js');
 
-
 module.exports = {
     data: {
         customId: "genericid", // customId of buttons that will execute this command
