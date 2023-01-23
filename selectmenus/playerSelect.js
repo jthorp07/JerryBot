@@ -10,8 +10,9 @@ module.exports = {
    * @param {SelectMenuInteraction} interaction
    */
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
     //TODO: Implement button command
     console.log(interaction.values[0]);
-    await interaction.reply("You selected a player!");
+    await interaction.editReply("You selected a player!", { ephemeral: true });
   },
 };
