@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE CreateEnum(
+CREATE PROCEDURE CreateEnum(
     @EnumName NVARCHAR(100)
 ) AS BEGIN
 
@@ -8,13 +8,13 @@ CREATE OR ALTER PROCEDURE CreateEnum(
         RETURN 1
     END
 
-    IF EXISTS (SELECT * FROM CodeNamespaces WHERE [Name]=@EnumName) BEGIN
+    IF EXISTS (SELECT * FROM CodeNamespace WHERE [Name]=@EnumName) BEGIN
         PRINT 'Enum already exists'
         RETURN 5
     END
 
     -- Do it --
-    INSERT INTO CodeNamespaces([Name]) VALUES(@EnumName)
+    INSERT INTO CodeNamespace([Name]) VALUES(@EnumName)
     PRINT 'Enum Created'
     RETURN 0
 
