@@ -6,10 +6,11 @@ module.exports = {
     permissions: "all", //TODO: Implement other permission options
   },
   /**
-   *
    * @param {SelectMenuInteraction} interaction
+   * @param {ConnectionPool} con
+   * @param {string[]} idArgs
    */
-  async execute(interaction) {
+  async execute(interaction, con, idArgs) {
     await interaction.deferReply({ ephemeral: true });
     //TODO: Implement button command
     console.log(interaction.values[0]);
