@@ -9,6 +9,12 @@ const {
   readButtons,
   readModals,
 } = require("./startup");
+const {
+  CHANNEL_TYPES,
+  QUEUE_STATES,
+  QUEUE_TYPES,
+  TENMANS_QUEUE_POOLS,
+} = require('./database-enums');
 
 module.exports = {
   connectToMSSQL,
@@ -21,4 +27,8 @@ module.exports = {
   readStringSelectMenus,
   readButtons,
   readModals,
+  CHANNEL_TYPES,
+  QUEUE_STATES,
+  QUEUE_TYPES,
+  TENMANS_QUEUE_POOLS
 };
