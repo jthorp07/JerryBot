@@ -2,7 +2,8 @@ CREATE PROCEDURE CreateGuildMember(
     @GuildId DiscordSnowflake,
     @UserId DiscordSnowflake,
     @IsOwner BIT,
-    @Username VARCHAR(32)
+    @Username VARCHAR(32),
+    @ValorantRankRoleIcon VARCHAR(255)
 ) AS BEGIN
 
     -- Validate --
@@ -26,7 +27,8 @@ CREATE PROCEDURE CreateGuildMember(
     END
 
     -- Do it --
-    INSERT INTO GuildMember(GuildId, MemberId, IsOwner) VALUES(@GuildId, @UserId, @IsOwner)
+    INSERT INTO GuildMember(GuildId, MemberId, IsOwner, DiscordDisplayName, ValorantRankRoleIcon) 
+    VALUES(@GuildId, @UserId, @IsOwner, @Username, @ValorantRankRoleIcon)
     PRINT 'Guild member added'
     RETURN 0
 
