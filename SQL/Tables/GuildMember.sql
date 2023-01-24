@@ -4,11 +4,13 @@ CREATE TABLE GuildMember(
     GuildId DiscordSnowflake NOT NULL,
     MemberId DiscordSnowflake NOT NULL,
     IsOwner BIT NOT NULL,
+    DiscordDisplayName VARCHAR(32) NOT NULL,
+    ValorantDisplayName VARCHAR(22),
+    ValorantRankRoleIcon VARCHAR(255),
 
     -- Columns: User Prefs --
     CanBeCaptain BIT NOT NULL DEFAULT 1,
     CurrentRank BIT NOT NULL DEFAULT 0,
-    QueueStatus SMALLINT NOT NULL DEFAULT 0, -- 0=Not in queue, 1=10mans player pool, 2=10mans spectator, 3-100 reserved for other queues, 30000->20000 team id
 
     -- Keys --
     CONSTRAINT PK_GuildMember PRIMARY KEY(GuildId, MemberId),

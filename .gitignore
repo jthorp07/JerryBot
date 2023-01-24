@@ -5,3 +5,4 @@ config.json
 .env
 
 # Jack's Ignores
+test.js
