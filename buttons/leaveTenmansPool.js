@@ -10,27 +10,29 @@ module.exports = {
    *
    * @param {ButtonInteraction} interaction
    * @param {ConnectionPool} con
+   * @param {string[]} idArgs
    */
-  async execute(interaction, con) {
-
+  async execute(interaction, con, idArgs) {
     // Go ahead and edit embed
-    await interaction.deferReply({ephemeral: true});
+    await interaction.deferReply({ ephemeral: true });
     let userToRemove = interaction.member.displayName;
     let embed = interaction.message.embeds[0];
-    let playerList = embed.fields[0].value.split('\n');
+    let playerList = embed.fields[0].value.split("\n");
     playerList.forEach((player, i) => {
       if (player.includes(userToRemove)) {
         playerList.splice(i, 1);
       }
     });
 
-    let newValue = playerList.join('\n');
+    let newValue = playerList.join("\n");
 
-    embed.fields[0].value = (newValue === '') ? 'N/A\n\nplayers will show up here when they join':newValue;
+    embed.fields[0].value =
+      newValue === ""
+        ? "N/A\n\nplayers will show up here when they join"
+        : newValue;
 
     let trans = con.transaction();
     trans.begin(async (err) => {
-
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", (aborted) => {
@@ -41,14 +43,18 @@ module.exports = {
         return;
       });
 
-      let result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('UserId', interaction.user.id)
-        .execute('LeaveTenmans');
+      let result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input("UserId", interaction.user.id)
+        .execute("LeaveTenmans");
 
       if (result.returnValue !== 0) {
         trans.rollback();
-        interaction.editReply({ ephemeral: true, content: 'Something went wrong o-o' });
+        interaction.editReply({
+          ephemeral: true,
+          content: "Something went wrong o-o",
+        });
         return;
       }
 
@@ -59,15 +65,14 @@ module.exports = {
         }
 
         interaction.message.edit({
-          embeds: [embed]
+          embeds: [embed],
         });
 
         await interaction.editReply({
           ephemeral: true,
-          content: `${interaction.user.username} left the player pool!`
+          content: `${interaction.user.username} left the player pool!`,
         });
-
       });
-    })
+    });
   },
 };
