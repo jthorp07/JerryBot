@@ -10,8 +10,9 @@ module.exports = {
    *
    * @param {ButtonInteraction} interaction
    * @param {ConnectionPool} con
+   * @param {string[]} idArgs
    */
-  async execute(interaction, con) {
+  async execute(interaction, con, idArgs) {
     //TODO: Implement button command
     console.log(interaction.user.id, interaction.user.username);
     await interaction.reply(

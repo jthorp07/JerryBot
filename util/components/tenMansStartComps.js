@@ -1,8 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
 module.exports = {
-
-
   tenMansStartComps() {
     return [
       new ActionRowBuilder().setComponents(
@@ -22,7 +20,7 @@ module.exports = {
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
           .setCustomId("start-tenman-game")
-          .setLabel("Start Game")
+          .setLabel("Start Draft")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId("end-tenman-game")
@@ -30,5 +28,5 @@ module.exports = {
           .setStyle(ButtonStyle.Danger)
       ),
     ];
-  }
+  },
 };
