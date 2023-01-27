@@ -1,0 +1,48 @@
+{
+  "categories": [
+    "Admin Commands",
+    "Staff Commands",
+    "Test Commands",
+    "User Commands",
+    "Some other command",
+    "Some other again"
+  ],
+  "Admin Commands": {
+    "commands": ["enforcerankroles", "register-all", "setup", "vc"],
+    "enforcerankroles": {
+      "title": "/enforcerankroles",
+      "description": "This command will determine if ranked roles are required in order to join queues",
+      "permissionLevel": "Admin",
+      "examples": [
+        {
+          "exampleCommand": "/enforcerankroles true",
+          "exampleDescription": "Will enable rank role enforcement"
+        },
+        {
+          "exampleCommand": "/enforcerankroles false",
+          "exampleDescription": "Will disable rank role enforcement"
+        }
+      ]
+    },
+    "register-all": {},
+    "setup": {},
+    "vc": {}
+  },
+  "Staff Commands": {
+    "commands": ["tenmans", "setrole"],
+    "tenmans": {},
+    "setrole": {}
+  },
+  "Test Commands": {
+    "commands": ["hello", "modaltest", "ping", "testEmbed"],
+    "hello": {},
+    "modaltest": {},
+    "ping": {},
+    "testEmbed": {}
+  },
+  "User Commands": {
+    "commands": ["help", "register"],
+    "help": {},
+    "register": {}
+  }
+}
