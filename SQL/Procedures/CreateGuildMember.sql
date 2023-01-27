@@ -3,11 +3,12 @@ CREATE PROCEDURE CreateGuildMember(
     @UserId DiscordSnowflake,
     @IsOwner BIT,
     @Username VARCHAR(32),
+    @GuildDisplayName VARCHAR(32),
     @ValorantRankRoleIcon VARCHAR(255)
 ) AS BEGIN
 
     -- Validate --
-    IF @GuildId IS NULL OR @UserId IS NULL OR @IsOwner IS NULL OR @Username IS NULL BEGIN
+    IF @GuildId IS NULL OR @UserId IS NULL OR @IsOwner IS NULL OR @Username IS NULL OR @GuildDisplayName IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
     END
@@ -19,6 +20,7 @@ CREATE PROCEDURE CreateGuildMember(
         RETURN 2
     END
 
+    -- If user doesn't exist, create user first --
     IF NOT EXISTS
     (SELECT * FROM [User] WHERE Id=@UserId)
     BEGIN
@@ -28,7 +30,7 @@ CREATE PROCEDURE CreateGuildMember(
 
     -- Do it --
     INSERT INTO GuildMember(GuildId, MemberId, IsOwner, DiscordDisplayName, ValorantRankRoleIcon) 
-    VALUES(@GuildId, @UserId, @IsOwner, @Username, @ValorantRankRoleIcon)
+    VALUES(@GuildId, @UserId, @IsOwner, @GuildDisplayName, @ValorantRankRoleIcon)
     PRINT 'Guild member added'
     RETURN 0
 
