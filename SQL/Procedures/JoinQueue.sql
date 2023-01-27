@@ -1,4 +1,4 @@
-CREATE PROCEDURE JoinQueue(
+ALTER PROCEDURE JoinQueue(
     @UserId DiscordSnowflake,
     @GuildId DiscordSnowflake,
     @QueueId INT,
@@ -40,7 +40,7 @@ BEGIN TRANSACTION
     DECLARE @TeamTwoPool INT
     EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'TEAM_TWO', @EnumValue = @TeamTwoPool OUTPUT
 
-    INSERT INTO QueuedPlayers(QueueId, PlayerId, QueuePool) VALUES(@QueueId, @UserId, @AvailablePool)
+    INSERT INTO QueuedPlayers(QueueId, PlayerId, QueuePool, GuildId) VALUES(@QueueId, @UserId, @AvailablePool, @GuildId)
     PRINT 'Player inserted into queue'
 
     EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT -- Index 0: All players in queue AS: {PlayerId, CanBeCaptain}
