@@ -7,10 +7,12 @@ CREATE TABLE GuildMember(
     DiscordDisplayName VARCHAR(32) NOT NULL,
     ValorantDisplayName VARCHAR(22),
     ValorantRankRoleIcon VARCHAR(255),
+    CurrentRank INT CONSTRAINT DF_GuildMember_CurrentRank DEFAULT 0,
+    HasRankRole BIT CONSTRAINT DF_GuildMember_HasRankRole DEFAULT 0,
 
     -- Columns: User Prefs --
-    CanBeCaptain BIT NOT NULL DEFAULT 1,
-    CurrentRank BIT NOT NULL DEFAULT 0,
+    CanBeCaptain BIT CONSTRAINT DF_GuildMember_CanBeCaptain DEFAULT 1,
+    
 
     -- Keys --
     CONSTRAINT PK_GuildMember PRIMARY KEY(GuildId, MemberId),
