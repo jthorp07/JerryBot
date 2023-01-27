@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE GetEnumDesc(
+CREATE PROCEDURE GetEnumDesc(
     @EnumName NVARCHAR(100),
     @EnumValue INT
 ) AS
@@ -26,8 +26,8 @@ BEGIN
 
     IF NOT EXISTS
     (SELECT * 
-    FROM CodeValues
-    JOIN CodeNamespaces ON CodeNamespaceId=[Id]
+    FROM CodeValue
+    JOIN CodeNamespace ON CodeNamespaceId=[Id]
     WHERE [Name]=@EnumName AND [Value]=@EnumValue)
     BEGIN
 
@@ -38,8 +38,8 @@ BEGIN
 
     -- Get it --
     SELECT [Description]
-    FROM CodeValues
-    JOIN CodeNamespaces ON [CodeNamespaceId]=[Id]
+    FROM CodeValue
+    JOIN CodeNamespace ON [CodeNamespaceId]=[Id]
     WHERE [Name]=@EnumName AND [Value]=@EnumValue
     PRINT 'Enum value selected'
     RETURN 0

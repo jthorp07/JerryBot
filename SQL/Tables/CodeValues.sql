@@ -3,7 +3,7 @@
 -- 
 -- As a solution to simulating ENUMs in SQL Server
 -- 
-DROP TABLE IF EXISTS CodeValues
+DROP TABLE IF EXISTS CodeValue
 GO
 
 CREATE TABLE [CodeValue] (

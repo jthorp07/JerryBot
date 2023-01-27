@@ -40,7 +40,9 @@ async function onSlashCommand(interaction, con, knownInteractions) {
  */
 async function onButton(interaction, con, knownInteractions) {
 
-	let btn = knownInteractions.buttons.get(interaction.customId);
+	let idArgs = interaction.customId.split(':');
+	let btn = knownInteractions.buttons.get(idArgs[0]);
+	
 	if (!btn) {
 		interaction.editReply({content: 'Unknown Button'});
 	}
@@ -52,7 +54,7 @@ async function onButton(interaction, con, knownInteractions) {
 	});
 
 	if (permCheck) {
-		btn.execute(interaction, con);
+		btn.execute(interaction, con, idArgs);
 		console.log('  [Bot]: Button Handled');
 	} else {
 		await interaction.editReply({content: 'Sorry, you don\'t have adequate permissions to use this button!'});
@@ -68,7 +70,8 @@ async function onButton(interaction, con, knownInteractions) {
  */
 async function onStringSelect(interaction, con, knownInteractions) {
 	
-	let smCommand = knownInteractions.stringSelects.get(interaction.customId);
+	let idArgs = interaction.customId.split(':');
+	let smCommand = knownInteractions.stringSelects.get(idArgs[0]);
 
 	if (!smCommand) {
 		await interaction.editReply({content: `Unknown Select Menu`});
@@ -77,7 +80,7 @@ async function onStringSelect(interaction, con, knownInteractions) {
 	
 	let permCheck = await checkPermissions(con, smCommand.data.permissions, interaction.user.id)	
 	if (permCheck) {
-		smCommand.execute(interaction, con);
+		smCommand.execute(interaction, con, idArgs);
 		console.log('  [Bot]: Select Menu Handled');
 	} else {
 		await interaction.editReply({content: 'Sorry, you don\'t have adequate permissions to use this button!'});
@@ -89,14 +92,16 @@ async function onStringSelect(interaction, con, knownInteractions) {
  * @param {ConnectionPool} con
  */
 async function onModal(interaction, con, knownInteractions) {
-	let modal = knownInteractions.modals.get(interaction.customId);
+
+	let idArgs = interaction.customId.split(':');
+	let modal = knownInteractions.modals.get(idArgs[0]);
 
 	if (!modal) {
 		await interaction.editReply({content: `Unknown Modal`});
 		return;
 	}
 		
-	modal.execute(interaction, con);
+	modal.execute(interaction, con, idArgs);
 	console.log('  [Bot]: Modal Handled');
 }
 
