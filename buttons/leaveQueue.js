@@ -3,7 +3,7 @@ const { ConnectionPool } = require("mssql");
 
 module.exports = {
   data: {
-    customId: "leave-tenman-pool", // customId of buttons that will execute this command
+    customId: "leave-queue", // customId of buttons that will execute this command
     permissions: "all", //TODO: Implement other permission options
   },
   /**

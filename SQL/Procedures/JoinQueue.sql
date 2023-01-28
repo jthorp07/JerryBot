@@ -45,9 +45,9 @@ BEGIN TRANSACTION
 
     EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT -- Index 0: All players in queue AS: {PlayerId, CanBeCaptain}
 
-    SELECT * FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@AvailablePool -- Index 1
-    SELECT * FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamOnePool -- Index 2
-    SELECT * FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamTwoPool -- Index 3
+    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@AvailablePool -- Index 1
+    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamOnePool -- Index 2
+    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamTwoPool -- Index 3
 
 COMMIT
 END

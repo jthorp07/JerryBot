@@ -13,7 +13,7 @@ module.exports = {
    * @returns
    */
 
-  async selectCaptains(result, rankedRoles, interaction) {
+  async selectCaptains(recordset, numCaps, rankedRoles, interaction) {
     let capPool = [
       {
         id: "",
@@ -24,7 +24,6 @@ module.exports = {
 
     // console.log(result);
     capPool = [];
-    let numCaps = result.output.NumCaptains;
     if (numCaps < 2) {
       // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
       result.recordset.forEach(async (record) => {

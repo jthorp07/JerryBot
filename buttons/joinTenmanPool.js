@@ -3,7 +3,7 @@ const { ConnectionPool, Int } = require("mssql");
 const Helpers = require("../util/helpers");
 module.exports = {
   data: {
-    customId: "join-tenman-pool", // customId of buttons that will execute this command
+    customId: "join-tenman", // customId of buttons that will execute this command
     permissions: "all", //TODO: Implement other permission options
   },
   /**
@@ -27,7 +27,6 @@ module.exports = {
       return;
     }
 
-    // Fetch 10 mans waiting lobby
     let trans = con.transaction();
     trans.begin(async (err) => {
       // DBMS error handling
@@ -45,7 +44,15 @@ module.exports = {
         .request(trans)
         .input("GuildId", interaction.guildId)
         .input("UserId", user.id)
-        .execute("JoinTenmans");
+        .input("QueueId", idArgs[1])
+        .output("NumPlayers", Int)
+        .output("NumCaptains", Int)
+        .execute("JoinQueue");
+
+      let numPlayers = result.output.NumPlayers;
+      let numCaptains = result.output.NumCaptains;
+
+      console.log(JSON.stringify(result.recordsets));
 
       if (result.returnValue === -1) {
         await trans.rollback();
@@ -71,12 +78,7 @@ module.exports = {
         // If there are 10 players, start draft, otherwise add new player to player list
         if (embed.fields[0].value.split("\n").length >= 10) {
           // Identify 2 lowest ranks
-          result = await con
-            .request(trans)
-            .input("GuildId", interaction.guildId)
-            .output("NumCaptains", Int)
-            .output("PlayerCount", Int)
-            .execute("GetTenmansQueue");
+          
           let draftInfo = await Helpers.selectCaptains(
             result,
             rankedRoles,
