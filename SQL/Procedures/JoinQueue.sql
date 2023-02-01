@@ -1,4 +1,4 @@
-ALTER PROCEDURE JoinQueue(
+CREATE PROCEDURE JoinQueue(
     @UserId DiscordSnowflake,
     @GuildId DiscordSnowflake,
     @QueueId INT,
@@ -34,20 +34,14 @@ BEGIN TRANSACTION
     DECLARE @AvailablePool INT
     EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'AVAILABLE', @EnumValue = @AvailablePool OUTPUT
 
-    DECLARE @TeamOnePool INT
-    EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'TEAM_ONE', @EnumValue = @TeamOnePool OUTPUT
-
-    DECLARE @TeamTwoPool INT
-    EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'TEAM_TWO', @EnumValue = @TeamTwoPool OUTPUT
-
     INSERT INTO QueuedPlayers(QueueId, PlayerId, QueuePool, GuildId) VALUES(@QueueId, @UserId, @AvailablePool, @GuildId)
     PRINT 'Player inserted into queue'
 
-    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT -- Index 0: All players in queue AS: {PlayerId, CanBeCaptain}
-
-    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@AvailablePool -- Index 1
-    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamOnePool -- Index 2
-    SELECT PlayerId, GuildId FROM QueuedPlayers WHERE QueueId=@QueueId AND QueuePool=@TeamTwoPool -- Index 3
+    -- Index 0: All players in queue AS: {PlayerId, GuildId, CanBeCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon}
+    -- Index 1: Available players in queue AS { PlayerId, GuildId, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
+    -- Index 2: Team One roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
+    -- Index 3: Team Two roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
+    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT
 
 COMMIT
 END

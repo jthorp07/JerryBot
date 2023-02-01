@@ -49,6 +49,9 @@ GO
 EXEC AddToEnum @EnumName = 'QUEUE_POOL', @Desc = 'TEAM_TWO'
 GO
 
+EXEC AddToEnum @EnumName = 'QUEUE_POOL', @Desc = 'SPECTATING'
+GO
+
 
 -- Queue type enum (For different queue types)
 -- ENUM:

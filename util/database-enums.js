@@ -13,7 +13,8 @@ module.exports = {
     TENMANS_QUEUE_POOLS: {
         AVAILABLE: 'AVAILABLE',
         TEAM_ONE: 'TEAM_ONE',
-        TEAM_TWO: 'TEAM_TWO'
+        TEAM_TWO: 'TEAM_TWO',
+        SPECTATING: 'SPECTATING'
     },
     QUEUE_TYPES: {
         TENMANS: 'TENMAN'
