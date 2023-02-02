@@ -1,5 +1,6 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
-const { ConnectionPool, Int } = require("mssql");
+const { ConnectionPool, Int, NVarChar } = require("mssql");
+const { QUEUE_STATES } = require("../util/")
 const Helpers = require("../util/helpers");
 module.exports = {
   data: {
@@ -14,6 +15,7 @@ module.exports = {
    */
   async execute(interaction, con, idArgs) {
     await interaction.deferReply({ ephemeral: true });
+    let queueId = parseInt(idArgs[1]);
 
     /**
      * Check if user is in a voice channel (they have to be in one for this to work)
@@ -44,15 +46,13 @@ module.exports = {
         .request(trans)
         .input("GuildId", interaction.guildId)
         .input("UserId", user.id)
-        .input("QueueId", idArgs[1])
+        .input("QueueId", queueId)
         .output("NumPlayers", Int)
         .output("NumCaptains", Int)
+        .output("QueueStatus", NVarChar(100))
         .execute("JoinQueue");
 
-      let numPlayers = result.output.NumPlayers;
-      let numCaptains = result.output.NumCaptains;
 
-      console.log(JSON.stringify(result.recordsets));
 
       if (result.returnValue === -1) {
         await trans.rollback();
@@ -62,45 +62,48 @@ module.exports = {
         });
         return;
       } else if (result.returnValue === 0) {
+
+        // Grab outputs from JoinQueue procedure
+        let numPlayers = result.output.NumPlayers;
+        let numCaptains = result.output.NumCaptains;
+        let queueStatus = result.output.QueueStatus;
+        let playersAndCanBeCapt = result.recordsets[0];
+        let playersAvailable = result.recordsets[1];
+        let teamOnePlayers = result.recordsets[2];
+        let teamTwoPlayers = result.recordsets[3];
+        let spectators = result.recordsets[4];
+
+        // Grab guild's rank roles
         result = await con
           .request(trans)
           .input("GuildId", interaction.guildId)
           .execute("GetRankRoles");
 
-        // This is pretty inefficient but still faster than doing it efficiently but having to ping the database again
         let rankedRoles = result.recordset;
-        let roleIcon = await Helpers.getRoleIcon(rankedRoles, user);
 
-        // Prepare player information for new message board
-        let newEntry = `${interaction.member.displayName} ${roleIcon}`;
-        let embed = interaction.message.embeds[0];
+        // If necessary, choose captains
+        if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
+          result = await con.request(trans)
+            .input('QueueId', queueId)
+            .execute('ImStartingDraft');
 
-        // If there are 10 players, start draft, otherwise add new player to player list
-        if (embed.fields[0].value.split("\n").length >= 10) {
-          // Identify 2 lowest ranks
-          
-          let draftInfo = await Helpers.selectCaptains(
-            result,
-            rankedRoles,
-            interaction,
-            embed
-          );
-          let newEmbed = Helpers.makeDraftEmbed(draftInfo, embed);
-        } else {
-          // Update: Update queue board with new player
-          if (
-            embed.fields[0].value ===
-            "N/A\n\nplayers will show up here when they join"
-          ) {
-            embed.fields[0].value = newEntry;
-          } else {
-            // Add player to embed
-            embed.fields[0].value = `${embed.fields[0].value}\n${newEntry}`;
+          if (result.returnValue === 0) {
+            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId);
+            playersAvailable = newVals.newAvailable;
+            teamOnePlayers = newVals.newTeamOne;
+            teamTwoPlayers = newVals.newTeamTwo;
+          } else if (result.returnValue !== -1) {
+            // Something bad happened
+            throw new Error("Database error");
           }
-          await interaction.message.edit({
-            embeds: [embed],
-          });
         }
+
+        let embeds = Helpers.makeDraftEmbed(numPlayers, numCaptains, queueStatus,
+          playersAndCanBeCapt, playersAvailable, teamOnePlayers, teamTwoPlayers, spectators);
+
+        interaction.message.edit({
+          embeds: embeds
+        })
 
         // Success, reply and commit transaction
         trans.commit(async (err) => {
