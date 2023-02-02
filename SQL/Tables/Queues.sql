@@ -10,6 +10,7 @@ CREATE TABLE Queues(
     QueueType INT NOT NULL,
     QueueStatus INT NOT NULL,
     DraftPickId DiscordSnowflake,
+    DraftPickTeamId INT,
     MapSidePickId DiscordSnowflake,
 
     -- Constraints --
