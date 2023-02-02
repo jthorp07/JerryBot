@@ -26,6 +26,9 @@ GO
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'WAITING'
 GO
 
+EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'START_DRAFT'
+GO
+
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'DRAFTING'
 GO
 
