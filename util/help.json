@@ -4,11 +4,30 @@
     "Staff Commands",
     "Test Commands",
     "User Commands",
-    "Some other command",
-    "Some other again"
+    "Admin Commands1",
+    "Staff Commands1",
+    "Test Commands1",
+    "User Commands1",
+    "Admin Commands2",
+    "Staff Commands2",
+    "Test Commands2",
+    "User Commands2"
   ],
   "Admin Commands": {
-    "commands": ["enforcerankroles", "register-all", "setup", "vc"],
+    "commands": [
+      "enforcerankroles",
+      "register-all",
+      "setup",
+      "vc",
+      "enforcerankroles1",
+      "register-all1",
+      "setup1",
+      "vc1",
+      "enforcerankroles2",
+      "register-all2",
+      "setup2",
+      "vc2"
+    ],
     "enforcerankroles": {
       "title": "/enforcerankroles",
       "description": "This command will determine if ranked roles are required in order to join queues",
@@ -26,7 +45,13 @@
     },
     "register-all": {},
     "setup": {},
-    "vc": {}
+    "vc": {},
+    "register-all1": {},
+    "setup1": {},
+    "vc1": {},
+    "register-all2": {},
+    "setup2": {},
+    "vc2": {}
   },
   "Staff Commands": {
     "commands": ["tenmans", "setrole"],

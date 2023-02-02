@@ -1,7 +1,10 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool } = require("mssql");
-const { helpEmbed } = require("../util/embeds");
-const { helpCategories, paginationButtons } = require("../util/components");
+const {
+  helpCategories,
+  paginationButtons,
+  helpCommands,
+} = require("../util/components");
 
 const helpInfo = require("../util/help.json");
 
@@ -17,29 +20,53 @@ module.exports = {
    * @param {string[]} idArgs
    * idArgs[1] === currentIdx
    * idArgs[2] === endIdx
+   * idArgs[3] === menuLevel
    */
   async execute(interaction, con, idArgs) {
-    //TODO: Handle if no more next buttons
+    await interaction.deferReply();
 
-    // await interaction.deferReply({ ephemeral: true });
-    const embed = helpEmbed();
-    const newCategories = await helpCategories(
-      helpInfo.categories.slice(
-        parseInt(idArgs[1] + 5),
-        helpInfo.categories.length
-      )
-    );
+    const arrayLengthDiff = (currentIdx, endIdx) => {
+      console.log(
+        parseInt(currentIdx),
+        parseInt(currentIdx) + 5,
+        parseInt(endIdx)
+      );
+      if (endIdx >= parseInt(currentIdx) + 5) {
+        return parseInt(currentIdx) + 5;
+      } else {
+        return parseInt(endIdx);
+      }
+    };
+
+    let updatedSelectors;
+    if (idArgs[3] === "categories") {
+      const newCategories = await helpCategories(
+        helpInfo.categories.slice(
+          parseInt(idArgs[1]) + 5,
+          arrayLengthDiff(parseInt(idArgs[1]) + 5, parseInt(idArgs[2]))
+        )
+      );
+      updatedSelectors = newCategories;
+    } else {
+      const newCommands = await helpCommands(
+        helpInfo[idArgs[3]].commands.slice(
+          parseInt(idArgs[1]) + 5,
+          arrayLengthDiff(parseInt(idArgs[1]) + 5, parseInt(idArgs[2]))
+        )
+      );
+      updatedSelectors = newCommands;
+    }
 
     const newPaginationButtons = paginationButtons(
-      parseInt(idArgs[1] + 5),
-      helpInfo.categories.length
+      parseInt(idArgs[1]) + 5,
+      parseInt(idArgs[2]),
+      idArgs[3]
     );
-    console.log(interaction.message);
+
     await interaction.message.edit({
-      embeds: [embed],
-      components: [newCategories, newPaginationButtons],
+      components: [updatedSelectors, newPaginationButtons],
     });
-    // interaction.editReply({ content: "done", ephemeral: true });
-    // interaction.deleteReply();
+
+    interaction.deleteReply();
   },
 };

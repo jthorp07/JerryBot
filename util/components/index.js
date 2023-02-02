@@ -2,8 +2,11 @@ const { tenMansStartComps } = require("./tenMansStartComps");
 const { tenMansDraftComps } = require("./tenMansDraftComps");
 const { mapSelectBuilder } = require("./mapSelect");
 const { playerSelectBuilder } = require("./playerSelect");
-const { helpCategories } = require("./helpCategories");
-const { paginationButtons } = require("./paginationButtons");
+const {
+  helpCategories,
+  helpCommands,
+  paginationButtons,
+} = require("./helpComponents");
 
 module.exports = {
   tenMansStartComps,
@@ -11,5 +14,6 @@ module.exports = {
   mapSelectBuilder,
   playerSelectBuilder,
   helpCategories,
+  helpCommands,
   paginationButtons,
 };
