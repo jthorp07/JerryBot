@@ -4,9 +4,13 @@ module.exports = {
 
     /**
      * 
-     * 
+     * @param {*} draftList 
+     * @param {*} teamOne 
+     * @param {*} teamTwo 
+     * @param {*} specs 
+     * @returns 
      */
-    tenMansDraftEmbed(availablePlayers, teamOne, teamTwo, spectators) {
+    tenMansDraftEmbed(draftList, teamOne, teamTwo, specs) {
 
         // Parse args into embed values
 
