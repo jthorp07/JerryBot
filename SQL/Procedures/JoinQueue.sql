@@ -3,7 +3,8 @@ CREATE PROCEDURE JoinQueue(
     @GuildId DiscordSnowflake,
     @QueueId INT,
     @NumPlayers INT OUTPUT,
-    @NumCaptains INT OUTPUT
+    @NumCaptains INT OUTPUT,
+    @QueueStatus NVARCHAR(100) OUTPUT
 ) AS BEGIN 
 BEGIN TRANSACTION
 
@@ -41,7 +42,7 @@ BEGIN TRANSACTION
     -- Index 1: Available players in queue AS { PlayerId, GuildId, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
     -- Index 2: Team One roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
     -- Index 3: Team Two roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
-    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT
+    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT, @QueueStatus=@QueueStatus OUTPUT
 
 COMMIT
 END

@@ -1,7 +1,8 @@
 CREATE PROCEDURE GetQueue(
     @QueueId INT,
     @NumCaptains INT OUTPUT,
-    @PlayerCount INT OUTPUT
+    @PlayerCount INT OUTPUT,
+    @QueueStatus NVARCHAR(100) OUTPUT
 ) AS BEGIN
 
     -- Validate --
@@ -40,6 +41,15 @@ CREATE PROCEDURE GetQueue(
     DECLARE @SpecPool INT
     EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'SPECTATING', @EnumValue = @SpecPool OUTPUT
 
+    -- Grab queue state and set output to string name of queue state
+    DECLARE @QueueState INT
+    SELECT @QueueState=QueueStatus
+    FROM Queues
+    WHERE [Id]=@QueueId
+
+    EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue = @QueueState, @EnumDesc = @QueueStatus OUTPUT
+
+    -- RECORDSETS:
     -- Index 0: All players in queue AS: {PlayerId, GuildId, CanBeCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon}
     SELECT PlayerId, QueuedPlayers.[GuildId], CanBeCaptain, DiscordDisplayName, ValorantRankRoleIcon, ValorantDisplayName
     FROM QueuedPlayers
