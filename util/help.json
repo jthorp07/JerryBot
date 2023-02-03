@@ -3,31 +3,10 @@
     "Admin Commands",
     "Staff Commands",
     "Test Commands",
-    "User Commands",
-    "Admin Commands1",
-    "Staff Commands1",
-    "Test Commands1",
-    "User Commands1",
-    "Admin Commands2",
-    "Staff Commands2",
-    "Test Commands2",
-    "User Commands2"
+    "User Commands"
   ],
   "Admin Commands": {
-    "commands": [
-      "enforcerankroles",
-      "register-all",
-      "setup",
-      "vc",
-      "enforcerankroles1",
-      "register-all1",
-      "setup1",
-      "vc1",
-      "enforcerankroles2",
-      "register-all2",
-      "setup2",
-      "vc2"
-    ],
+    "commands": ["enforcerankroles", "register-all", "setup", "vc"],
     "enforcerankroles": {
       "title": "/enforcerankroles",
       "description": "This command will determine if ranked roles are required in order to join queues",
@@ -43,20 +22,49 @@
         }
       ]
     },
-    "register-all": {},
-    "setup": {},
-    "vc": {},
-    "register-all1": {},
-    "setup1": {},
-    "vc1": {},
-    "register-all2": {},
-    "setup2": {},
-    "vc2": {}
+    "register-all": {
+      "title": "/register-all",
+      "description": "Registers existing users and server info into bot's memory",
+      "permissionLevel": "Admin",
+      "examples": [
+        {
+          "exampleCommand": "/register-all",
+          "exampleDescription": ""
+        }
+      ]
+    },
+    "setup": {
+      "title": "/setup",
+      "description": "Bot initial setup command",
+      "permissionLevel": "Admin",
+      "examples": []
+    },
+    "vc": {
+      "title": "/vc",
+      "description": "Creates a voice channel for the person who calls the command",
+      "permissionLevel": "Admin",
+      "examples": []
+    }
   },
   "Staff Commands": {
     "commands": ["tenmans", "setrole"],
-    "tenmans": {},
-    "setrole": {}
+    "tenmans": {
+      "title": "/tenmans",
+      "description": "Starts a queue for drafing",
+      "permissionLevel": "Staff",
+      "examples": []
+    },
+    "setrole": {
+      "title": "/setrole",
+      "description": "Assigns a role that was created in the server to a heirarchy of ranks that has been preset in the bot's memory",
+      "permissionLevel": "Staff",
+      "examples": [
+        {
+          "exampleCommand": "/setrole [[ROLENAME]] [[ROLE]]",
+          "exampleDescription": "The command takes two parameters where [[ROLENAME]] is the level you would like to set the role at and [[ROLE]] is the name of the role you created in the server. The heirarchy goes from the lowest rank Iron, Bronze, Silver, Gold, etc..."
+        }
+      ]
+    }
   },
   "Test Commands": {
     "commands": ["hello", "modaltest", "ping", "testEmbed"],
@@ -67,7 +75,17 @@
   },
   "User Commands": {
     "commands": ["help", "register"],
-    "help": {},
-    "register": {}
+    "help": {
+      "title": "/help",
+      "description": "Creates this help modal in your DMs so that you can learn more about the bot and its features! :)",
+      "permissionLevel": "User",
+      "examples": []
+    },
+    "register": {
+      "title": "/register",
+      "description": "Registers a new user to the bot's memory. This needs to be done before trying to join a tenman queue",
+      "permissionLevel": "User",
+      "examples": []
+    }
   }
 }
