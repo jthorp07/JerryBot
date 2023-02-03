@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, AnyComponentBuilder } = require("discord.js");
 const { IRecordSet } = require('mssql');
 
 module.exports = {
@@ -6,6 +6,8 @@ module.exports = {
    *
    * @param {string} queueId
    * @param {IRecordSet<any>} draftList
+   * 
+   * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
   tenMansDraftComps(queueId, draftList, map) {
     return [

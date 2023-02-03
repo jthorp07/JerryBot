@@ -1,6 +1,7 @@
 CREATE PROCEDURE GetEnumDesc(
     @EnumName NVARCHAR(100),
-    @EnumValue INT
+    @EnumValue INT,
+    @EnumDesc NVARCHAR(100) OUTPUT
 ) AS
 BEGIN
 
@@ -37,7 +38,7 @@ BEGIN
     END
 
     -- Get it --
-    SELECT [Description]
+    SELECT @EnumDesc=[Description]
     FROM CodeValue
     JOIN CodeNamespace ON [CodeNamespaceId]=[Id]
     WHERE [Name]=@EnumName AND [Value]=@EnumValue

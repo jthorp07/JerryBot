@@ -101,13 +101,16 @@ module.exports = {
           }
         }
 
-        let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAndCanBeCapt, playersAvailable, teamOnePlayers, 
+        let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
           teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
 
-        let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable);
+        console.log(queueStatus);
+
+        let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable, true);
 
         interaction.message.edit({
-          embeds: embeds
+          embeds: embeds,
+          components: comps
         })
 
         // Success, reply and commit transaction

@@ -1,7 +1,8 @@
 const { tenMansStartEmbed, tenMansDraftEmbed } = require("../embeds");
 const { IRecordSet } = require('mssql');
 const { EmbedBuilder } = require("discord.js");
-const { QUEUE_STATES } = require("../../util");
+const { QUEUE_STATES } = require("../database-enums");
+
 
 
 module.exports = {
@@ -24,8 +25,10 @@ module.exports = {
   tenMansClassicNextEmbed(queueStatus, playersAvailable,
     teamOnePlayers, teamTwoPlayers, spectators, hostName, hostPfp) {
 
+      console.log(`Host: ${hostName}\nPfp: ${hostPfp}`);
+
     // Available Players
-    let draftListString = '';
+    let draftListString = playersAvailable ? "" : undefined;
     playersAvailable.forEach(player => {
       let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
       let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
@@ -33,11 +36,11 @@ module.exports = {
     });
 
     // Spectators
-    let specString
-    spectators.forEach(spectator => {
+    let specString = spectators ? "" : undefined;
+    if (spectators) spectators.forEach(spectator => {
       let dispName = spectator.ValorantDisplayName ? spectator.ValorantDisplayName : spectator.DiscordDisplayName;
       specString = `${specString}${dispName}\n`;
-    })
+    });
 
 
     // Queue states of drafting or in-game: Make Draft embed 

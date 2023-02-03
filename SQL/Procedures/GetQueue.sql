@@ -60,7 +60,7 @@ CREATE PROCEDURE GetQueue(
     FROM Queues
     WHERE [Id]=@QueueId
 
-    EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue = @QueueState, @EnumDesc = @QueueStatus OUTPUT
+    EXEC GetEnumDesc @EnumName = 'QUEUE_STATE', @EnumValue = @QueueState, @EnumDesc = @QueueStatus OUTPUT
 
     -- RECORDSETS:
     -- Index 0: All players in queue AS: {PlayerId, GuildId, CanBeCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon}
