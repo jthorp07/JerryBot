@@ -5,7 +5,7 @@ const { tenMansStartComps, mapSelectBuilder } = require("../util/components");
 
 module.exports = {
   data: {
-    customId: "start-tenman-game", // customId of buttons that will execute this command
+    customId: "start-draft", // customId of buttons that will execute this command
     permissions: "all", //TODO: Implement other permission options
   },
   /**

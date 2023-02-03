@@ -5,14 +5,23 @@ const { tenMansStartComps } = require('../util/components');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('settenmans')
-        .setDescription('Launches a ten mans lobby hosted by the user'),
+        .setName('tenmans-launch')
+        .setDescription('Launches a ten mans lobby hosted by the user')
+        .addStringOption(option =>
+            option.setName('type')
+                .addChoices(
+                    {name:'Classic',value:'TENMAN'}
+                )
+                .setDescription('The type of ten mans lobby to make')
+                .setRequired(true)),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
      * @param {ConnectionPool} con 
      */
     async execute(interaction, con) {
+
+        let type = interaction.options.getString('type');
 
         await interaction.deferReply({ ephemeral: true });
 
@@ -29,25 +38,20 @@ module.exports = {
                 return;
             });
 
-            let playerCount = -1;
+            let queueId;
             let result = await con.request(trans)
                 .input('GuildId', interaction.guildId)
-                .output('NumCaptains', Int)
-                .output('PlayerCount', Int, playerCount)
-                .execute('GetTenmansQueue');
+                .input('HostId', interaction.member.id)
+                .input('QueueType', type)
+                .output('QueueId', Int, queueId)
+                .execute('CreateQueue');
 
-            let embed;
-            if (playerCount !== 0) {
-                let playersValue = '';
-                let playerListRecords = result.recordset;
-                for (record of playerListRecords) {
-                    let member =  await interaction.guild.members.fetch(record.memberId);
+            if (!queueId) queueId = result.output.QueueId;
 
-                }
+            let embeds = tenMansStartEmbed(undefined, undefined, interaction.member.displayName, interaction.member.displayAvatarURL());
+            let comps = tenMansStartComps(queueId);
 
-            } else {
-                embed = tenMansStartEmbed(undefined, undefined, interaction.member.displayName, interaction.member.displayAvatarURL());
-            }
+            await interaction.channel.send({embeds: embeds, components: comps});
 
             trans.commit(async (err) => {
                 if (err) {
@@ -56,6 +60,7 @@ module.exports = {
                     // TODO: Have bot report error
                     return;
                 }
+                await interaction.editReply({ephemeral: true, content: `You have successfully launched a ten mans queue (Queue ID: ${queueId})`});
                 return;
             });
 

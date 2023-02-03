@@ -4,14 +4,17 @@ module.exports = {
 
     /**
      * 
-     * @param {string} capOne 
-     * @param {string} capTwo 
-     * @param {string} draftList 
-     * @param {EmbedField} specs The embed field with the spectators
-     * @param {string} host host's displayName
-     * @param {string} hostPfp link to host's pfp
+     * @param {*} draftList 
+     * @param {*} teamOne 
+     * @param {*} teamTwo 
+     * @param {*} specs 
+     * @returns 
      */
-    tenMansDraftEmbed(capOne, capTwo, draftList, specs, host, hostPfp) {
+    tenMansDraftEmbed(draftList, teamOne, teamTwo, specs) {
+
+        // Parse args into embed values
+
+
         return new EmbedBuilder()
             .setColor("0x0099ff")
             .setTitle("Ten Mans Queue")
@@ -23,12 +26,12 @@ module.exports = {
             .addFields(
                 {
                     name: `Team 1`,
-                    value: `${capOne} [Captain]`,
+                    value: `${capOne} [Captain]\n${teamOne}`,
                     inline: false
                 },
                 {
                     name: `Team 2`,
-                    value: `${capTwo} [Captain]`,
+                    value: `${capTwo} [Captain]\n${teamTwo}`,
                     inline: false
                 },
                 {

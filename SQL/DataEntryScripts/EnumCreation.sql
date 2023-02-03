@@ -26,6 +26,9 @@ GO
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'WAITING'
 GO
 
+EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'START_DRAFT'
+GO
+
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'DRAFTING'
 GO
 
@@ -47,6 +50,9 @@ EXEC AddToEnum @EnumName = 'QUEUE_POOL', @Desc = 'TEAM_ONE'
 GO
 
 EXEC AddToEnum @EnumName = 'QUEUE_POOL', @Desc = 'TEAM_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'QUEUE_POOL', @Desc = 'SPECTATING'
 GO
 
 

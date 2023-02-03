@@ -50,6 +50,8 @@ module.exports = {
                 .input('UserId', owner.id)
                 .input('IsOwner', 1)
                 .input('Username', owner.user.username)
+                .input('GuildDisplayName', owner.displayName)
+                .input('ValorantRankRoleIcon', null)
                 .execute('CreateGuildMember');
 
             if (result.returnValue === 2) {
@@ -69,6 +71,8 @@ module.exports = {
                     .input('UserId', user.id)
                     .input('IsOwner', 0)
                     .input('Username', user.user.username)
+                    .input('GuildDisplayName', user.displayName)
+                    .input('ValorantRankRoleIcon', null)
                     .execute('CreateGuildMember');
 
                 if (result.returnValue === 2) {
@@ -83,6 +87,14 @@ module.exports = {
             }
 
             trans.commit(async (err) => {
+                if (err) {
+                    interaction.editReply({ephemeral:true,content:'Something went wrong!'});
+                    trans.rollback();
+                    console.log(err);
+                    return;
+                }
+
+
                 interaction.editReply({ ephemeral: true, content: `All done! Here\'s a summary of what happened:\n\n  Users added: ${usersAdded}\n  Previously registered users (skipped): ${alreadyIn}` });
                 return;
             });

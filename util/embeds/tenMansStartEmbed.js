@@ -36,10 +36,10 @@ module.exports = {
    * @param {string} specs 
    * @param {string} host 
    * @param {string} hostPfp
-   * @returns {EmbedBuilder} 
+   * @returns {EmbedBuilder[]} 
    */
   tenMansStartEmbed(players, specs, host, hostPfp) {
-    return new EmbedBuilder()
+    return [new EmbedBuilder()
       .setColor("0x0099ff")
       .setTitle("Ten Mans Queue")
       .setDescription("Waiting for players...")
@@ -59,6 +59,6 @@ module.exports = {
           value: specs ? specs : 'N/A\n\nplayers will show up here when they join',
           inline: true,
         }
-      )
+      )]
   }
 };

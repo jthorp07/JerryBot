@@ -1,5 +1,5 @@
 const { ButtonInteraction, ChannelType } = require("discord.js");
-const { IProcedureResult, IRecordSet } = require("mssql");
+const { IProcedureResult, IRecordSet, ConnectionPool, Transaction } = require("mssql");
 
 module.exports = {
   /**
@@ -7,13 +7,19 @@ module.exports = {
    * roles, and current interaction to select
    * two captains for a ten mans draft
    *
-   * @param {IProcedureResult} result
-   * @param {IRecordSet} rankedRoles
+   * @param {number} numCaps
+   * @param {IRecordSet<any>} potentialCaps
+   * @param {IRecordSet<any>} rankedRoles
    * @param {ButtonInteraction} interaction
+   * @param {number} queueId
+   * @param {ConnectionPool} con
+   * @param {Transaction} trans
+   * 
    * @returns
    */
+  async selectCaptains(numCaps, potentialCaps, rankedRoles, interaction, queueId, con, trans) {
 
-  async selectCaptains(result, rankedRoles, interaction) {
+    // Establishing capPool type for intellisense
     let capPool = [
       {
         id: "",
@@ -21,14 +27,13 @@ module.exports = {
         name: "",
       },
     ];
-
-    // console.log(result);
     capPool = [];
-    let numCaps = result.output.NumCaptains;
+
+    // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
     if (numCaps < 2) {
-      // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
-      result.recordset.forEach(async (record) => {
-        let userId = record.MemberId;
+      
+      potentialCaps.forEach(async (record) => {
+        let userId = record.PlayerId;
         let user = await interaction.guild.members.fetch(userId);
         let role;
 
@@ -54,10 +59,10 @@ module.exports = {
         cap1.rank - cap2.rank;
       });
     } else {
-      for (let record of result.recordset) {
+      for (let record of potentialCaps) {
         if (record.CanBeCaptain == 0) continue;
 
-        let userId = record.MemberId;
+        let userId = record.PlayerId;
         let user = await interaction.guild.members.fetch(userId);
         let role;
 
@@ -77,26 +82,6 @@ module.exports = {
       capPool.sort((cap1, cap2) => {
         cap1.rank - cap2.rank;
       });
-
-      for (let record of result.recordset) {
-        if (record.CanBeCaptain == 1) continue;
-
-        let userId = record.MemberId;
-        let user = await interaction.guild.members.fetch(userId);
-        let role;
-
-        for (let entry of rankedRoles) {
-          for (let item of user.roles.cache) {
-            let roleId = item[1].id;
-            if (roleId == entry.RoleId) {
-              capPool.push({ id: userId, rank: entry.OrderBy });
-              role = true;
-              break;
-            }
-          }
-          if (role) break;
-        }
-      }
     }
 
     // TODO: Maybe later rewrite this to remove the reverses
@@ -104,15 +89,20 @@ module.exports = {
     capPool = capPool.reverse();
     let capOne = capPool.pop();
     let capTwo = capPool.pop();
-    capPool = capPool.reverse();
-    let draftInfo = {
-      capOne: await createCaptainVC(capOne, interaction),
-      capTwo: await createCaptainVC(capTwo, interaction),
-      draftInfo: capPool,
-    };
-    // console.log(`Draft Pool:\n\n${JSON.stringify(capPool)}\n\n`);
-    // console.log(capOne);
-    return draftInfo;
+
+    let result = await con.request(trans)
+      .input('QueueId', queueId)
+      .input('CapOne', capOne.id)
+      .input('CapTwo', capTwo.id)
+      .input('GuildId', interaction.guildId)
+      .execute('SetCaptains');
+
+    return {
+      newAvailable: result.recordsets[1],
+      newTeamOne: result.recordsets[2],
+      newTeamTwo: result.recordsets[3],
+    }
+
   },
 };
 
