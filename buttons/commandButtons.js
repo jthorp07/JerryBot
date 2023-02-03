@@ -14,16 +14,37 @@ module.exports = {
    * @param {ButtonInteraction} interaction
    * @param {ConnectionPool} con
    * @param {string[]} idArgs
+   * [1] === category
+   * [2] === command
    */
   async execute(interaction, con, idArgs) {
     await interaction.deferReply();
-
+    const exampleArr =
+      (await helpInfo[idArgs[1]][idArgs[2]].examples.length) > 0
+        ? [
+            {
+              name: "\u200B",
+              value: "\u200B",
+            },
+            ...helpInfo[idArgs[1]][idArgs[2]].examples.map((cmdExObj) => {
+              return {
+                name: "```" + cmdExObj.exampleCommand + "```",
+                value: cmdExObj.exampleDescription,
+              };
+            }),
+          ]
+        : [
+            {
+              name: "\u200B",
+              value: "\u200B",
+            },
+          ];
     const embed = helpEmbed({
-      title: idArgs[1],
-      desc: `command info for /${idArgs[1]}`,
+      title: `/${idArgs[2]}`,
+      desc: `${helpInfo[idArgs[1]][idArgs[2]].description}`,
+      examples: exampleArr,
     });
 
-    console.log(`Hey! you clicked ${idArgs[1]}`);
     await interaction.message.edit({
       embeds: [embed],
     });

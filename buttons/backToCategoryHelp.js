@@ -13,7 +13,7 @@ module.exports = {
   async execute(interaction, con) {
     await interaction.deferReply();
     const embed = helpEmbed({
-      title: "Jerry Bot Help",
+      title: "Jerry Bot Help Home",
       desc: "Select a category below to find different commands",
     });
 

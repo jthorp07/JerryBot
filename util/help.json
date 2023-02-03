@@ -26,12 +26,7 @@
       "title": "/register-all",
       "description": "Registers existing users and server info into bot's memory",
       "permissionLevel": "Admin",
-      "examples": [
-        {
-          "exampleCommand": "/register-all",
-          "exampleDescription": ""
-        }
-      ]
+      "examples": []
     },
     "setup": {
       "title": "/setup",
@@ -56,12 +51,12 @@
     },
     "setrole": {
       "title": "/setrole",
-      "description": "Assigns a role that was created in the server to a heirarchy of ranks that has been preset in the bot's memory",
+      "description": "Assigns a role that was created in the server to a hierarchy of ranks that has been preset in the bot's memory",
       "permissionLevel": "Staff",
       "examples": [
         {
-          "exampleCommand": "/setrole [[ROLENAME]] [[ROLE]]",
-          "exampleDescription": "The command takes two parameters where [[ROLENAME]] is the level you would like to set the role at and [[ROLE]] is the name of the role you created in the server. The heirarchy goes from the lowest rank Iron, Bronze, Silver, Gold, etc..."
+          "exampleCommand": "/setrole rolename role",
+          "exampleDescription": "The command takes two parameters where \u0060\u0060\u0060rolename\u0060\u0060\u0060 is the where the level should go in the hierarchy and \u0060\u0060\u0060 role \u0060\u0060\u0060 is the name of the role you created in the server.\n\n The hierarchy goes from the lowest rank \n\nIron -> Bronze -> Silver -> Gold -> Platinum -> Diamon -> Ascendent -> \nImmortal -> Radiant"
         }
       ]
     }

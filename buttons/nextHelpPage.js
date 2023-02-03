@@ -52,7 +52,8 @@ module.exports = {
         helpInfo[idArgs[3]].commands.slice(
           parseInt(idArgs[1]) + 5,
           arrayLengthDiff(parseInt(idArgs[1]) + 5, parseInt(idArgs[2]))
-        )
+        ),
+        idArgs[3]
       );
       updatedSelectors = newCommands;
     }

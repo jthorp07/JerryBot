@@ -28,7 +28,8 @@ module.exports = {
       desc: `The following commands are ${idArgs[1]}. You may not be able to access them if you do not have proper access.`,
     });
     const commands = await helpCommands(
-      helpInfo[idArgs[1]].commands.slice(0, 5)
+      helpInfo[idArgs[1]].commands.slice(0, 5),
+      idArgs[1]
     );
     const pagination = paginationButtons(
       0,

@@ -14,14 +14,14 @@ module.exports = {
       })
     );
   },
-  async helpCommands(commandArray) {
+  async helpCommands(commandArray, category) {
     if (commandArray.length > 5) {
       throw new Error("Too many buttons in the array");
     }
     return new ActionRowBuilder().setComponents(
       commandArray.map((command) => {
         return new ButtonBuilder()
-          .setCustomId(`help-button-command:${command}`)
+          .setCustomId(`help-button-command:${category}:${command}`)
           .setLabel(`/${command}`)
           .setStyle(ButtonStyle.Primary);
       })

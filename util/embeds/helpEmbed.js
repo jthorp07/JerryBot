@@ -4,13 +4,21 @@ module.exports = {
   /**
    *
    */
-  helpEmbed({ title = " ", desc = " " }) {
-    return new EmbedBuilder()
-      .setColor("0x0099ff")
-      .setTitle(title)
-      .setDescription(desc)
-      .setAuthor({
-        name: "Jerry Bot Help",
-      });
+  helpEmbed({
+    title = " ",
+    desc = " ",
+    examples = [
+      {
+        name: "\u200B",
+        value: "\u200B",
+      },
+    ],
+  }) {
+    return {
+      color: 0x0099ff,
+      title: title,
+      description: desc,
+      fields: examples,
+    };
   },
 };
