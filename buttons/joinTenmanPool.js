@@ -1,6 +1,7 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
-const { ConnectionPool, Int, NVarChar } = require("mssql");
-const { QUEUE_STATES } = require("../util/")
+const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
+const { QUEUE_STATES } = require("../util/");
+const { tenMansStartComps, tenMansDraftComps } = require('../util/components');
 const Helpers = require("../util/helpers");
 module.exports = {
   data: {
@@ -50,6 +51,7 @@ module.exports = {
         .output("NumPlayers", Int)
         .output("NumCaptains", Int)
         .output("QueueStatus", NVarChar(100))
+        .output("HostId", VarChar(21))
         .execute("JoinQueue");
 
 
@@ -72,6 +74,7 @@ module.exports = {
         let teamOnePlayers = result.recordsets[2];
         let teamTwoPlayers = result.recordsets[3];
         let spectators = result.recordsets[4];
+        let host = await interaction.guild.members.fetch(result.output.HostId);
 
         // Grab guild's rank roles
         result = await con
@@ -98,8 +101,10 @@ module.exports = {
           }
         }
 
-        let embeds = Helpers.makeDraftEmbed(numPlayers, numCaptains, queueStatus,
-          playersAndCanBeCapt, playersAvailable, teamOnePlayers, teamTwoPlayers, spectators);
+        let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAndCanBeCapt, playersAvailable, teamOnePlayers, 
+          teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
+
+        let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable);
 
         interaction.message.edit({
           embeds: embeds

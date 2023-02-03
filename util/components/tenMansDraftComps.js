@@ -1,11 +1,13 @@
-const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require("discord.js");
+const { IRecordSet } = require('mssql');
 
 module.exports = {
   /**
    *
-   * @param {string[]} draftablePlayers Array if player IDs
+   * @param {string} queueId
+   * @param {IRecordSet<any>} draftList
    */
-  tenMansDraftComps() {
+  tenMansDraftComps(queueId, draftList, map) {
     return [
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
@@ -31,6 +33,33 @@ module.exports = {
           .setLabel("End Game")
           .setStyle(ButtonStyle.Danger)
       ),
+      map ? new ActionRowBuilder().setComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`map-select-menu:${queueId}`)
+          .setPlaceholder(`please select a map`)
+          .setMinValues(1)
+          .setMaxValues(1)
+          .addOptions([
+            { label: "Ascent", value: "Ascent" },
+            { label: "Bind", value: "Bind" },
+            { label: "Breeze", value: "Breeze" },
+            { label: "Fracture", value: "Fracture" },
+            { label: "Haven", value: "Haven" },
+            { label: "Icebox", value: "Icebox" },
+            { label: "Lotus", value: "Lotus" },
+            { label: "Pearl", value: "Pearl" },
+            { label: "Split", value: "Split" },
+          ])
+      ) : new ActionRowBuilder().setComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`player-select-menu:${queueId}`)
+          .setPlaceholder(
+            `please select a player to join your team`
+          )
+          .setMinValues(1)
+          .setMaxValues(1)
+          .addOptions(draftList)
+      )
     ];
   },
 };

@@ -1,21 +1,20 @@
-const { EmbedBuilder, EmbedField } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
 
     /**
      * 
-     * @param {*} draftList 
-     * @param {*} teamOne 
-     * @param {*} teamTwo 
-     * @param {*} specs 
-     * @returns 
+     * @param {string} capOne 
+     * @param {string} capTwo 
+     * @param {string} draftList 
+     * @param {string} teamOne 
+     * @param {string} teamTwo 
+     * @param {string} specs 
+     * @returns {EmbedBuilder[]}
      */
-    tenMansDraftEmbed(draftList, teamOne, teamTwo, specs) {
+    tenMansDraftEmbed(capOne, capTwo, draftList, teamOne, teamTwo, specs) {
 
-        // Parse args into embed values
-
-
-        return new EmbedBuilder()
+        return [new EmbedBuilder()
             .setColor("0x0099ff")
             .setTitle("Ten Mans Queue")
             .setDescription("Waiting for players...")
@@ -44,7 +43,7 @@ module.exports = {
                     value: specs.value,
                     inline: true
                 }
-            );
+            )];
     }
 
 }
