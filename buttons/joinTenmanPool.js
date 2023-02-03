@@ -104,8 +104,6 @@ module.exports = {
         let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
           teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
 
-        console.log(queueStatus);
-
         let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable, true);
 
         interaction.message.edit({

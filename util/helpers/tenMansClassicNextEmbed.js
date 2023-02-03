@@ -25,8 +25,6 @@ module.exports = {
   tenMansClassicNextEmbed(queueStatus, playersAvailable,
     teamOnePlayers, teamTwoPlayers, spectators, hostName, hostPfp) {
 
-      console.log(`Host: ${hostName}\nPfp: ${hostPfp}`);
-
     // Available Players
     let draftListString = playersAvailable ? "" : undefined;
     playersAvailable.forEach(player => {

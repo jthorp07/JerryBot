@@ -39,8 +39,6 @@ module.exports = {
    * @returns {EmbedBuilder[]} 
    */
   tenMansStartEmbed(players, specs, host, hostPfp) {
-
-    console.log(`Host: ${host}\nPfp: ${hostPfp}`);
     return [new EmbedBuilder()
       .setColor("0x0099ff")
       .setTitle("Ten Mans Queue")
