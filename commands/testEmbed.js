@@ -1,11 +1,8 @@
-const {
-  CommandInteraction,
-  SlashCommandBuilder,
-} = require("discord.js");
-const { tenMansStartComps } = require('../util/components');
+const { CommandInteraction, SlashCommandBuilder } = require("discord.js");
+const { tenMansStartComps } = require("../util/components");
 const mssql = require("mssql");
 
-const { tenMansStartEmbed } = require('../util/embeds');
+const { tenMansStartEmbed } = require("../util/embeds");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -18,8 +15,14 @@ module.exports = {
    */
   async execute(interaction, con) {
     let comps = tenMansStartComps();
-    let embed = tenMansStartEmbed(undefined, undefined, interaction.member.displayName, interaction.member.displayAvatarURL());
+    let embed = tenMansStartEmbed(
+      undefined,
+      undefined,
+      interaction.member.displayName,
+      interaction.member.displayAvatarURL()
+    );
 
+    console.log(comps);
     interaction.reply({
       embeds: [embed],
       components: comps,

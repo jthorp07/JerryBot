@@ -1,21 +1,15 @@
-const {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-} = require("discord.js");
+const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool } = require("mssql");
 const { helpEmbed } = require("../util/embeds");
 const { helpCategories, paginationButtons } = require("../util/components");
+
 const helpInfo = require("../util/help.json");
 
 module.exports = {
-  data: new SlashCommandBuilder()
-    .setName("help")
-    .setDescription("Helps ya out duh"),
-  /**
-   *
-   * @param {ChatInputCommandInteraction} interaction
-   * @param {ConnectionPool} con
-   */
+  data: {
+    customId: "back-to-category-help", // customId of buttons that will execute this command
+    permissions: "all", //TODO: Implement other permission options
+  },
   async execute(interaction, con) {
     await interaction.deferReply();
     const embed = helpEmbed({
@@ -38,11 +32,10 @@ module.exports = {
       compArr = [comps];
     }
 
-    interaction.member.send({
+    await interaction.message.edit({
       embeds: [embed],
       components: compArr,
     });
     interaction.deleteReply();
   },
-  permissions: "all",
 };
