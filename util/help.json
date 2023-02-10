@@ -1,10 +1,5 @@
 {
-  "categories": [
-    "Admin Commands",
-    "Staff Commands",
-    "Test Commands",
-    "User Commands"
-  ],
+  "categories": ["Admin Commands", "Staff Commands", "User Commands"],
   "Admin Commands": {
     "commands": ["enforcerankroles", "register-all", "setup", "vc"],
     "enforcerankroles": {
@@ -60,13 +55,6 @@
         }
       ]
     }
-  },
-  "Test Commands": {
-    "commands": ["hello", "modaltest", "ping", "testEmbed"],
-    "hello": {},
-    "modaltest": {},
-    "ping": {},
-    "testEmbed": {}
   },
   "User Commands": {
     "commands": ["help", "register"],
