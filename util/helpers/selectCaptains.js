@@ -1,5 +1,5 @@
 const { ButtonInteraction, ChannelType } = require("discord.js");
-const { IProcedureResult, IRecordSet, ConnectionPool, Transaction } = require("mssql");
+const { IProcedureResult, IRecordSet, ConnectionPool, Transaction, NVarChar } = require("mssql");
 
 module.exports = {
   /**
@@ -79,28 +79,29 @@ module.exports = {
         }
       }
       // Sort capPool by rank
-      capPool.sort((cap1, cap2) => {
-        cap1.rank - cap2.rank;
+      capPool = capPool.sort((cap1, cap2) => {
+        return cap1.rank - cap2.rank;
       });
+      console.log(`\n[SELECTCAPTAINS]: Sorted capPool:${JSON.stringify(capPool)}\n`);
     }
 
     // TODO: Maybe later rewrite this to remove the reverses
     // console.log(`Captain Pool:\n\n${JSON.stringify(capPool)}\n\n`);
-    capPool = capPool.reverse();
-    let capOne = capPool.pop();
-    let capTwo = capPool.pop();
-
+    let capOne = capPool[0]
+    let capTwo = capPool[1]
     let result = await con.request(trans)
       .input('QueueId', queueId)
       .input('CapOne', capOne.id)
       .input('CapTwo', capTwo.id)
       .input('GuildId', interaction.guildId)
+      .output('QueueStatus', NVarChar(100))
       .execute('SetCaptains');
 
     return {
       newAvailable: result.recordsets[1],
       newTeamOne: result.recordsets[2],
       newTeamTwo: result.recordsets[3],
+      newStatus: result.output.QueueStatus
     }
 
   },

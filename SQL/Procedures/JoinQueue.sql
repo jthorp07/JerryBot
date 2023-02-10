@@ -4,7 +4,8 @@ CREATE PROCEDURE JoinQueue(
     @QueueId INT,
     @NumPlayers INT OUTPUT,
     @NumCaptains INT OUTPUT,
-    @QueueStatus NVARCHAR(100) OUTPUT
+    @QueueStatus NVARCHAR(100) OUTPUT,
+    @HostId DiscordSnowflake OUTPUT
 ) AS BEGIN 
 BEGIN TRANSACTION
 
@@ -12,6 +13,13 @@ BEGIN TRANSACTION
     IF @UserId IS NULL OR @QueueId IS NULL OR @GuildId IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
+    END
+
+    IF NOT EXISTS
+    (SELECT * FROM GuildMember WHERE MemberId=@UserId AND GuildId=@GuildId)
+    BEGIN
+        PRINT 'User does not exist'
+        RETURN 2
     END
 
     -- IF Guild enforces rank roles: validate user has rank role --
@@ -42,7 +50,7 @@ BEGIN TRANSACTION
     -- Index 1: Available players in queue AS { PlayerId, GuildId, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
     -- Index 2: Team One roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
     -- Index 3: Team Two roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon }
-    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT, @QueueStatus=@QueueStatus OUTPUT
+    EXEC GetQueue @QueueId=@QueueId, @PlayerCount=@NumPlayers OUTPUT, @NumCaptains=@NumCaptains OUTPUT, @QueueStatus=@QueueStatus OUTPUT, @HostId=@HostId OUTPUT
 
 COMMIT
 END

@@ -8,7 +8,7 @@ CREATE PROCEDURE GetRankRoles(
         RETURN 0
     END
 
-    SELECT RoleId, RoleName
+    SELECT RoleId, RoleName, OrderBy
     FROM GuildRoles
     WHERE GuildId=@GuildId AND RoleName='IRON' OR RoleName='BRONZE' 
     OR RoleName='SILVER' OR RoleName='GOLD' 

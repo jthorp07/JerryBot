@@ -1,6 +1,7 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
-const { ConnectionPool, Int, NVarChar } = require("mssql");
-const { QUEUE_STATES } = require("../util/")
+const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
+const { QUEUE_STATES } = require("../util/");
+const { tenMansStartComps, tenMansDraftComps } = require('../util/components');
 const Helpers = require("../util/helpers");
 module.exports = {
   data: {
@@ -50,11 +51,12 @@ module.exports = {
         .output("NumPlayers", Int)
         .output("NumCaptains", Int)
         .output("QueueStatus", NVarChar(100))
+        .output("HostId", VarChar(21))
         .execute("JoinQueue");
 
 
-
-      if (result.returnValue === -1) {
+      let numPlayers = result.output.NumPlayers;
+      if (numPlayers === -1) {
         await trans.rollback();
         await interaction.editReply({
           ephemeral: true,
@@ -63,8 +65,7 @@ module.exports = {
         return;
       } else if (result.returnValue === 0) {
 
-        // Grab outputs from JoinQueue procedure
-        let numPlayers = result.output.NumPlayers;
+        // Grab outputs from JoinQueue procedure        
         let numCaptains = result.output.NumCaptains;
         let queueStatus = result.output.QueueStatus;
         let playersAndCanBeCapt = result.recordsets[0];
@@ -72,6 +73,7 @@ module.exports = {
         let teamOnePlayers = result.recordsets[2];
         let teamTwoPlayers = result.recordsets[3];
         let spectators = result.recordsets[4];
+        let host = await interaction.guild.members.fetch(result.output.HostId);
 
         // Grab guild's rank roles
         result = await con
@@ -88,21 +90,25 @@ module.exports = {
             .execute('ImStartingDraft');
 
           if (result.returnValue === 0) {
-            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId);
+            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;
+            queueStatus = newVals.newStatus;
           } else if (result.returnValue !== -1) {
             // Something bad happened
             throw new Error("Database error");
           }
         }
 
-        let embeds = Helpers.makeDraftEmbed(numPlayers, numCaptains, queueStatus,
-          playersAndCanBeCapt, playersAvailable, teamOnePlayers, teamTwoPlayers, spectators);
+        let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
+          teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
+
+        let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable, true);
 
         interaction.message.edit({
-          embeds: embeds
+          embeds: embeds,
+          components: comps
         })
 
         // Success, reply and commit transaction
@@ -111,7 +117,7 @@ module.exports = {
             console.log(err);
             await interaction.editReply({
               ephemeral: true,
-              content: "Something went wrong, sorry!",
+              content: "Something went wrong and the command could not be completed.",
             });
             // TODO: Have bot report error
             return;
@@ -125,6 +131,7 @@ module.exports = {
           return;
         });
       } else {
+        await trans.rollback();
         throw new Error(`Database failure: Code ${result.returnValue}`);
       }
     });

@@ -1,9 +1,9 @@
 const { getRoleIcon } = require("./getRoleIcon");
-const { makeDraftEmbed } = require("./makeDraftEmbed");
+const { tenMansClassicNextEmbed } = require("./tenMansClassicNextEmbed");
 const { selectCaptains } = require("./selectCaptains");
 
 module.exports = {
   getRoleIcon,
-  makeDraftEmbed,
+  tenMansClassicNextEmbed,
   selectCaptains,
 };

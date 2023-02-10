@@ -11,6 +11,7 @@ module.exports = {
                 .setRequired(true)),
     /**
      * 
+     * 
      * @param {ChatInputCommandInteraction} interaction 
      * @param {ConnectionPool} con 
      */
@@ -22,6 +23,13 @@ module.exports = {
         let trans = con.transaction();
         trans.begin(async (err) => {
 
+            // Transaction begin error
+            if (err) {
+                await interaction.editReply({content: 'Something went wrong and the command could not be completed.'});
+                console.log(err);
+                return;
+            }
+
             // DBMS error handling
             let rolledBack = false;
             trans.on("rollback", (aborted) => {
@@ -32,10 +40,24 @@ module.exports = {
                 return;
             });
 
+            // Set value in database
+            let result = await con.request(trans)
+                .input('Enforce', enforce ? 1 : 0)
+                .input('GuldId', interaction.guildId)
+                .execute('SetEnforceRankRoles');
+
+            // Ensure valid database response
+            if (result.returnValue != 0) {
+                await interaction.editReply({content: 'Something went wrong and the command could not be completed.'});
+                trans.rollback();
+                return;
+            }
+
+            // Commit transaction and respond on Discord
             trans.commit(async (err) => {
                 if (err) {
                     trans.rollback();
-                    interaction.editReply({ephemeral:true,content:'Something went wrong with the database o-o'});
+                    interaction.editReply({ephemeral:true,content:'Something went wrong and the command could not be completed.'});
                     console.log(err);
                     return;
                 }

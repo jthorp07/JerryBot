@@ -13,7 +13,7 @@ module.exports = {
   async execute(interaction, con, idArgs) {
     await interaction.deferReply({ ephemeral: true });
     //TODO: Implement button command
-    console.log(interaction);
+    console.log(interaction.values);
     await interaction.editReply("You selected a map!", { ephemeral: true });
   },
 };

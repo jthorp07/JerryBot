@@ -6,7 +6,7 @@ module.exports = {
    * 
    * @param {number} queueId
    * 
-   * @returns {ActionRowBuilder<AnyComponentBuilder>}
+   * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
   tenMansStartComps(queueId) {
     return [

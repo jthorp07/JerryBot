@@ -2,7 +2,8 @@ CREATE PROCEDURE GetQueue(
     @QueueId INT,
     @NumCaptains INT OUTPUT,
     @PlayerCount INT OUTPUT,
-    @QueueStatus NVARCHAR(100) OUTPUT
+    @QueueStatus NVARCHAR(100) OUTPUT,
+    @HostId DiscordSnowflake OUTPUT
 ) AS BEGIN
 
     -- Validate --
@@ -25,9 +26,21 @@ CREATE PROCEDURE GetQueue(
     JOIN GuildMember ON QueuedPlayers.PlayerId = GuildMember.MemberId
     WHERE QueueId=@QueueId AND CanBeCaptain=1 AND GuildMember.GuildId=@GuildId
 
-    SELECT @PlayerCount=COUNT(PlayerId)
+    SELECT @PlayerCount = COUNT(PlayerId)
     FROM QueuedPlayers
     WHERE QueueId=@QueueId
+
+    IF @PlayerCount >= 10 BEGIN
+
+        DECLARE @NewState INT
+        EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='START_DRAFT', @EnumValue=@NewState OUTPUT
+
+        UPDATE Queues
+        SET QueueStatus=@NewState
+        WHERE [Id]=@QueueId
+        PRINT 'Queue starting draft'
+
+    END
 
     DECLARE @AvailablePool INT
     EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'AVAILABLE', @EnumValue = @AvailablePool OUTPUT
@@ -43,11 +56,11 @@ CREATE PROCEDURE GetQueue(
 
     -- Grab queue state and set output to string name of queue state
     DECLARE @QueueState INT
-    SELECT @QueueState=QueueStatus
+    SELECT @QueueState=QueueStatus, @HostId=HostId
     FROM Queues
     WHERE [Id]=@QueueId
 
-    EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue = @QueueState, @EnumDesc = @QueueStatus OUTPUT
+    EXEC GetEnumDesc @EnumName = 'QUEUE_STATE', @EnumValue = @QueueState, @EnumDesc = @QueueStatus OUTPUT
 
     -- RECORDSETS:
     -- Index 0: All players in queue AS: {PlayerId, GuildId, CanBeCaptain, DiscordDisplayName, ValorantDisplayName, ValorantRankRoleIcon}

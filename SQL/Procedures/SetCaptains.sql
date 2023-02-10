@@ -1,8 +1,9 @@
-CREATE PROCEDURE SetCaptains(
+ALTER PROCEDURE SetCaptains(
     @QueueId INT,
     @CapOne DiscordSnowflake,
     @CapTwo DiscordSnowflake,
-    @GuildId DiscordSnowflake
+    @GuildId DiscordSnowflake,
+    @QueueStatus NVARCHAR(100) OUTPUT
 ) AS BEGIN
 
     -- Validate args --
@@ -19,17 +20,18 @@ CREATE PROCEDURE SetCaptains(
     EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc = 'TEAM_TWO', @EnumValue = @TeamTwoId OUTPUT
 
     UPDATE QueuedPlayers
-    SET QueuePool=@TeamOneId
+    SET QueuePool=@TeamOneId, IsCaptain=1
     WHERE QueueId=@QueueId AND GuildId=@GuildId AND PlayerId=@CapOne
 
     UPDATE QueuedPlayers
-    SET QueuePool=@TeamTwoId
+    SET QueuePool=@TeamTwoId, IsCaptain=1
     WHERE QueueId=@QueueId AND GuildId=@GuildId AND PlayerId=@CapTwo
 
     DECLARE @Temp INT
     DECLARE @Temp2 INT
-    DECLARE @Temp3 NVARCHAR(100)
+    DECLARE @Temp4 DiscordSnowflake
 
-    EXEC GetQueue @QueueId=@QueueId, @NumCaptains=@Temp OUTPUT, @PlayerCount=@Temp2 OUTPUT, @QueueStatus=@Temp3 OUTPUT
+    EXEC GetQueue @QueueId=@QueueId, @NumCaptains=@Temp OUTPUT, @PlayerCount=@Temp2 OUTPUT, @QueueStatus=@QueueStatus OUTPUT, @HostId=@Temp4
+
 
 END

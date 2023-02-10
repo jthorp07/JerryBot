@@ -15,11 +15,12 @@ async function onSlashCommand(interaction, con, knownInteractions) {
 	let command = knownInteractions.commands.get(interaction.commandName);
 	if (!command) {
 		interaction.editReply({ content: 'Unknown Command' });
+		return;
 	}
 
 	// Check user permissions for command
 	let permCheck = await checkPermissions(con, command.permissions, interaction.user.id).catch(err => {
-		interaction.editReply({content: 'Something went wrong authenticating this command o-o'});
+		interaction.reply({content: 'Something went wrong authenticating this command o-o'});
 		console.log(err);
 		return;
 	});
@@ -28,7 +29,7 @@ async function onSlashCommand(interaction, con, knownInteractions) {
 		console.log('  [Bot]: Command executed');
 	} else {
 		// No perms -> Let 'em know and go
-		interaction.editReply({ content: 'Sorry, you don\'t have adequate permissions to use this command!' });
+		interaction.reply({ content: 'Sorry, you don\'t have adequate permissions to use this command!' });
 	}
 }
 
@@ -44,11 +45,12 @@ async function onButton(interaction, con, knownInteractions) {
 	let btn = knownInteractions.buttons.get(idArgs[0]);
 	
 	if (!btn) {
-		interaction.editReply({content: 'Unknown Button'});
+		interaction.reply({content: 'Unknown Button'});
+		return;
 	}
 
 	let permCheck = await checkPermissions(con, btn.data.permissions, interaction.user.id).catch(err => {
-		interaction.editReply({content: 'Something went wrong authenticating this command o-o'});
+		interaction.reply({content: 'Something went wrong authenticating this command o-o'});
 		console.log(err);
 		return;
 	});
@@ -57,7 +59,7 @@ async function onButton(interaction, con, knownInteractions) {
 		btn.execute(interaction, con, idArgs);
 		console.log('  [Bot]: Button Handled');
 	} else {
-		await interaction.editReply({content: 'Sorry, you don\'t have adequate permissions to use this button!'});
+		await interaction.reply({content: 'Sorry, you don\'t have adequate permissions to use this button!'});
 	}
 
 }
