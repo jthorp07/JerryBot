@@ -61,13 +61,6 @@
       ]
     }
   },
-  "Test Commands": {
-    "commands": ["hello", "modaltest", "ping", "testEmbed"],
-    "hello": {},
-    "modaltest": {},
-    "ping": {},
-    "testEmbed": {}
-  },
   "User Commands": {
     "commands": ["help", "register"],
     "help": {
