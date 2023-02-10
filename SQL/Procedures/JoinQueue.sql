@@ -15,6 +15,13 @@ BEGIN TRANSACTION
         RETURN 1
     END
 
+    IF NOT EXISTS
+    (SELECT * FROM GuildMember WHERE MemberId=@UserId AND GuildId=@GuildId)
+    BEGIN
+        PRINT 'User does not exist'
+        RETURN 2
+    END
+
     -- IF Guild enforces rank roles: validate user has rank role --
     IF EXISTS
     (SELECT *
