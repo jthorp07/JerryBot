@@ -10,28 +10,47 @@ module.exports = {
    * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
   tenMansDraftComps(queueId, draftList, map) {
+
+    // Just defining this object with a schema for intellisense - not necessary for prod
+    let playerDraftOptions = [{
+      label:"",
+      value:""
+    }];
+    playerDraftOptions = [];
+
+    // If not a map pick, parse available players into valid StringSelectMenu options
+    if (!map) {
+      draftList.forEach(player => {
+        let name = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
+        playerDraftOptions.push({
+          label: name,
+          value: player.PlayerId
+        });
+      });
+    }
+
     return [
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
-          .setCustomId("join-tenman-pool")
+          .setCustomId(`join-tenman:${queueId}`)
           .setLabel("Join Player Pool")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId("leave-tenman-pool")
+          .setCustomId(`leave-queue:${queueId}`)
           .setLabel("Leave Player Pool")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId("join-tenman-spec")
+          .setCustomId(`join-tenman-spec:${queueId}`)
           .setLabel("Join Spectators")
           .setStyle(ButtonStyle.Secondary)
       ),
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
-          .setCustomId("start-tenman-game")
+          .setCustomId(`start-draft:${queueId}`)
           .setLabel("Start Draft")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId("end-tenman-game")
+          .setCustomId(`end-queue:${queueId}`)
           .setLabel("End Game")
           .setStyle(ButtonStyle.Danger)
       ),
@@ -60,7 +79,7 @@ module.exports = {
           )
           .setMinValues(1)
           .setMaxValues(1)
-          .addOptions(draftList)
+          .addOptions(playerDraftOptions)
       )
     ];
   },

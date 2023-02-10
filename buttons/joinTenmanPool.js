@@ -55,8 +55,8 @@ module.exports = {
         .execute("JoinQueue");
 
 
-
-      if (result.returnValue === -1) {
+      let numPlayers = result.output.NumPlayers;
+      if (numPlayers === -1) {
         await trans.rollback();
         await interaction.editReply({
           ephemeral: true,
@@ -65,8 +65,7 @@ module.exports = {
         return;
       } else if (result.returnValue === 0) {
 
-        // Grab outputs from JoinQueue procedure
-        let numPlayers = result.output.NumPlayers;
+        // Grab outputs from JoinQueue procedure        
         let numCaptains = result.output.NumCaptains;
         let queueStatus = result.output.QueueStatus;
         let playersAndCanBeCapt = result.recordsets[0];
@@ -91,10 +90,11 @@ module.exports = {
             .execute('ImStartingDraft');
 
           if (result.returnValue === 0) {
-            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId);
+            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;
+            queueStatus = newVals.newStatus;
           } else if (result.returnValue !== -1) {
             // Something bad happened
             throw new Error("Database error");
@@ -117,7 +117,7 @@ module.exports = {
             console.log(err);
             await interaction.editReply({
               ephemeral: true,
-              content: "Something went wrong, sorry!",
+              content: "Something went wrong and the command could not be completed.",
             });
             // TODO: Have bot report error
             return;
@@ -131,6 +131,7 @@ module.exports = {
           return;
         });
       } else {
+        await trans.rollback();
         throw new Error(`Database failure: Code ${result.returnValue}`);
       }
     });

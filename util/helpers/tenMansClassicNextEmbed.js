@@ -53,7 +53,7 @@ module.exports = {
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
         let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
-        teamOneString = `${draftListString}${dispName} ${dispRole}\n`;
+        teamOneString = `${teamOneString}${dispName} ${dispRole}\n`;
       };
 
       // Team One Captain
@@ -65,15 +65,18 @@ module.exports = {
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
         let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
-        capOne = `${draftListString}${dispName} ${dispRole}\n`;
+        capOne = `${dispName} ${dispRole}`;
       };
 
       // Team Two
       let teamTwoString = '';
       for (player of teamTwoPlayers) {
+        if (player.IsCaptain == 1) {
+          continue;
+        }
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
         let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
-        teamTwoString = `${draftListString}${dispName} ${dispRole}\n`;
+        teamTwoString = `${teamTwoString}${dispName} ${dispRole}\n`;
       }
 
       // Team Two Captain
@@ -85,11 +88,11 @@ module.exports = {
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
         let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
-        capTwo = `${draftListString}${dispName} ${dispRole}\n`;
+        capTwo = `${dispName} ${dispRole}`;
       };
 
       // Return Draft Embed
-      return tenMansDraftEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString);
+      return tenMansDraftEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString, hostName, hostPfp);
 
     } else {
       return tenMansStartEmbed(draftListString, specString, hostName, hostPfp);

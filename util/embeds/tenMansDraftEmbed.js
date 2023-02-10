@@ -10,9 +10,11 @@ module.exports = {
      * @param {string} teamOne 
      * @param {string} teamTwo 
      * @param {string} specs 
+     * @param {string} host
+     * @param {string} hostPfp
      * @returns {EmbedBuilder[]}
      */
-    tenMansDraftEmbed(capOne, capTwo, draftList, teamOne, teamTwo, specs) {
+    tenMansDraftEmbed(capOne, capTwo, draftList, teamOne, teamTwo, specs, host, hostPfp) {
 
         return [new EmbedBuilder()
             .setColor("0x0099ff")
@@ -35,12 +37,12 @@ module.exports = {
                 },
                 {
                     name: `Available Players`,
-                    value: draftList,
+                    value: draftList ? draftList : 'N/A\n\nplayers will show up here when they join',
                     inline: true
                 },
                 {
-                    name: specs.name,
-                    value: specs.value,
+                    name: `Spectators`,
+                    value: specs ? specs : 'N/A\n\nplayers will show up here when they join',
                     inline: true
                 }
             )];
