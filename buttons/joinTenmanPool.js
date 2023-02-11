@@ -1,7 +1,6 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
 const { QUEUE_STATES } = require("../util/");
-const { tenMansStartComps, tenMansDraftComps } = require('../util/components');
 const {tenMansClassicNextEmbed, tenMansClassicNextComps} = require("../util/helpers");
 module.exports = {
   data: {
@@ -90,6 +89,8 @@ module.exports = {
             .execute('ImStartingDraft');
 
           if (result.returnValue === 0) {
+
+            // Assuming success, reassign values with updated data after selecting captaibns and starting draft
             let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;

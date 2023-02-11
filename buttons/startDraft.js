@@ -1,7 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
 const { tenMansClassicNextComps, tenMansClassicNextEmbed } = require("../util/helpers");
-const { QUEUE_STATES } = require('../util');
 
 module.exports = {
   data: {
