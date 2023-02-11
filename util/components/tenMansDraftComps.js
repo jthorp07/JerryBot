@@ -1,33 +1,15 @@
-const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, AnyComponentBuilder } = require("discord.js");
-const { IRecordSet } = require('mssql');
+const { ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle, AnyComponentBuilder} = require("discord.js");
 
 module.exports = {
   /**
    *
    * @param {string} queueId
-   * @param {IRecordSet<any>} draftList
+   * @param playerDraftOptions
+   * @param {boolean} map
    * 
    * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
-  tenMansDraftComps(queueId, draftList, map) {
-
-    // Just defining this object with a schema for intellisense - not necessary for prod
-    let playerDraftOptions = [{
-      label:"",
-      value:""
-    }];
-    playerDraftOptions = [];
-
-    // If not a map pick, parse available players into valid StringSelectMenu options
-    if (!map) {
-      draftList.forEach(player => {
-        let name = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        playerDraftOptions.push({
-          label: name,
-          value: player.PlayerId
-        });
-      });
-    }
+  tenMansDraftComps(queueId, playerDraftOptions, map) {
 
     return [
       new ActionRowBuilder().setComponents(

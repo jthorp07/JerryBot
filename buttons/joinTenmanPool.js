@@ -2,7 +2,7 @@ const { ButtonInteraction, GuildMember } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
 const { QUEUE_STATES } = require("../util/");
 const { tenMansStartComps, tenMansDraftComps } = require('../util/components');
-const Helpers = require("../util/helpers");
+const {tenMansClassicNextEmbed, tenMansClassicNextComps} = require("../util/helpers");
 module.exports = {
   data: {
     customId: "join-tenman", // customId of buttons that will execute this command
@@ -101,10 +101,10 @@ module.exports = {
           }
         }
 
-        let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
+        let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
           teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
 
-        let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable, true);
+        let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable);
 
         interaction.message.edit({
           embeds: embeds,

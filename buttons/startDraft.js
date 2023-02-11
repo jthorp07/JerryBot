@@ -1,7 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
-const Helpers = require("../util/helpers");
-const { tenMansStartComps, tenMansDraftComps } = require("../util/components");
+const { tenMansClassicNextComps, tenMansClassicNextEmbed } = require("../util/helpers");
 const { QUEUE_STATES } = require('../util');
 
 module.exports = {
@@ -86,14 +85,10 @@ module.exports = {
         return;
       }
 
-      console.log(`\n[STARTDRAFT]: playersAvailable from DB: ${JSON.stringify(playersAvailable)}\n`);
-      console.log(`\n[STARTDRAFT]: teamOnePlayers from DB: ${JSON.stringify(teamOnePlayers)}\n`);
-      console.log(`\n[STARTDRAFT]: teamTwoPlayers from DB: ${JSON.stringify(teamTwoPlayers)}\n`);
-
-      let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers,
+      let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers,
         teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
 
-      let comps = (queueStatus == QUEUE_STATES.TENMANS_WAITING) ? tenMansStartComps(queueId) : tenMansDraftComps(queueId, playersAvailable, true);
+      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable);
 
       // Commit transaction and respond on Discord
       trans.commit(async (err) => {
