@@ -12,7 +12,7 @@ module.exports = {
    * @param {string[]} idArgs
    */
 
-  async selectExecute(interaction, con, idArgs) {
+  async execute(interaction, con, idArgs) {
     //TODO: Implement button command
     await interaction.reply("You pressed a generic selectmenu option!");
   },
