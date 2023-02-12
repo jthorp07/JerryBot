@@ -1,7 +1,7 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
 const { QUEUE_STATES } = require("../util/");
-const {tenMansClassicNextEmbed, tenMansClassicNextComps} = require("../util/helpers");
+const { tenMansClassicNextEmbed, tenMansClassicNextComps, selectCaptains } = require("../util/helpers");
 module.exports = {
   data: {
     customId: "join-tenman", // customId of buttons that will execute this command
@@ -53,6 +53,21 @@ module.exports = {
         .output("HostId", VarChar(21))
         .execute("JoinQueue");
 
+      let ret = result.returnValue;
+      if (ret == 6) {
+        await interaction.editReply({
+          content: "You are already in this queue!"
+        });
+        return;
+      }
+
+      if (ret == 5) {
+        await interaction.editReply({
+          content: "You need to register with /register before joining queues in this server!"
+        });
+        return;
+      }
+
 
       let numPlayers = result.output.NumPlayers;
       if (numPlayers === -1) {
@@ -91,7 +106,7 @@ module.exports = {
           if (result.returnValue === 0) {
 
             // Assuming success, reassign values with updated data after selecting captaibns and starting draft
-            let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
+            let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;

@@ -1,6 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
-const { tenMansClassicNextComps, tenMansClassicNextEmbed } = require("../util/helpers");
+const { tenMansClassicNextComps, tenMansClassicNextEmbed, selectCaptains } = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -38,22 +38,21 @@ module.exports = {
         return;
       });
 
-      // Grab rankedroles for guild
-      let result = await con
-        .request(trans)
-        .input("GuildId", interaction.guildId)
-        .execute("GetRankRoles");
-
-      let rankedRoles = result.recordset;
-
       // Grab queue data
-      result = await con.request(trans)
+      let result = await con.request(trans)
         .input('QueueId', queueId)
         .output('NumCaptains', Int)
         .output('PlayerCount', Int)
         .output('QueueStatus', NVarChar(100))
         .output('HostId', VarChar(21))
         .execute('GetQueue');
+
+      if (result.output.PlayerCount < 3) {
+        interaction.editReply({
+          content: 'There are not enough players to start a draft.'
+        });
+        return;
+      }
 
       let numCaptains = result.output.NumCaptains;
       let queueStatus = result.output.QueueStatus;
@@ -64,13 +63,21 @@ module.exports = {
       let spectators = result.recordsets[4];
       let host = await interaction.guild.members.fetch(result.output.HostId);
 
+
+      // Grab rankedroles for guild
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .execute("GetRankRoles");
+
+      let rankedRoles = result.recordset;
       // Set starting so that other threads know not to attempt to start
       result = await con.request(trans)
         .input('QueueId', queueId)
         .execute('ImStartingDraft');
 
       if (result.returnValue === 0) {
-        let newVals = await Helpers.selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
+        let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
         playersAvailable = newVals.newAvailable;
         teamOnePlayers = newVals.newTeamOne;
         teamTwoPlayers = newVals.newTeamTwo;

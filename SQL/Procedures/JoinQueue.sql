@@ -12,6 +12,7 @@ BEGIN TRANSACTION
     -- Validate Args --
     IF @UserId IS NULL OR @QueueId IS NULL OR @GuildId IS NULL BEGIN
         PRINT 'Args cannot be null'
+        ROLLBACK
         RETURN 1
     END
 
@@ -19,6 +20,7 @@ BEGIN TRANSACTION
     (SELECT * FROM GuildMember WHERE MemberId=@UserId AND GuildId=@GuildId)
     BEGIN
         PRINT 'User does not exist'
+        ROLLBACK
         RETURN 2
     END
 
@@ -35,8 +37,18 @@ BEGIN TRANSACTION
         PRINT 'User does not have required role'
         SELECT @NumPlayers = -1
         SELECT @NumCaptains = -1
+        ROLLBACK
         RETURN 5
+    END
 
+    IF EXISTS
+    (SELECT * FROM QueuedPlayers WHERE PlayerId=@UserId AND GuildId=@GuildId)
+    BEGIN
+        PRINT 'User already in queue'
+        SELECT @NumPlayers = -1
+        SELECT @NumCaptains = -1
+        ROLLBACK
+        RETURN 6
     END
 
     -- Do it --

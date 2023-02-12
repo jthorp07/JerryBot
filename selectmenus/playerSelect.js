@@ -1,6 +1,6 @@
 const { StringSelectMenuInteraction } = require("discord.js");
 const { ConnectionPool, NVarChar, Int, VarChar } = require('mssql');
-const { QUEUE_STATES, Helpers } = require("../util");
+const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require('../util/helpers');
 
 module.exports = {
   data: {
@@ -61,10 +61,10 @@ module.exports = {
       let spectators = result.recordsets[4];
       let host = await interaction.guild.members.fetch(result.output.HostId);
 
-      let embeds = Helpers.tenMansClassicNextEmbed(queueStatus, playersAvailable,
+      let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
         teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
 
-      let comps = Helpers.
+      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable);
 
 
       // Commit transaction and respond on Discord
@@ -75,6 +75,12 @@ module.exports = {
           console.log(err);
           return;
         }
+        
+        await interaction.message.edit({
+          embeds: embeds,
+          components: comps
+        });
+        await interaction.deleteReply();
         return;
       });
 
