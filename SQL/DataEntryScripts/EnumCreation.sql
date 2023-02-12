@@ -35,6 +35,9 @@ GO
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'MAP_PICK'
 GO
 
+EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'SIDE_PICK'
+GO
+
 EXEC AddToEnum @EnumName = 'QUEUE_STATE', @Desc = 'PLAYING'
 GO
 

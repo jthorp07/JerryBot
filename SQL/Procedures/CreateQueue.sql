@@ -21,6 +21,7 @@ CREATE PROCEDURE CreateQueue(
     END
 
     DECLARE @QType INT
+    --SET @QType=GetEnumVal('QUEUE_TYPE', @EnumDesc)
     EXEC GetEnumValue @EnumName = 'QUEUE_TYPE', @EnumDesc = @QueueType, @EnumValue = @QType OUTPUT
 
     DECLARE @QState INT

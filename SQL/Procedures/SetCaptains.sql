@@ -1,4 +1,4 @@
-ALTER PROCEDURE SetCaptains(
+CREATE PROCEDURE SetCaptains(
     @QueueId INT,
     @CapOne DiscordSnowflake,
     @CapTwo DiscordSnowflake,
@@ -26,6 +26,10 @@ ALTER PROCEDURE SetCaptains(
     UPDATE QueuedPlayers
     SET QueuePool=@TeamTwoId, IsCaptain=1
     WHERE QueueId=@QueueId AND GuildId=@GuildId AND PlayerId=@CapTwo
+
+    UPDATE Queues
+    SET DraftPickId=@CapOne, MapSidePickId=@CapTwo, DraftPickTeamId=@TeamOneId
+    WHERE [Id]=@QueueId
 
     DECLARE @Temp INT
     DECLARE @Temp2 INT

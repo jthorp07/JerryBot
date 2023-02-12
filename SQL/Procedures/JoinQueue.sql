@@ -42,7 +42,7 @@ BEGIN TRANSACTION
     END
 
     IF EXISTS
-    (SELECT * FROM QueuedPlayers WHERE PlayerId=@UserId AND GuildId=@GuildId)
+    (SELECT * FROM QueuedPlayers WHERE PlayerId=@UserId AND QueueId=@QueueId)
     BEGIN
         PRINT 'User already in queue'
         SELECT @NumPlayers = -1
