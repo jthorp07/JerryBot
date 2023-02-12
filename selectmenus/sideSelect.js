@@ -20,7 +20,6 @@ module.exports = {
     let queueId = parseInt(idArgs[1]);
 
     let mapPick = idArgs[2];
-    mapPick = interaction.values[0];
     let firstUpper = mapPick.charAt(0).toUpperCase();
     mapPick = firstUpper.concat(mapPick.substring(1));
 
