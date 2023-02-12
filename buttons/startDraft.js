@@ -92,9 +92,9 @@ module.exports = {
       }
 
       let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers,
-        teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
+        teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
 
-      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable);
+      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null);
 
       // Commit transaction and respond on Discord
       trans.commit(async (err) => {

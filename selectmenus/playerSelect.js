@@ -1,5 +1,5 @@
 const { StringSelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, NVarChar, Int, VarChar } = require('mssql');
+const { ConnectionPool, NVarChar, Int, VarChar, PreparedStatement } = require('mssql');
 const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require('../util/helpers');
 
 module.exports = {
@@ -38,21 +38,41 @@ module.exports = {
         return;
       });
 
-      let result = await con.request(trans)
+      let stmt = new PreparedStatement(trans)
+        .input('UserId', VarChar(21))
+        .input('QueueId', Int);
+
+      let result;
+      try {
+        await stmt.prepare('SELECT DraftPickId FROM Queues WHERE [Id]=@QueueId AND DraftPickId=@UserId');
+        result = await stmt.execute({
+          UserId: interaction.user.id,
+          QueueId: queueId
+        });
+        await stmt.unprepare();
+      } catch (err) {
+        console.log(` [DB]: ${err}`);
+        interaction.editReply({
+          content: 'Something went wrong and the command was unable to be processed'
+        });
+        return;
+      }
+
+      if (result.recordset.length == 0) {
+        interaction.editReply({
+          content: 'It is not your turn to pick!'
+        });
+        trans.rollback();
+        return;
+      }
+
+      result = await con.request(trans)
         .input('QueueId', queueId)
         .input('PlayerId', draftedId)
         .input('GuildId', interaction.guildId)
         .output('QueueStatus', NVarChar(100))
-        .execute('DraftPlayer');
-
-
-      result = await con.request(trans)
-        .input('QueueId', queueId)
-        .output('NumCaptains', Int)
-        .output('PlayerCount', Int)
-        .output('QueueStatus', NVarChar(100))
         .output('HostId', VarChar(21))
-        .execute('GetQueue');
+        .execute('DraftPlayer');
 
       let queueStatus = result.output.QueueStatus;
       let playersAvailable = result.recordsets[1];
@@ -62,9 +82,9 @@ module.exports = {
       let host = await interaction.guild.members.fetch(result.output.HostId);
 
       let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
-        teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL());
+        teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
 
-      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable);
+      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null);
 
 
       // Commit transaction and respond on Discord
@@ -75,7 +95,7 @@ module.exports = {
           console.log(err);
           return;
         }
-        
+
         await interaction.message.edit({
           embeds: embeds,
           components: comps

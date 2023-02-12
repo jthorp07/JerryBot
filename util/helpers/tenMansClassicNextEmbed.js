@@ -1,4 +1,4 @@
-const { tenMansStartEmbed, tenMansDraftEmbed } = require("../embeds");
+const { tenMansStartEmbed, tenMansDraftEmbed, tenMansInGameEmbed } = require("../embeds");
 const { IRecordSet } = require('mssql');
 const { EmbedBuilder } = require("discord.js");
 const { QUEUE_STATES } = require("../database-enums");
@@ -19,11 +19,13 @@ module.exports = {
    * @param {IRecordSet<any>} spectators Set of spectators in queue
    * @param {string} hostName Display name of the host
    * @param {string} hostPfp Discord PFP of the host
+   * @param {string} map Name of map if selected
+   * @param {number} teamTwoAttack 0 if not selected, 1 if Team 2 is attackers, 2 if Team 2 is defenders
    * 
    * @returns {EmbedBuilder[]} embeds component of the message payload to be sent
    */
   tenMansClassicNextEmbed(queueStatus, playersAvailable,
-    teamOnePlayers, teamTwoPlayers, spectators, hostName, hostPfp) {
+    teamOnePlayers, teamTwoPlayers, spectators, hostName, hostPfp, map, teamTwoAttack) {
 
     // Available Players
     let draftListString = playersAvailable ? "" : undefined;
@@ -42,8 +44,9 @@ module.exports = {
 
 
     // Queue states of drafting or in-game: Make Draft embed 
-    if (queueStatus == QUEUE_STATES.TENMANS_DRAFTING || queueStatus == QUEUE_STATES.TENMANS_IN_GAME) {
-
+    if (queueStatus == QUEUE_STATES.TENMANS_WAITING) {
+      return tenMansStartEmbed(draftListString, specString, hostName, hostPfp);
+    } else {
       // Team One
       let teamOneString = '';
       for (player of teamOnePlayers) {
@@ -91,11 +94,14 @@ module.exports = {
         capTwo = `${dispName} ${dispRole}`;
       };
 
+      if (queueStatus == QUEUE_STATES.TENMANS_SIDE_PICK || queueStatus == QUEUE_STATES.TENMANS_IN_GAME) {
+        return tenMansInGameEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString, hostName, hostPfp, map, teamTwoAttack);
+      }
+
       // Return Draft Embed
       return tenMansDraftEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString, hostName, hostPfp);
 
-    } else {
-      return tenMansStartEmbed(draftListString, specString, hostName, hostPfp);
     }
+      
   },
 };

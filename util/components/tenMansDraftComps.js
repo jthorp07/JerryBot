@@ -6,10 +6,11 @@ module.exports = {
    * @param {string} queueId
    * @param playerDraftOptions
    * @param {boolean} map
+   * @param {string} mapName
    * 
    * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
-  tenMansDraftComps(queueId, playerDraftOptions, map) {
+  tenMansDraftComps(queueId, playerDraftOptions, map, mapName) {
 
     return [
       new ActionRowBuilder().setComponents(
@@ -39,7 +40,7 @@ module.exports = {
       map ? new ActionRowBuilder().setComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`map-select-menu:${queueId}`)
-          .setPlaceholder(`please select a map`)
+          .setPlaceholder(`Select a map`)
           .setMinValues(1)
           .setMaxValues(1)
           .addOptions([
@@ -53,11 +54,21 @@ module.exports = {
             { label: "Pearl", value: "Pearl" },
             { label: "Split", value: "Split" },
           ])
-      ) : new ActionRowBuilder().setComponents(
+      ) : mapName ? new ActionRowBuilder().setComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`side-select-menu:${queueId}:${mapName.toLowerCase()}`)
+          .setPlaceholder(`Select your team's side`)
+          .setMinValues(1)
+          .setMaxValues(1)
+          .addOptions([
+            {label: "Attack", value: "atk"},
+            {label: "Defend", value: "dfn"}
+          ])
+      ): new ActionRowBuilder().setComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`player-select-menu:${queueId}`)
           .setPlaceholder(
-            `please select a player to join your team`
+            `Pick a player`
           )
           .setMinValues(1)
           .setMaxValues(1)

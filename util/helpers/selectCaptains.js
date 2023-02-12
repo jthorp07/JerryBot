@@ -82,11 +82,8 @@ module.exports = {
       capPool = capPool.sort((cap1, cap2) => {
         return cap1.rank - cap2.rank;
       });
-      console.log(`\n[SELECTCAPTAINS]: Sorted capPool:${JSON.stringify(capPool)}\n`);
     }
 
-    // TODO: Maybe later rewrite this to remove the reverses
-    // console.log(`Captain Pool:\n\n${JSON.stringify(capPool)}\n\n`);
     let capOne = capPool[0]
     let capTwo = capPool[1]
     let result = await con.request(trans)

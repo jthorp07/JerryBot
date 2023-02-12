@@ -1,10 +1,10 @@
 const { SelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, PreparedStatement, Int, NVarChar, VarChar } = require("mssql");
-const { tenMansClassicNextComps, tenMansClassicNextEmbed } = require("../util/helpers");
+const { ConnectionPool, Int, NVarChar, VarChar, PreparedStatement } = require("mssql");
+const {tenMansClassicNextEmbed, tenMansClassicNextComps} = require("../util/helpers");
 
 module.exports = {
   data: {
-    customId: "map-select-menu", // customId of buttons that will execute this command
+    customId: "side-select-menu", // customId of buttons that will execute this command
     permissions: "all", //TODO: Implement other permission options
   },
   /**
@@ -12,14 +12,19 @@ module.exports = {
    * @param {ConnectionPool} con
    * @param {string[]} idArgs
    */
+
   async execute(interaction, con, idArgs) {
-    await interaction.deferReply({ ephemeral: true });
     //TODO: Implement button command
+    await interaction.deferReply({ephemeral:true});
+
     let queueId = parseInt(idArgs[1]);
 
-    let mapPick = interaction.values[0];
+    let mapPick = idArgs[2];
+    mapPick = interaction.values[0];
     let firstUpper = mapPick.charAt(0).toUpperCase();
     mapPick = firstUpper.concat(mapPick.substring(1));
+
+    let choice = interaction.values[0] == 'atk' ? 1 : 2;
 
     // Authorize map/side picker
     let stmt = new PreparedStatement(con)
@@ -55,7 +60,7 @@ module.exports = {
       .output("PlayerCount", Int)
       .output("QueueStatus", NVarChar(100))
       .output("HostId", VarChar(21))
-      .execute("PickMap");
+      .execute("PickSide");
 
     let queueStatus = result.output.QueueStatus;
     let playersAvailable = result.recordsets[1];
@@ -65,7 +70,7 @@ module.exports = {
     let host = await interaction.guild.members.fetch(result.output.HostId);
 
     let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
-      teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, 0);
+      teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, choice);
 
     let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick);
 
@@ -73,7 +78,5 @@ module.exports = {
       embeds: embeds,
       components: comps
     });
-
-    await interaction.editReply("You selected a map!", { ephemeral: true });
   },
 };
