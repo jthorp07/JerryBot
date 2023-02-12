@@ -3,7 +3,7 @@ CREATE TABLE Channel(
     -- Columns --
     Id DiscordSnowflake NOT NULL,
     GuildId DiscordSnowflake NOT NULL,
-    [Name] VARCHAR(32) NOT NULL,
+    [Name] VARCHAR(100) NOT NULL,
     [Type] VARCHAR(20) NOT NULL,
     Triggerable BIT NOT NULL
     
