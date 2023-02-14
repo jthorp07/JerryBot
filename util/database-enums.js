@@ -21,5 +21,17 @@ module.exports = {
     },
     QUEUE_TYPES: {
         TENMANS: 'TENMAN'
+    },
+    VALORANT_RANKS: {
+        UNRANKED: 'UNRANKED',
+        IRON: 'IRON',
+        BRONZE: 'BRONZE',
+        SILVER: 'SILVER',
+        GOLD: 'GOLD',
+        PLATINUM: 'PLATINUM',
+        DIAMOND: 'DIAMOND',
+        ASCENDANT: 'ASCENDANT',
+        IMMORTAL: 'IMMORTAL',
+        RADIANT: 'RADIANT'
     }
 }

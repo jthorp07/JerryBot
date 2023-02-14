@@ -70,3 +70,40 @@ GO
 -- ENUM VALUES:
 EXEC AddToEnum @EnumName = 'QUEUE_TYPE', @Desc = 'TENMAN'
 GO
+
+
+-- Valorant Rank enum (For the valorant ranks)
+-- ENUM:
+EXEC CreateEnum @EnumName = 'VAL_RANK';
+GO
+
+-- ENUM VALUES:
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'UNRANKED'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IRON'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'BRONZE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'SILVER'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'GOLD'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'PLATINUM'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'DIAMOND'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'ASCENDANT'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IMMORTAL'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'RADIANT'
+GO
