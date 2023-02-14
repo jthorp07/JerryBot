@@ -1,5 +1,5 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
-const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
+const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
 const { QUEUE_STATES } = require("../util/");
 const { tenMansClassicNextEmbed, tenMansClassicNextComps, selectCaptains } = require("../util/helpers");
 module.exports = {
@@ -101,12 +101,15 @@ module.exports = {
         if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
           result = await con.request(trans)
             .input('QueueId', queueId)
+            .output('EnforceRankRoles', Bit)
             .execute('ImStartingDraft');
 
           if (result.returnValue === 0) {
 
+            let enforce = result.output.EnforceRankRoles;
+
             // Assuming success, reassign values with updated data after selecting captaibns and starting draft
-            let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
+            let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans, enforce);
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;

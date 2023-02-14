@@ -1,5 +1,6 @@
 CREATE PROCEDURE ImStartingDraft(
-    @QueueId INT
+    @QueueId INT,
+    @EnforceRankRoles BIT OUTPUT
 ) AS BEGIN
 
     -- Validate --
@@ -25,6 +26,12 @@ CREATE PROCEDURE ImStartingDraft(
         PRINT 'Someone else already took this queue'
         RETURN -1
     END
+
+    -- Get EnforceRankRoles from Guild --
+    SELECT @EnforceRankRoles=EnforceRankRoles
+    FROM Guild
+    JOIN Queues ON Queues.GuildId=Guild.Id
+    WHERE Queues.Id=@QueueId
 
     PRINT 'I am starting queue'
     RETURN 0

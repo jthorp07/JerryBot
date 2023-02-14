@@ -1,5 +1,5 @@
 const { StringSelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, NVarChar, Int, VarChar, PreparedStatement } = require('mssql');
+const { ConnectionPool, NVarChar, Int, VarChar, PreparedStatement, Bit } = require('mssql');
 const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require('../util/helpers');
 
 module.exports = {
@@ -72,6 +72,7 @@ module.exports = {
         .input('GuildId', interaction.guildId)
         .output('QueueStatus', NVarChar(100))
         .output('HostId', VarChar(21))
+        .output('Team', NVarChar(100))
         .execute('DraftPlayer');
 
       let queueStatus = result.output.QueueStatus;
@@ -80,6 +81,17 @@ module.exports = {
       let teamTwoPlayers = result.recordsets[3];
       let spectators = result.recordsets[4];
       let host = await interaction.guild.members.fetch(result.output.HostId);
+      let team = result.output.Team;
+
+      result = await con.request(trans)
+        .input('GuildId', interaction.guildId)
+        .input('ChannelName', `QUEUE:${queueId}:${team}`)
+        .output('ChannelId', VarChar(21))
+        .output('Triggerable', Bit)
+        .output('Type', VarChar(20))
+        .execute('GetChannel');
+
+      let channel = await interaction.guild.channels.fetch(result.output.ChannelId);
 
       let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
         teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
@@ -94,6 +106,14 @@ module.exports = {
           interaction.editReply({ ephemeral: true, content: 'Something went wrong and the command could not be completed.' });
           console.log(err);
           return;
+        }
+
+        let drafted = await interaction.guild.members.fetch(draftedId);
+        try {
+          drafted.voice.setChannel(channel);
+        } catch (err) {
+          await interaction.editReply({content:"User was unable to be moved into their team channel"});
+          console.log(err);
         }
 
         await interaction.message.edit({

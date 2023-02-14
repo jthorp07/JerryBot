@@ -4,7 +4,7 @@ CREATE TABLE Channel(
     Id DiscordSnowflake NOT NULL,
     GuildId DiscordSnowflake NOT NULL,
     [Name] VARCHAR(100) NOT NULL,
-    [Type] VARCHAR(20) NOT NULL,
+    [Type] INT NOT NULL,
     Triggerable BIT NOT NULL
     
     -- Key --

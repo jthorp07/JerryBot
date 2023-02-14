@@ -1,5 +1,5 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, ChannelType, VoiceChannel } = require('discord.js');
-const {ConnectionPool} = require('mssql');
+const {ConnectionPool, VarChar, Bit} = require('mssql');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -49,9 +49,12 @@ module.exports = {
             let result = await con.request(trans)
                                 .input('ChannelName', 'VCCAT')
                                 .input('GuildId', interaction.guildId)
+                                .output('ChannelId', VarChar(21))
+                                .output('Triggerable', Bit)
+                                .output('Type', VarChar(20))
                                 .execute('GetChannel');
 
-            let parentId = result.recordset[0].Id;
+            let parentId = result.output.ChannelId;
             channel.edit((await channel.setUserLimit(cap ? cap : 100)).setParent(parentId));
 
             result = await con.request(trans)

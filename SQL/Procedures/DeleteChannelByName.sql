@@ -1,6 +1,6 @@
-CREATE OR ALTER PROCEDURE DeleteChannelByName(
+CREATE PROCEDURE DeleteChannelByName(
     @GuildId DiscordSnowflake,
-    @ChannelName VARCHAR(32)
+    @ChannelName VARCHAR(100)
 ) AS BEGIN
 
     -- Validate Arg --
@@ -11,6 +11,7 @@ CREATE OR ALTER PROCEDURE DeleteChannelByName(
 
     -- Do it --
     DELETE FROM Channel WHERE GuildId=@GuildId AND [Name]=@ChannelName
+    PRINT 'Channel deleted if exists'
     RETURN 0
 
 END

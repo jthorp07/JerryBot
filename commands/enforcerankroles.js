@@ -43,7 +43,7 @@ module.exports = {
             // Set value in database
             let result = await con.request(trans)
                 .input('Enforce', enforce ? 1 : 0)
-                .input('GuldId', interaction.guildId)
+                .input('GuildId', interaction.guildId)
                 .execute('SetEnforceRankRoles');
 
             // Ensure valid database response

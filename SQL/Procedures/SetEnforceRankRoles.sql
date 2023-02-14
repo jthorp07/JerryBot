@@ -1,4 +1,4 @@
-CREATE PROCEDURE SetCreateEnforceRankRoles(
+CREATE PROCEDURE SetEnforceRankRoles(
     @GuildId DiscordSnowflake,
     @Enforce BIT
 ) AS BEGIN

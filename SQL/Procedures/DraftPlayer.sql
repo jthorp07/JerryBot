@@ -3,7 +3,8 @@ CREATE PROCEDURE DraftPlayer(
     @GuildId DiscordSnowflake,
     @QueueId INT,
     @QueueStatus NVARCHAR(100) OUTPUT,
-    @HostId DiscordSnowflake OUTPUT
+    @HostId DiscordSnowflake OUTPUT,
+    @Team NVARCHAR(100) OUTPUT
 ) AS BEGIN
 
     -- Validate args --
@@ -41,6 +42,7 @@ CREATE PROCEDURE DraftPlayer(
     DECLARE @NewTeamValue NVARCHAR(100)
     EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue=@TeamToDraftTo, @EnumDesc=@OldTeamValue OUTPUT
 
+    SET @Team = @OldTeamValue
     SET @NewTeamValue = 'TEAM_ONE'
     IF @OldTeamValue = 'TEAM_ONE'
     BEGIN

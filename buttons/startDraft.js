@@ -1,5 +1,5 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool, Int, NVarChar, VarChar } = require("mssql");
+const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
 const { tenMansClassicNextComps, tenMansClassicNextEmbed, selectCaptains } = require("../util/helpers");
 
 module.exports = {
@@ -74,10 +74,13 @@ module.exports = {
       // Set starting so that other threads know not to attempt to start
       result = await con.request(trans)
         .input('QueueId', queueId)
+        .output('EnforceRankRoles', Bit)
         .execute('ImStartingDraft');
 
       if (result.returnValue === 0) {
-        let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans);
+        let enforce = result.output.EnforceRankRoles
+
+        let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans, enforce);
         playersAvailable = newVals.newAvailable;
         teamOnePlayers = newVals.newTeamOne;
         teamTwoPlayers = newVals.newTeamTwo;
