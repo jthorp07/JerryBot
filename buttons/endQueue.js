@@ -15,17 +15,16 @@ module.exports = {
    */
   async execute(interaction, con, idArgs) {
     //TODO: Implement button command
-    await interaction.deferReply({ephemeral: true});
+    await interaction.deferReply({ ephemeral: true });
 
     let queueId = parseInt(idArgs[1]);
 
     let trans = con.transaction();
 
     trans.begin(async (err) => {
-
       if (err) {
         await interaction.editReply({
-          content: 'Something went wrong'
+          content: "Something went wrong",
         });
         return;
       }
@@ -33,62 +32,79 @@ module.exports = {
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", async (aborted) => {
-          if (aborted) {
-              console.log("This rollback was triggered by SQL server");
-          }
-          rolledBack = true;
-          await interaction.editReply({content: 'Something went wrong'});
-          return;
+        if (aborted) {
+          console.log("This rollback was triggered by SQL server");
+        }
+        rolledBack = true;
+        await interaction.editReply({ content: "Something went wrong" });
+        return;
       });
 
-      let result = await con.request(trans)
-        .input('QueueId', queueId)
-        .execute('EndQueue');
+      let result = await con
+        .request(trans)
+        .input("QueueId", queueId)
+        .execute("EndQueue");
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', 'TENMANLOBBY')
-        .output('ChannelId', VarChar(21))
-        .output('Triggerable', Bit)
-        .output('Type', VarChar(20))
-        .execute('GetChannel');
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input("ChannelName", "TENMANLOBBY")
+        .output("ChannelId", VarChar(21))
+        .output("Triggerable", Bit)
+        .output("Type", VarChar(20))
+        .execute("GetChannel");
 
       let lobbyId = result.output.ChannelId;
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`)
-        .output('ChannelId', VarChar(21))
-        .output('Triggerable', Bit)
-        .output('Type', VarChar(20))
-        .execute('GetChannel');
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input(
+          "ChannelName",
+          `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
+        )
+        .output("ChannelId", VarChar(21))
+        .output("Triggerable", Bit)
+        .output("Type", VarChar(20))
+        .execute("GetChannel");
 
       let teamOneId = result.output.ChannelId;
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`)
-        .output('ChannelId', VarChar(21))
-        .output('Triggerable', Bit)
-        .output('Type', VarChar(20))
-        .execute('GetChannel');
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input(
+          "ChannelName",
+          `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
+        )
+        .output("ChannelId", VarChar(21))
+        .output("Triggerable", Bit)
+        .output("Type", VarChar(20))
+        .execute("GetChannel");
 
       let teamTwoId = result.output.ChannelId;
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`)
-        .execute('DeleteChannelByName');
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input(
+          "ChannelName",
+          `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
+        )
+        .execute("DeleteChannelByName");
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`)
-        .execute('DeleteChannelByName');
+      result = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input(
+          "ChannelName",
+          `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
+        )
+        .execute("DeleteChannelByName");
 
       trans.commit(async (err) => {
-
         if (err) {
-          await interaction.editReply({content: 'Something went wrong'});
+          await interaction.editReply({ content: "Something went wrong" });
           return;
         }
 
@@ -99,23 +115,49 @@ module.exports = {
         /** @type {VoiceChannel} */
         let teamTwoChan = await interaction.guild.channels.fetch(teamTwoId);
 
-        teamOneChan.members.forEach(member => {
-          try {
-            member.voice.setChannel(lobbyChan);
-          } catch (err) {
-            console.log("Failed to move user");
-          }  
-        });
+        await Promise.all(
+          teamOneChan.members.map(async (member) => {
+            return new Promise((resolve, reject) => {
+              try {
+                resolve(member.voice.setChannel(lobbyChan));
+              } catch (err) {
+                reject(new Error("Failed to move user"));
+                console.log("Failed to move user");
+              }
+            });
+          })
+        )
+          .then(() => {
+            teamOneChan.delete("Queue has ended");
+          })
+          .catch(() => {
+            console.error(
+              "Could not delete VC because there was still one or more members in the call"
+            );
+          });
 
-        teamTwoChan.members.forEach(member => {
-          try {
-            member.voice.setChannel(lobbyChan);
-          } catch (err) {
-            console.log("Failed to move user");
-          }  
-        });
+        await Promise.all(
+          teamTwoChan.members.map(async (member) => {
+            return new Promise((resolve, reject) => {
+              try {
+                resolve(member.voice.setChannel(lobbyChan));
+              } catch (err) {
+                reject(new Error("Failed to move user"));
+                console.log("Failed to move user");
+              }
+            });
+          })
+        )
+          .then(() => {
+            teamTwoChan.delete("Queue has ended");
+          })
+          .catch(() => {
+            console.error(
+              "Could not delete VC because there was still one or more members in the call"
+            );
+          });
 
-        interaction.editReply({content: 'The queue has been ended'});
+        interaction.editReply({ content: "The queue has been ended" });
       });
     });
   },
