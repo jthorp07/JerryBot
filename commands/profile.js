@@ -71,7 +71,7 @@ module.exports = {
           userObj.ValorantName,
           userObj.ValorantRoleIcon,
           userObj.Ranked,
-          userObj.CurrentRank,
+          result.output.CurrentRank,
           userObj.Username,
           userObj.CanBeCaptain
         );

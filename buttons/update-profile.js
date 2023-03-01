@@ -1,7 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool } = require("mssql");
 const { getRoleIcon } = require("../util/helpers");
-const { profileEmbed } = require("../util/embeds");
 
 module.exports = {
     data: {
@@ -56,8 +55,9 @@ module.exports = {
                 .input('Username', interaction.user.username)
                 .input('GuildDisplayName', interaction.member.displayName)
                 .input('IsOwner', (interaction.guild.ownerId == interaction.member.id))
-                .input('ValorantRoleIcon', roleIcon.icon)
-                .input('CurrentRank', roleIcon.rank)
+                .input('ValorantRoleIcon', roleIcon ? roleIcon.icon : null)
+                .input('CurrentRank', roleIcon ? roleIcon.rank : null)
+                .input('HasRank', roleIcon ? true : false)
                 .execute('UpdateDiscordProfile');
 
             if (!result.returnValue == 0) {
@@ -65,11 +65,6 @@ module.exports = {
                 await interaction.editReply({ content: 'There was an error fetching your profile' });
                 return;
             }
-
-            result = await con.request(trans)
-                .input('GuildId', interaction.guildId)
-                .input('UserId', interaction.user.id)
-                .execute('GetProfile');
 
             if (!result.returnValue == 0) {
                 trans.rollback();
@@ -86,19 +81,6 @@ module.exports = {
                     return;
                 }
 
-                let embeds = profileEmbed(
-                    interaction.member.displayAvatarURL(),
-                    result.recordset[0].GuildName,
-                    result.recordset[0].DisplayName,
-                    result.recordset[0].ValorantName,
-                    result.recordset[0].ValorantRoleIcon,
-                    result.recordset[0].Ranked,
-                    result.recordset[0].CurrentRank,
-                    result.recordset[0].Username,
-                    result.recordset[0].CanBeCaptain
-                );
-
-                await interaction.message.edit({embeds:embeds});
                 await interaction.editReply({content: 'Profile updated'});
                 return;
 

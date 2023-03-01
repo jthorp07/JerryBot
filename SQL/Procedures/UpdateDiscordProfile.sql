@@ -8,19 +8,23 @@ CREATE PROCEDURE UpdateDiscordProfile(
     @IsOwner BIT,
     @GuildDisplayName VARCHAR(32),
     @ValorantRoleIcon VARCHAR(255),
-    @CurrentRank NVARCHAR(100)
+    @CurrentRank NVARCHAR(100),
+    @HasRank BIT
 
-) AS BEGIN
+)
+AS
+BEGIN
 
     -- Validate args --
-    IF @GuildId IS NULL OR @UserId IS NULL OR @Username IS NULL OR @IsOwner IS NULL 
-    OR @GuildDisplayName IS NULL OR @ValorantRoleIcon IS NULL OR @CurrentRank IS NULL BEGIN
+    IF @GuildId IS NULL OR @UserId IS NULL OR @Username IS NULL OR @IsOwner IS NULL OR @GuildDisplayName IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
     END
 
     IF NOT EXISTS
-    (SELECT * FROM GuildMember WHERE MemberId=@UserId AND GuildId=@GuildId)
+    (SELECT *
+    FROM GuildMember
+    WHERE MemberId=@UserId AND GuildId=@GuildId)
     BEGIN
         PRINT 'Member not registered in guild'
         RETURN 2
@@ -29,13 +33,14 @@ CREATE PROCEDURE UpdateDiscordProfile(
     DECLARE @CRank INT
     SELECT @CRank=dbo.GetEnumVal('VAL_RANK', @CurrentRank)
 
-    IF @CRank IS NULL BEGIN
+    IF @CRank IS NULL AND @CurrentRank IS NOT NULL BEGIN
         PRINT 'Bad value given for table dbo.GuildMember.CurrentRank'
         RETURN 3
     END
 
+
     UPDATE GuildMember
-    SET IsOwner=@IsOwner, DiscordDisplayName=@GuildDisplayName, ValorantRankRoleIcon=@ValorantRoleIcon, CurrentRank=@CRank
+    SET IsOwner=@IsOwner, DiscordDisplayName=@GuildDisplayName, ValorantRankRoleIcon=@ValorantRoleIcon, CurrentRank=@CRank, HasRankRole=@HasRank
     WHERE GuildId=@GuildId AND MemberId=@UserId
 
     UPDATE [User]

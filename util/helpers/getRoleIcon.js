@@ -21,9 +21,7 @@ module.exports = {
           return { 
             icon: item[1].icon
               ? item[1].icon
-              : item[1].unicodeEmoji
-              ? item[1].unicodeEmoji
-              : item[1].name,
+              : null,
             /** @type {string} */
             rank: entry.RoleName
           };
