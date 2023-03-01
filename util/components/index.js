@@ -3,6 +3,7 @@ const { tenMansDraftComps } = require("./tenMansDraftComps");
 const { tenMansInGameComps } = require("./tenMansInGameComps");
 const { mapSelectBuilder } = require("./mapSelect");
 const { playerSelectBuilder } = require("./playerSelect");
+const { profileComps } = require("./profileComps");
 const {
   helpCategories,
   helpCommands,
@@ -18,4 +19,5 @@ module.exports = {
   helpCategories,
   helpCommands,
   paginationButtons,
+  profileComps
 };
