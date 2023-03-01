@@ -36,7 +36,9 @@ module.exports = {
       userObj.ValorantName,
       userObj.ValorantRoleIcon,
       userObj.Ranked,
-      userObj.CurrentRank
+      userObj.CurrentRank,
+      userObj.Username,
+      userObj.CanBeCaptain
     );
 
     // let stringoption = interaction.options.getString("stringone");

@@ -20,29 +20,57 @@ module.exports = {
     ValorantName,
     ValorantRoleIcon,
     Ranked,
-    CurrentRank
+    CurrentRank,
+    Username,
+    CanBeCaptain
   ) {
     return [
       new EmbedBuilder()
         .setColor("0x0099ff")
         .setDescription(`For Server: ${GuildName}`)
-        // .setThumbnail(Ranked && ValorantRoleIcon && ValorantRoleIcon)
         .setAuthor({
-          name: `${DisplayName}'s Profile`,
+          name: `${Username}'s Profile`,
           iconURL: userPfp && userPfp,
         })
+        .setThumbnail(
+          Ranked && ValorantRoleIcon
+            ? ValorantRoleIcon
+            : "https://buyboosting.com/assets/imgs/valorant/rank-icons/unranked.png"
+        )
         .addFields(
+          { name: "\u200B", value: "\u200B" },
           {
             name: `Valorant Information`,
-            value: `Riot ID: ${ValorantName || "No name set"}`,
+            value: "-----------------------",
+          },
+          {
+            name: "Riot ID",
+            value: `${ValorantName || "No Riot ID set"}`,
             inline: true,
           },
           {
-            name: "\u200B",
-            value: `Valorant Role: ${
-              (Ranked && CurrentRank && CurrentRank) || "No role set"
-            }`,
+            name: "Valorant Rank",
+            value: `${(Ranked && CurrentRank && CurrentRank) || "No Rank Set"}`,
             inline: true,
+          }
+        )
+        .addFields(
+          { name: "\u200B", value: "\u200B" },
+          {
+            name: `Preferences`,
+            value: "--------------",
+          },
+          {
+            name: `Display name in server:`,
+            value: `${DisplayName}`,
+          },
+          {
+            name: "Volunteer for Team Captain:",
+            value: `${
+              CanBeCaptain
+                ? "Would prefer to be a captain when needed"
+                : "Would prefer NOT to be a captain when needed"
+            }`,
           }
         ),
     ];
