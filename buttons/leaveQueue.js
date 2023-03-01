@@ -13,26 +13,29 @@ module.exports = {
    * @param {string[]} idArgs
    */
   async execute(interaction, con, idArgs) {
+
+
     // Go ahead and edit embed
     await interaction.deferReply({ ephemeral: true });
-    let userToRemove = interaction.member.displayName;
-    let embed = interaction.message.embeds[0];
-    let playerList = embed.fields[0].value.split("\n");
+
     playerList.forEach((player, i) => {
       if (player.includes(userToRemove)) {
         playerList.splice(i, 1);
       }
     });
 
-    let newValue = playerList.join("\n");
 
-    embed.fields[0].value =
-      newValue === ""
-        ? "N/A\n\nplayers will show up here when they join"
-        : newValue;
+    
 
     let trans = con.transaction();
     trans.begin(async (err) => {
+
+      if (err) {
+        await interaction.editReply({content:"Something went wrong"});
+        console.log(err);
+        return;
+      }
+
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", (aborted) => {
@@ -61,6 +64,7 @@ module.exports = {
       trans.commit(async (err) => {
         if (err) {
           console.log(err);
+          await interaction.editReply({content:'Something went wrong o-o'})
           return;
         }
 

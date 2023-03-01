@@ -1,5 +1,5 @@
 CREATE PROCEDURE LeaveTenmans(
-    @GuildId DiscordSnowflake,
+    @QueueId INT,
     @UserId DiscordSnowflake
 ) AS BEGIN
 

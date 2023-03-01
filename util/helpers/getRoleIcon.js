@@ -13,16 +13,20 @@ module.exports = {
    * @param {IRecordSet} rankedRoles
    * @param {GuildMember} user
    */
-  async getRoleIcon(rankedRoles, user) {
+  getRoleIcon(rankedRoles, user) {
     for (let entry of rankedRoles) {
       for (let item of user.roles.cache) {
         let roleId = item[1].id;
         if (roleId == entry.RoleId) {
-          return item[1].icon
-            ? item[1].icon
-            : item[1].unicodeEmoji
-            ? item[1].unicodeEmoji
-            : item[1].name;
+          return { 
+            icon: item[1].icon
+              ? item[1].icon
+              : item[1].unicodeEmoji
+              ? item[1].unicodeEmoji
+              : item[1].name,
+            /** @type {string} */
+            rank: entry.RoleName
+          };
         }
       }
     }
