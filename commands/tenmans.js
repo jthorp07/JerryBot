@@ -29,6 +29,13 @@ module.exports = {
 
     let trans = con.transaction();
     trans.begin(async (err) => {
+
+      if (err) {
+        console.log(err);
+        await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+        return;
+      }
+
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", (aborted) => {
@@ -61,15 +68,13 @@ module.exports = {
       await interaction.channel.send({ embeds: embeds, components: comps });
 
       trans.commit(async (err) => {
+        
         if (err) {
           console.log(err);
-          await interaction.editReply({
-            ephemeral: true,
-            content: "Something went wrong, sorry!",
-          });
-          // TODO: Have bot report error
+          await interaction.editReply({content:"Something went wrong and the command could not be completed"});
           return;
         }
+
         await interaction.editReply({
           ephemeral: true,
           content: `You have successfully launched a ten mans queue (Queue ID: ${queueId})`,

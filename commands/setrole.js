@@ -62,6 +62,12 @@ module.exports = {
         let trans = con.transaction();
         trans.begin(async (err) => {
 
+            if (err) {
+                console.log(err);
+                await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+                return;
+            }
+
             // DBMS error handling
             let rolledBack = false;
             trans.on("rollback", (aborted) => {
@@ -84,12 +90,13 @@ module.exports = {
                 return;
             }
 
-            await interaction.editReply({ ephemeral: true, content: 'Role Set!' });
-            trans.commit(err => {
+            trans.commit(async (err) => {
                 if (err) {
                     console.log(err);
+                    await interaction.editReply({content:"Something went wrong and the command could not be completed"});
                     return;
                 }
+                await interaction.editReply({ ephemeral: true, content: 'Role Set!' });
             });
         });
     },
