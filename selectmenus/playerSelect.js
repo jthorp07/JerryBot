@@ -75,6 +75,12 @@ module.exports = {
         .output('Team', NVarChar(100))
         .execute('DraftPlayer');
 
+      if (result.returnValue != 0) {
+        await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+        console.log("Database error");
+        return;
+      }
+
       let queueStatus = result.output.QueueStatus;
       let playersAvailable = result.recordsets[1];
       let teamOnePlayers = result.recordsets[2];
@@ -91,12 +97,18 @@ module.exports = {
         .output('Type', VarChar(20))
         .execute('GetChannel');
 
+      if (result.returnValue != 0) {
+        await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+        console.log("Database error");
+        return;
+      }
+
       let channel = await interaction.guild.channels.fetch(result.output.ChannelId);
 
       let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
         teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
 
-      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null);
+      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null, host.id);
 
 
       // Commit transaction and respond on Discord
@@ -112,7 +124,7 @@ module.exports = {
         try {
           drafted.voice.setChannel(channel);
         } catch (err) {
-          await interaction.editReply({content:"User was unable to be moved into their team channel"});
+          await interaction.editReply({ content: "User was unable to be moved into their team channel" });
           console.log(err);
         }
 

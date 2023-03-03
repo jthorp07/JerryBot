@@ -22,12 +22,11 @@ module.exports = {
     mapPick = firstUpper.concat(mapPick.substring(1));
 
     // Authorize map/side picker
+    let result;
+    try {
     let stmt = new PreparedStatement(con)
       .input('UserId', VarChar(21))
       .input('QueueId', Int);
-
-    let result;
-    try {
       await stmt.prepare('SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId');
       result = await stmt.execute({
         UserId: interaction.user.id,
@@ -57,6 +56,12 @@ module.exports = {
       .output("HostId", VarChar(21))
       .execute("PickMap");
 
+    if (result.returnValue != 0) {
+      await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+      console.log("Database failure");
+      return;
+    }
+
     let queueStatus = result.output.QueueStatus;
     let playersAvailable = result.recordsets[1];
     let teamOnePlayers = result.recordsets[2];
@@ -67,7 +72,7 @@ module.exports = {
     let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
       teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, 0);
 
-    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick);
+    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick, host.id);
 
     await interaction.message.edit({
       embeds: embeds,

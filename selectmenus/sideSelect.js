@@ -1,6 +1,6 @@
 const { SelectMenuInteraction } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar, PreparedStatement } = require("mssql");
-const {tenMansClassicNextEmbed, tenMansClassicNextComps} = require("../util/helpers");
+const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -15,7 +15,7 @@ module.exports = {
 
   async execute(interaction, con, idArgs) {
     //TODO: Implement button command
-    await interaction.deferReply({ephemeral:true});
+    await interaction.deferReply({ ephemeral: true });
 
     let queueId = parseInt(idArgs[1]);
 
@@ -61,6 +61,12 @@ module.exports = {
       .output("HostId", VarChar(21))
       .execute("PickSide");
 
+    if (result.returnValue != 0) {
+      await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+      console.log("Database error");
+      return;
+    }
+
     let queueStatus = result.output.QueueStatus;
     let playersAvailable = result.recordsets[1];
     let teamOnePlayers = result.recordsets[2];
@@ -71,7 +77,7 @@ module.exports = {
     let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
       teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, choice);
 
-    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick);
+    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick, host.id);
 
     await interaction.message.edit({
       embeds: embeds,
