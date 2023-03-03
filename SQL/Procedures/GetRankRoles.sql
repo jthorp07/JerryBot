@@ -10,10 +10,7 @@ CREATE PROCEDURE GetRankRoles(
 
     SELECT RoleId, RoleName, OrderBy
     FROM GuildRoles
-    WHERE GuildId=@GuildId AND RoleName='IRON' OR RoleName='BRONZE' 
-    OR RoleName='SILVER' OR RoleName='GOLD' 
-    OR RoleName='PLATINUM' OR RoleName='DIAMOND' 
-    OR RoleName='ASCENDANT' OR RoleName='IMMORTAL' OR RoleName='RADIANT'
+    WHERE GuildId=@GuildId AND OrderBy=1
 
 END
 GO

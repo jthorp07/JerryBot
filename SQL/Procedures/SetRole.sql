@@ -1,13 +1,18 @@
 CREATE PROCEDURE SetRole(
     @GuildId DiscordSnowflake,
     @RoleId DiscordSnowflake,
-    @RoleName VARCHAR(32)
+    @RoleName VARCHAR(32),
+    @OrderBy INT
 ) AS BEGIN
 
     -- Validate --
     IF @GuildId IS NULL OR @RoleId IS NULL OR @RoleName IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
+    END
+
+    IF @OrderBy IS NULL BEGIN
+        SET @OrderBy=0
     END
 
     -- If role already set, update it --
@@ -24,7 +29,7 @@ CREATE PROCEDURE SetRole(
     END
 
     -- Otherwise insert new value to set role --
-    INSERT INTO GuildRoles(GuildId, RoleId, RoleName) VALUES(@GuildId, @RoleId, @RoleName)
+    INSERT INTO GuildRoles(GuildId, RoleId, RoleName, OrderBy) VALUES(@GuildId, @RoleId, @RoleName, @OrderBy)
     PRINT 'Role set'
     RETURN 0
 

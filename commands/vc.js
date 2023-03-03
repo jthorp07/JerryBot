@@ -23,18 +23,21 @@ module.exports = {
         // Create the channel in the Discord server
         let cap = interaction.options.getNumber('capacity');
         /**@type {VoiceChannel} */
-        let channel;
-        interaction.guild.channels.create({
+        let channel = await interaction.guild.channels.create({
             name: `${interaction.user.username}'s channel`,
             type: ChannelType.GuildVoice,
             reason: 'cmd'
-        }).then(vc => {
-            channel = vc;
         });
         
         // Begin a database transaction to store newly made channel's information
         let trans = con.transaction();
         trans.begin(async (err) => {
+
+            if (err) {
+                console.log(err);
+                await interaction.editReply({content:"Something went wrong"});
+                return;
+            }
 
             // DBMS error handling
             let rolledBack = false;
@@ -55,7 +58,7 @@ module.exports = {
                                 .execute('GetChannel');
 
             let parentId = result.output.ChannelId;
-            channel.edit((await channel.setUserLimit(cap ? cap : 100)).setParent(parentId));
+            channel.edit((await channel.setUserLimit(cap ? cap : 99)).setParent(parentId));
 
             result = await con.request(trans)
                             .input('GuildId', interaction.guildId)

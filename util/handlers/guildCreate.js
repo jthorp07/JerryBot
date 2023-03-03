@@ -10,6 +10,7 @@ module.exports = {
     let trans = con.transaction();
     trans
       .begin(async (err) => {
+
         if (err) {
           trans.rollback();
           return;
@@ -31,11 +32,9 @@ module.exports = {
 
         if (result.returnValue != 0) {
           trans.rollback();
+          console.log("Failed to run GuildCreate handler");
+          return;
         }
       })
-      .catch((err) => {
-        console.log(err);
-        return;
-      });
   },
 };

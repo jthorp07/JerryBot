@@ -19,8 +19,8 @@ module.exports = {
         let roleId = item[1].id;
         if (roleId == entry.RoleId) {
           return { 
-            icon: item[1].icon
-              ? item[1].icon
+            icon: item[1].iconURL()
+              ? item[1].iconURL()
               : null,
             /** @type {string} */
             rank: entry.RoleName

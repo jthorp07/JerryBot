@@ -18,6 +18,13 @@ module.exports = {
 
     let trans = con.transaction();
     trans.begin(async (err) => {
+
+      if (err) {
+        console.log(err);
+        await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+        return;
+      }
+
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", (aborted) => {
@@ -43,25 +50,15 @@ module.exports = {
         return;
       }
 
-      ///Need to add rank to GuildMember row
+      result = await con.request(trans)
+        .input('GuildId', interaction.guildId)
+        .input('UserId', interaction.user.id)
+        .input('IsOwner', (interaction.user.id == interaction.guild.ownerId) ? 1 : 0)
+        .input('Username', interaction.user.username)
+        .input('GuildDisplayName', interaction.member.displayName)
+        .input('ValorantRankRoleIcon', null)
+        .execute('CreateGuildMember');
 
-      //   result = await con
-      //   .request(trans)
-      //   .input("GuildId", interaction.guildId)
-      //   .execute("GetRankRoles");
-      // .input("RankRoleIcon", **something goes here**)
-      // .input("ValorantDisplayName", NULL)
-
-      result = await con
-        .request(trans)
-        .input("GuildId", interaction.guildId)
-        .input("UserId", interaction.user.id)
-        .input(
-          "IsOwner",
-          interaction.guild.ownerId === interaction.user.id ? 1 : 0
-        )
-        .input("Username", interaction.user.username)
-        .execute("CreateGuildMember");
 
       if (result.returnValue === 2) {
         interaction.editReply({
@@ -80,6 +77,13 @@ module.exports = {
       }
 
       trans.commit(async (err) => {
+
+        if (err) {
+          console.log(err);
+          await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+          return;
+        }
+
         interaction.editReply({
           ephemeral: true,
           content: "You are now registered in this server!",

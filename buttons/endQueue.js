@@ -21,8 +21,6 @@ module.exports = {
     let queueId = parseInt(idArgs[1]);
     let hostId = idArgs[2];
 
-    console.log(idArgs);
-
     let trans = con.transaction();
 
     trans.begin(async (err) => {

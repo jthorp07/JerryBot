@@ -40,6 +40,8 @@ module.exports = {
                 .input('GuildId', interaction.guildId)
                 .execute('GetRankRoles');
 
+            
+
             if (!result.returnValue == 0) {
                 trans.rollback();
                 await interaction.editReply({ content: 'There was an error fetching your profile' });
@@ -48,6 +50,10 @@ module.exports = {
 
             let rankedRoles = result.recordset;
             let roleIcon = getRoleIcon(rankedRoles, interaction.member);
+
+            console.log(JSON.stringify(rankedRoles));
+
+            console.log(JSON.stringify(roleIcon));
 
             result = await con.request(trans)
                 .input('UserId', interaction.user.id)
