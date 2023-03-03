@@ -1,7 +1,11 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
 const { QUEUE_STATES } = require("../util/");
-const { tenMansClassicNextEmbed, tenMansClassicNextComps, selectCaptains } = require("../util/helpers");
+const {
+  tenMansClassicNextEmbed,
+  tenMansClassicNextComps,
+  selectCaptains,
+} = require("../util/helpers");
 module.exports = {
   data: {
     customId: "join-tenman", // customId of buttons that will execute this command
@@ -56,18 +60,18 @@ module.exports = {
       let ret = result.returnValue;
       if (ret == 6) {
         await interaction.editReply({
-          content: "You are already in this queue!"
+          content: "You are already in this queue!",
         });
         return;
       }
 
       if (ret == 5) {
         await interaction.editReply({
-          content: "You need to register with /register before joining queues in this server!"
+          content:
+            "You need to register with /register before joining queues in this server!",
         });
         return;
       }
-
 
       let numPlayers = result.output.NumPlayers;
       if (numPlayers === -1) {
@@ -78,8 +82,7 @@ module.exports = {
         });
         return;
       } else if (result.returnValue === 0) {
-
-        // Grab outputs from JoinQueue procedure        
+        // Grab outputs from JoinQueue procedure
         let numCaptains = result.output.NumCaptains;
         let queueStatus = result.output.QueueStatus;
         let playersAndCanBeCapt = result.recordsets[0];
@@ -99,17 +102,26 @@ module.exports = {
 
         // If necessary, choose captains
         if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
-          result = await con.request(trans)
-            .input('QueueId', queueId)
-            .output('EnforceRankRoles', Bit)
-            .execute('ImStartingDraft');
+          result = await con
+            .request(trans)
+            .input("QueueId", queueId)
+            .output("EnforceRankRoles", Bit)
+            .execute("ImStartingDraft");
 
           if (result.returnValue === 0) {
-
             let enforce = result.output.EnforceRankRoles;
 
             // Assuming success, reassign values with updated data after selecting captaibns and starting draft
-            let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans, enforce);
+            let newVals = await selectCaptains(
+              numCaptains,
+              playersAndCanBeCapt,
+              rankedRoles,
+              interaction,
+              queueId,
+              con,
+              trans,
+              enforce
+            );
             playersAvailable = newVals.newAvailable;
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;
@@ -120,15 +132,30 @@ module.exports = {
           }
         }
 
-        let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers, 
-          teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
+        let embeds = tenMansClassicNextEmbed(
+          queueStatus,
+          playersAvailable,
+          teamOnePlayers,
+          teamTwoPlayers,
+          spectators,
+          host.displayName,
+          host.displayAvatarURL(),
+          null,
+          0
+        );
 
-        let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null);
+        let comps = tenMansClassicNextComps(
+          queueId,
+          queueStatus,
+          playersAvailable,
+          null,
+          host
+        );
 
         interaction.message.edit({
           embeds: embeds,
-          components: comps
-        })
+          components: comps,
+        });
 
         // Success, reply and commit transaction
         trans.commit(async (err) => {
@@ -136,7 +163,8 @@ module.exports = {
             console.log(err);
             await interaction.editReply({
               ephemeral: true,
-              content: "Something went wrong and the command could not be completed.",
+              content:
+                "Something went wrong and the command could not be completed.",
             });
             // TODO: Have bot report error
             return;

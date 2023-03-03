@@ -15,9 +15,11 @@ module.exports = {
    */
   async execute(interaction, con, idArgs) {
     //TODO: Implement button command
+
     await interaction.deferReply({ ephemeral: true });
 
     let queueId = parseInt(idArgs[1]);
+    let hostId = idArgs[2];
 
     let trans = con.transaction();
 
@@ -25,6 +27,12 @@ module.exports = {
       if (err) {
         await interaction.editReply({
           content: "Something went wrong",
+        });
+        return;
+      }
+      if (hostId !== interaction.member.id) {
+        await interaction.editReply({
+          content: "You do not have permission to end the queue",
         });
         return;
       }
@@ -116,7 +124,7 @@ module.exports = {
         let teamTwoChan = await interaction.guild.channels.fetch(teamTwoId);
 
         await Promise.all(
-          teamOneChan.members.map(async (member) => {
+          teamOneChan?.members?.map(async (member) => {
             return new Promise((resolve, reject) => {
               try {
                 resolve(member.voice.setChannel(lobbyChan));
@@ -137,7 +145,7 @@ module.exports = {
           });
 
         await Promise.all(
-          teamTwoChan.members.map(async (member) => {
+          teamTwoChan?.members?.map(async (member) => {
             return new Promise((resolve, reject) => {
               try {
                 resolve(member.voice.setChannel(lobbyChan));
@@ -157,7 +165,11 @@ module.exports = {
             );
           });
 
-        interaction.editReply({ content: "The queue has been ended" });
+        interaction.editReply({ content: "The queue has ended" });
+
+        if (interaction.message.deletable) {
+          interaction.message.delete();
+        }
       });
     });
   },

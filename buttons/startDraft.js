@@ -1,6 +1,10 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
-const { tenMansClassicNextComps, tenMansClassicNextEmbed, selectCaptains } = require("../util/helpers");
+const {
+  tenMansClassicNextComps,
+  tenMansClassicNextEmbed,
+  selectCaptains,
+} = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -13,18 +17,27 @@ module.exports = {
    * @param {string[]} idArgs
    */
   async execute(interaction, con, idArgs) {
-
     // Defer, grab queueId from ID args, and start transaction
     await interaction.deferReply({ ephemeral: true });
     let queueId = parseInt(idArgs[1]);
+    let hostId = idArgs[2];
 
     let trans = con.transaction();
     trans.begin(async (err) => {
-
       // Transaction begin error
       if (err) {
-        await interaction.editReply({ content: 'Something went wrong and the command could not be completed.' });
+        await interaction.editReply({
+          content:
+            "Something went wrong and the command could not be completed.",
+        });
         console.log(err);
+        return;
+      }
+
+      if (hostId !== interaction.member.id) {
+        await interaction.editReply({
+          content: "You do not have permission to start the queue",
+        });
         return;
       }
 
@@ -39,17 +52,18 @@ module.exports = {
       });
 
       // Grab queue data
-      let result = await con.request(trans)
-        .input('QueueId', queueId)
-        .output('NumCaptains', Int)
-        .output('PlayerCount', Int)
-        .output('QueueStatus', NVarChar(100))
-        .output('HostId', VarChar(21))
-        .execute('GetQueue');
+      let result = await con
+        .request(trans)
+        .input("QueueId", queueId)
+        .output("NumCaptains", Int)
+        .output("PlayerCount", Int)
+        .output("QueueStatus", NVarChar(100))
+        .output("HostId", VarChar(21))
+        .execute("GetQueue");
 
       if (result.output.PlayerCount < 3) {
         interaction.editReply({
-          content: 'There are not enough players to start a draft.'
+          content: "There are not enough players to start a draft.",
         });
         return;
       }
@@ -63,7 +77,6 @@ module.exports = {
       let spectators = result.recordsets[4];
       let host = await interaction.guild.members.fetch(result.output.HostId);
 
-
       // Grab rankedroles for guild
       result = await con
         .request(trans)
@@ -72,15 +85,25 @@ module.exports = {
 
       let rankedRoles = result.recordset;
       // Set starting so that other threads know not to attempt to start
-      result = await con.request(trans)
-        .input('QueueId', queueId)
-        .output('EnforceRankRoles', Bit)
-        .execute('ImStartingDraft');
+      result = await con
+        .request(trans)
+        .input("QueueId", queueId)
+        .output("EnforceRankRoles", Bit)
+        .execute("ImStartingDraft");
 
       if (result.returnValue === 0) {
-        let enforce = result.output.EnforceRankRoles
+        let enforce = result.output.EnforceRankRoles;
 
-        let newVals = await selectCaptains(numCaptains, playersAndCanBeCapt, rankedRoles, interaction, queueId, con, trans, enforce);
+        let newVals = await selectCaptains(
+          numCaptains,
+          playersAndCanBeCapt,
+          rankedRoles,
+          interaction,
+          queueId,
+          con,
+          trans,
+          enforce
+        );
         playersAvailable = newVals.newAvailable;
         teamOnePlayers = newVals.newTeamOne;
         teamTwoPlayers = newVals.newTeamTwo;
@@ -89,29 +112,49 @@ module.exports = {
         // Something bad happened
         throw new Error("Database error");
       } else {
-        await interaction.editReply({ content: 'Another interaction is already trying to start this queue!' });
+        await interaction.editReply({
+          content: "Another interaction is already trying to start this queue!",
+        });
         await trans.rollback();
         return;
       }
 
-      let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable, teamOnePlayers,
-        teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
+      let embeds = tenMansClassicNextEmbed(
+        queueStatus,
+        playersAvailable,
+        teamOnePlayers,
+        teamTwoPlayers,
+        spectators,
+        host.displayName,
+        host.displayAvatarURL(),
+        null,
+        0
+      );
 
-      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null);
+      let comps = tenMansClassicNextComps(
+        queueId,
+        queueStatus,
+        playersAvailable,
+        null
+      );
 
       // Commit transaction and respond on Discord
       trans.commit(async (err) => {
         if (err) {
           trans.rollback();
-          interaction.editReply({ ephemeral: true, content: 'Something went wrong and the command could not be completed.' });
+          interaction.editReply({
+            ephemeral: true,
+            content:
+              "Something went wrong and the command could not be completed.",
+          });
           console.log(err);
           return;
         }
 
         interaction.message.edit({
           embeds: embeds,
-          components: comps
-        })
+          components: comps,
+        });
 
         setTimeout(() => {
           interaction.deleteReply();

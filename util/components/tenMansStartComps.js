@@ -1,14 +1,19 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, AnyComponentBuilder } = require("discord.js");
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  AnyComponentBuilder,
+} = require("discord.js");
 
 module.exports = {
-
   /**
-   * 
+   *
    * @param {number} queueId
-   * 
+   * @param {string} host
+   *
    * @returns {ActionRowBuilder<AnyComponentBuilder>[]}
    */
-  tenMansStartComps(queueId) {
+  tenMansStartComps(queueId, host) {
     return [
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
@@ -26,11 +31,11 @@ module.exports = {
       ),
       new ActionRowBuilder().setComponents(
         new ButtonBuilder()
-          .setCustomId(`start-draft:${queueId}`)
+          .setCustomId(`start-draft:${queueId}:${host}`)
           .setLabel("Start Draft")
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId(`end-queue:${queueId}`)
+          .setCustomId(`end-queue:${queueId}:${host}`)
           .setLabel("End Game")
           .setStyle(ButtonStyle.Danger)
       ),
