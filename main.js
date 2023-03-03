@@ -91,17 +91,32 @@ client.on(Events.ClientReady, () => {
 
 // On joining a new Discord server
 client.on(Events.GuildCreate, async (guild) => {
-  Handlers.onGuildCreate(guild, con);
+  try {
+    Handlers.onGuildCreate(guild, con);
+  } catch (err) {
+    console.log(err);
+    return;
+  }
 });
 
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-  Handlers.onVoiceStateUpdate(oldState, newState, con);
+  try {
+    Handlers.onVoiceStateUpdate(oldState, newState, con);
+  } catch (err) {
+    console.log(err);
+    return;
+  }
 });
 
 // Command Handling
 client.on(Events.InteractionCreate, async (interaction) => {
-  Handlers.onInteractionCreate(interaction, con, knownInteractions);
+  try {
+    Handlers.onInteractionCreate(interaction, con, knownInteractions);
+  } catch (err) {
+    console.log(err);
+    return;
+  }
 });
 
 client.login(TOKEN);
