@@ -81,28 +81,76 @@ GO
 EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'UNRANKED'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IRON'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IRON_ONE'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'BRONZE'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IRON_TWO'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'SILVER'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IRON_THREE'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'GOLD'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'BRONZE_ONE'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'PLATINUM'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'BRONZE_TWO'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'DIAMOND'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'BRONZE_THREE'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'ASCENDANT'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'SILVER_ONE'
 GO
 
-EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IMMORTAL'
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'SILVER_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'SILVER_THREE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'GOLD_ONE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'GOLD_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'GOLD_THREE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'PLATINUM_ONE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'PLATINUM_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'PLATINUM_THREE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'DIAMOND_ONE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'DIAMOND_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'DIAMOND_THREE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'ASCENDANT_ONE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'ASCENDANT_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'ASCENDANT_THREE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IMMORTAL_ONE'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IMMORTAL_TWO'
+GO
+
+EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'IMMORTAL_THREE'
 GO
 
 EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'RADIANT'

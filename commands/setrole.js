@@ -9,7 +9,8 @@ module.exports = {
             option.setName('rolename')
                 .setDescription('The name of the role')
                 .setRequired(true)
-                .addChoices({ name: 'Iron Rank Role', value: 'iron' },
+                .addChoices({ name: 'Unranked Rank Role', value: 'unranked' },
+                    { name: 'Iron Rank Role', value: 'iron' },
                     { name: 'Bronze Rank Role', value: 'bronze' },
                     { name: 'Silver Rank Role', value: 'silver' },
                     { name: 'Gold Rank Role', value: 'gold' },
@@ -18,6 +19,14 @@ module.exports = {
                     { name: 'Ascendant Rank Role', value: 'ascendant' },
                     { name: 'Immortal Rank Role', value: 'immortal' },
                     { name: 'Radiant Rank Role', value: 'radiant' }))
+        .addNumberOption(option =>
+            option.setName('ranklevel')
+                .setDescription('For applicable tiers- the sublevel of the rank')
+                .setRequired(true)
+                .addChoices({ name: '1', value: 1 },
+                    { name: '2', value: 2 },
+                    { name: '3', value: 3 },
+                ))
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('The role to be used')
@@ -31,7 +40,24 @@ module.exports = {
 
         await interaction.deferReply();
         let role = interaction.options.getRole('role');
-        let roleName = interaction.options.getString('rolename');
+        let roleName = interaction.options.getString('rolename').toUpperCase();
+        let roleLevel = interaction.options.getNumber('ranklevel');
+
+        if (!(roleName == 'UNRANKED' || roleName == 'RADIANT')) {
+            switch (roleLevel) {
+                case 1:
+                    roleName = `${roleName}_ONE`;
+                    break;
+                case 2:
+                    roleName = `${roleName}_TWO`;
+                    break;
+                case 3:
+                    roleName = `${roleName}_THREE`;
+                    break;
+            }
+        }
+
+        console.log(roleName);
 
         let trans = con.transaction();
         trans.begin(async (err) => {
@@ -49,7 +75,7 @@ module.exports = {
             let result = await con.request(trans)
                 .input('GuildId', interaction.guildId)
                 .input('RoleId', role.id)
-                .input('RoleName', roleName.toUpperCase())
+                .input('RoleName', roleName)
                 .execute('SetRole');
 
             if (result.returnValue !== 0) {
