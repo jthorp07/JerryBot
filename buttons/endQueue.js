@@ -21,6 +21,8 @@ module.exports = {
     let queueId = parseInt(idArgs[1]);
     let hostId = idArgs[2];
 
+    console.log(idArgs);
+
     let trans = con.transaction();
 
     trans.begin(async (err) => {
@@ -30,7 +32,7 @@ module.exports = {
         });
         return;
       }
-      if (hostId !== interaction.member.id) {
+      if (hostId != interaction.member.id) {
         await interaction.editReply({
           content: "You do not have permission to end the queue",
         });
