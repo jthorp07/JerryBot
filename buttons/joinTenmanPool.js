@@ -149,7 +149,7 @@ module.exports = {
           queueStatus,
           playersAvailable,
           null,
-          host
+          host.id
         );
 
         interaction.message.edit({
