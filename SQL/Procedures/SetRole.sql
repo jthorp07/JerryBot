@@ -20,10 +20,10 @@ CREATE PROCEDURE SetRole(
     -- If role already set, update it --
     IF EXISTS
     (SELECT RoleName
-    FROM GuildRoles
+    FROM GuildRole
     WHERE GuildId=@GuildId AND RoleName=@RoleName)
     BEGIN
-        UPDATE GuildRoles
+        UPDATE GuildRole
         SET RoleId=@RoleId
         WHERE GuildId=@GuildId AND RoleName=@RoleName
         PRINT 'Role updated'
@@ -31,7 +31,7 @@ CREATE PROCEDURE SetRole(
     END
 
     -- Otherwise insert new value to set role --
-    INSERT INTO GuildRoles(GuildId, RoleId, RoleName, OrderBy, RoleIcon, RoleEmote) VALUES(@GuildId, @RoleId, @RoleName, @OrderBy, @RoleIcon, @RoleEmote)
+    INSERT INTO GuildRole(GuildId, RoleId, RoleName, OrderBy, RoleIcon, RoleEmote) VALUES(@GuildId, @RoleId, @RoleName, @OrderBy, @RoleIcon, @RoleEmote)
     PRINT 'Role set'
     RETURN 0
 

@@ -17,7 +17,7 @@ CREATE PROCEDURE GetProfile(
 
     -- RecordSet 0: {IsPremium (bit), Username (string)}
     SELECT U.IsPremium IsPremium, U.Username Username, G.[Name] GuildName, GM.IsOwner IsOwner, GM.DiscordDisplayName DisplayName, 
-        GM.ValorantDisplayName ValorantName, GM.ValorantRankRoleIcon ValorantRoleIcon, GM.HasRankRole Ranked, GM.CanBeCaptain CanBeCaptain
+        GM.ValorantDisplayName ValorantName, GM.ValorantRankRoleName ValorantRoleName, GM.HasRankRole Ranked, GM.CanBeCaptain CanBeCaptain
     From [User] U
     JOIN GuildMember GM ON U.[Id]=GM.MemberId
     JOIN Guild G ON G.[Id]=GM.GuildId

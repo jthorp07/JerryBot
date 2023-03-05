@@ -56,7 +56,7 @@ module.exports = {
         .input('IsOwner', (interaction.user.id == interaction.guild.ownerId) ? 1 : 0)
         .input('Username', interaction.user.username)
         .input('GuildDisplayName', interaction.member.displayName)
-        .input('ValorantRankRoleIcon', null)
+        .input('ValorantRankRoleName', null)
         .execute('CreateGuildMember');
 
 

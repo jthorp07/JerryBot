@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool, NVarChar } = require("mssql");
+const { ConnectionPool, NVarChar, VarChar } = require("mssql");
 const { profileEmbed } = require("../util/embeds");
 const { profileComps } = require("../util/components");
 
@@ -50,6 +50,16 @@ module.exports = {
         return;
       }
 
+      const userObj = result.recordsets[0][0];
+
+      result = await con.request(trans)
+        .input('UserId', interaction.user.id)
+        .input('GuildId', interaction.guildId)
+        .output('RoleName', NVarChar(100))
+        .output('RoleEmote', VarChar(57))
+        .output('RoleIcon', VarChar(255))
+        .execute('GetUserValRank');
+
       trans.commit(async (err) => {
 
         if (err) {
@@ -60,12 +70,8 @@ module.exports = {
 
         let comps = profileComps();
 
-        const userObj = result.recordsets[0][0];
-
-        console.log(userObj);
-
         /**@type {string} */
-        let currentRank = result.output.CurrentRank;
+        let currentRank = result.output.RoleName;
         let parts = currentRank.toLowerCase().split('_');
         for (let i = 0; i < parts.length; i++) {
           let part = parts[i];
@@ -78,14 +84,12 @@ module.exports = {
           userObj.GuildName,
           userObj.DisplayName,
           userObj.ValorantName,
-          userObj.ValorantRoleIcon,
+          result.output.RoleIcon,
           userObj.Ranked,
           currentRank,
           userObj.Username,
           userObj.CanBeCaptain
         );
-
-        // let stringoption = interaction.options.getString("stringone");
         await interaction.editReply({ embeds: profile, ephemeral: true, components: comps });
       })
     });

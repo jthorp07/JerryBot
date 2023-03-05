@@ -9,7 +9,7 @@ CREATE PROCEDURE GetRankRoles(
     END
 
     SELECT RoleId, RoleName, OrderBy, RoleIcon, RoleEmote
-    FROM GuildRoles
+    FROM GuildRole
     WHERE GuildId=@GuildId AND OrderBy=1
 
 END

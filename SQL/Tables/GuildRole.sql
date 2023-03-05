@@ -1,6 +1,6 @@
-DROP TABLE IF EXISTS GuildRoles
+DROP TABLE IF EXISTS GuildRole
 
-CREATE TABLE GuildRoles(
+CREATE TABLE GuildRole(
 
     GuildId DiscordSnowflake NOT NULL,
     RoleId DiscordSnowflake NOT NULL,

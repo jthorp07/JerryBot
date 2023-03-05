@@ -57,7 +57,6 @@ module.exports = {
                 .input('Username', interaction.user.username)
                 .input('GuildDisplayName', interaction.member.displayName)
                 .input('IsOwner', (interaction.guild.ownerId == interaction.member.id))
-                .input('ValorantRoleIcon', roleIcon ? roleIcon.icon : null)
                 .input('CurrentRank', roleIcon ? roleIcon.rank : null)
                 .input('HasRank', roleIcon ? true : false)
                 .execute('UpdateDiscordProfile');

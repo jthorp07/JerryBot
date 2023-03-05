@@ -7,7 +7,6 @@ CREATE PROCEDURE UpdateDiscordProfile(
     -- Guild Member Params: Pertain to a user in the guild sending this request
     @IsOwner BIT,
     @GuildDisplayName VARCHAR(32),
-    @ValorantRoleIcon VARCHAR(255),
     @CurrentRank NVARCHAR(100),
     @HasRank BIT
 
@@ -40,7 +39,7 @@ BEGIN
 
 
     UPDATE GuildMember
-    SET IsOwner=@IsOwner, DiscordDisplayName=@GuildDisplayName, ValorantRankRoleIcon=@ValorantRoleIcon, CurrentRank=@CRank, HasRankRole=@HasRank
+    SET IsOwner=@IsOwner, DiscordDisplayName=@GuildDisplayName, ValorantRankRoleName=@CurrentRank, CurrentRank=@CRank, HasRankRole=@HasRank
     WHERE GuildId=@GuildId AND MemberId=@UserId
 
     UPDATE [User]

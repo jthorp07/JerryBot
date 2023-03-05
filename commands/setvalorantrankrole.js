@@ -30,7 +30,11 @@ module.exports = {
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('The role to be used')
-                .setRequired(true)),
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('emote')
+            .setDescription('A unicode emoji OR custom emote to represent the role')
+            .setRequired(false)),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -43,6 +47,7 @@ module.exports = {
         let roleName = interaction.options.getString('rolename').toUpperCase().split(':')[0];
         let roleGroup = parseInt(interaction.options.getString('rolename').split(':')[1]);
         let roleLevel = interaction.options.getNumber('ranklevel');
+        let roleEmote = interaction.options.getString('emote');
 
         if (!(roleName == 'UNRANKED' || roleName == 'RADIANT')) {
             switch (roleLevel) {
@@ -84,6 +89,8 @@ module.exports = {
                 .input('RoleId', role.id)
                 .input('RoleName', roleName)
                 .input('OrderBy', roleGroup)
+                .input('RoleIcon', role.iconURL() ? role.iconURL() : null)
+                .input('RoleEmote' ,roleEmote ? roleEmote : null)
                 .execute('SetRole');
 
             if (result.returnValue !== 0) {

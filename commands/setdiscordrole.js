@@ -20,7 +20,11 @@ module.exports = {
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('The role to be used')
-                .setRequired(true)),
+                .setRequired(true))
+        .addStringOption(option =>
+            option.setName('emote')
+                .setDescription('A unicode emoji OR custom emote to represent the role')
+                .setRequired(false)),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -28,10 +32,11 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        await interaction.deferReply({ephemeral:true});
+        await interaction.deferReply({ ephemeral: true });
         let role = interaction.options.getRole('role');
         let roleName = interaction.options.getString('rolename').toUpperCase().split(':')[0];
         let roleGroup = parseInt(interaction.options.getString('rolename').split(':')[1]);
+        let roleEmote = interaction.options.getString('emote');
 
         let trans = con.transaction();
         trans.begin(async (err) => {
@@ -57,6 +62,8 @@ module.exports = {
                 .input('RoleId', role.id)
                 .input('RoleName', roleName)
                 .input('OrderBy', roleGroup)
+                .input('RoleIcon', role.iconURL() ? role.iconURL() : null)
+                .input('RoleEmote', roleEmote ? roleEmote : null)
                 .execute('SetRole');
 
             if (result.returnValue !== 0) {
@@ -68,7 +75,7 @@ module.exports = {
             trans.commit(async (err) => {
                 if (err) {
                     console.log(err);
-                    await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+                    await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
                     return;
                 }
                 await interaction.editReply({ ephemeral: true, content: 'Role Set!' });
