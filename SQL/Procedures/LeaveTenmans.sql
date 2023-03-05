@@ -1,17 +1,17 @@
 CREATE PROCEDURE LeaveTenmans(
     @QueueId INT,
-    @UserId DiscordSnowflake
+    @UserId DiscordSnowflake,
+    @GuildId DiscordSnowflake
 ) AS BEGIN
 
     -- VALIDATE --
-    IF @GuildId IS NULL OR @UserId IS NULL BEGIN
+    IF @GuildId IS NULL OR @UserId IS NULL OR @QueueId IS NULL BEGIN
         PRINT 'Args cannot be null'
         RETURN 1
     END
 
-    UPDATE GuildMember
-    SET QueueStatus=0
-    WHERE GuildId=@GuildId AND MemberId=@UserId
+    DELETE FROM QueuedPlayers
+    WHERE QueueId=@QueueId AND Playerid=@UserId AND GuildId=@GuildId
     PRINT 'Removed player from queue'
     RETURN 0
 

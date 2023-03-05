@@ -72,12 +72,15 @@ module.exports = {
 
         /**@type {string} */
         let currentRank = result.output.RoleName;
-        let parts = currentRank.toLowerCase().split('_');
-        for (let i = 0; i < parts.length; i++) {
-          let part = parts[i];
-          parts[i] = part.charAt(0).toUpperCase().concat(part.substring(1));
+        if (currentRank) {
+          let parts = currentRank.toLowerCase().split('_');
+          for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            parts[i] = part.charAt(0).toUpperCase().concat(part.substring(1));
+          }
+          currentRank = parts.join(' ');
         }
-        currentRank = parts.join(' ');
+
 
         const profile = profileEmbed(
           interaction.member.displayAvatarURL(),

@@ -29,9 +29,10 @@ module.exports = {
 
     // Available Players
     let draftListString = playersAvailable ? "" : undefined;
-    playersAvailable.forEach(player => {
+    if (playersAvailable) playersAvailable.forEach(player => {
+      console.log(JSON.stringify(player));
       let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-      let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
+      let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
       draftListString = `${draftListString}${dispName} ${dispRole}\n`;
     });
 
@@ -55,7 +56,7 @@ module.exports = {
         }
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
+        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
         teamOneString = `${teamOneString}${dispName} ${dispRole}\n`;
       };
 
@@ -67,7 +68,7 @@ module.exports = {
         }
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
+        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
         capOne = `${dispName} ${dispRole}`;
       };
 
@@ -78,7 +79,7 @@ module.exports = {
           continue;
         }
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
+        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
         teamTwoString = `${teamTwoString}${dispName} ${dispRole}\n`;
       }
 
@@ -90,7 +91,7 @@ module.exports = {
         }
 
         let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.ValorantRankRoleIcon ? player.ValorantRankRoleIcon : "";
+        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
         capTwo = `${dispName} ${dispRole}`;
       };
 
@@ -102,6 +103,18 @@ module.exports = {
       return tenMansDraftEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString, hostName, hostPfp);
 
     }
-      
+
   },
 };
+
+
+function parseRoleName(roleName) {
+  let currentRank = roleName;
+  let parts = currentRank.toLowerCase().split('_');
+  for (let i = 0; i < parts.length; i++) {
+    let part = parts[i];
+    parts[i] = part.charAt(0).toUpperCase().concat(part.substring(1));
+  }
+  currentRank = parts.join(' ');
+  return currentRank;
+}

@@ -51,7 +51,7 @@ module.exports = {
                 .input('IsOwner', 1)
                 .input('Username', owner.user.username)
                 .input('GuildDisplayName', owner.displayName)
-                .input('ValorantRankRoleIcon', null)
+                .input('ValorantRankRoleName', null)
                 .execute('CreateGuildMember');
 
             if (result.returnValue === 2) {
@@ -72,7 +72,7 @@ module.exports = {
                     .input('IsOwner', 0)
                     .input('Username', user.user.username)
                     .input('GuildDisplayName', user.displayName)
-                    .input('ValorantRankRoleIcon', null)
+                    .input('ValorantRankRoleName', null)
                     .execute('CreateGuildMember');
 
                 if (result.returnValue === 2) {
