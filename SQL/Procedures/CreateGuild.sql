@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE CreateGuild(
+CREATE PROCEDURE CreateGuild(
     @GuildId DiscordSnowflake,
     @GuildName VARCHAR(32)
 ) AS BEGIN
@@ -13,7 +13,7 @@ CREATE OR ALTER PROCEDURE CreateGuild(
     (SELECT * FROM Guild WHERE Id=@GuildId)
     BEGIN
         PRINT 'Guild already exists'
-        RETURN 2
+        RETURN 3
     END
 
     -- Do it --

@@ -11,6 +11,10 @@ module.exports = {
 	 */
 	async execute(interaction, con) {
 
+		// REMOVE THIS ONCE IMPLEMENTED
+		await interaction.reply({ephemeral:true, content: 'This command is not finished yet! Try again some other time!'});
+		return;
+
 		await interaction.deferReply();
 
 		let trans = con.transaction();

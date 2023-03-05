@@ -16,11 +16,13 @@ CREATE PROCEDURE ImStartingDraft(
 
     -- Do it --
     DECLARE @NewState INT
+    DECLARE @OldState INT
     EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='DRAFTING', @EnumValue=@NewState OUTPUT
+    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='START_DRAFT', @EnumValue=@OldState OUTPUT
 
     UPDATE Queues
     SET QueueStatus=@NewState
-    WHERE [Id]=@QueueId AND NOT QueueStatus=@NewState
+    WHERE [Id]=@QueueId AND QueueStatus!=@OldState
 
     IF @@ROWCOUNT = 0 BEGIN
         PRINT 'Someone else already took this queue'

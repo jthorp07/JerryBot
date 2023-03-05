@@ -23,7 +23,9 @@ module.exports = {
               ? item[1].iconURL()
               : null,
             /** @type {string} */
-            rank: entry.RoleName
+            rank: entry.RoleName,
+            emote: entry.RoleEmote,
+            icon: entry.RoleIcon
           };
         }
       }

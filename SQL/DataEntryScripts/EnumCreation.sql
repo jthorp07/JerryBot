@@ -155,3 +155,37 @@ GO
 
 EXEC AddToEnum @EnumName = 'VAL_RANK', @Desc = 'RADIANT'
 GO
+
+
+-- Discord Role enum (For the Discord roles)
+-- ENUM:
+EXEC CreateEnum @EnumName = 'DISCORD_ROLE';
+GO
+
+-- ENUM VALUES:
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'MOD'
+GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'ADMIN'
+GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'QUEUEHOST'
+GO
+
+--EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'MUTE'
+--GO
+
+--EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'TIMEOUT'
+--GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'QUEUEBAN'
+GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'SUBTIERONE'
+GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'SUBTIERTWO'
+GO
+
+EXEC AddToEnum @EnumName = 'DISCORD_ROLE', @Desc = 'SUBTIERTHREE'
+GO

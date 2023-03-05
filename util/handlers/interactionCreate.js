@@ -14,12 +14,12 @@ async function onSlashCommand(interaction, con, knownInteractions) {
 	// Prepare command for execution
 	let command = knownInteractions.commands.get(interaction.commandName);
 	if (!command) {
-		interaction.editReply({ content: 'Unknown Command' });
+		interaction.reply({ content: 'Unknown Command' });
 		return;
 	}
 
 	// Check user permissions for command
-	let permCheck = await checkPermissions(con, command.permissions, interaction.user.id).catch(err => {
+	let permCheck = await checkPermissions(con, command.permissions, interaction.member).catch(err => {
 		interaction.reply({content: 'Something went wrong authenticating this command o-o'});
 		console.log(err);
 		return;
@@ -49,7 +49,7 @@ async function onButton(interaction, con, knownInteractions) {
 		return;
 	}
 
-	let permCheck = await checkPermissions(con, btn.data.permissions, interaction.user.id).catch(err => {
+	let permCheck = await checkPermissions(con, btn.data.permissions, interaction.member).catch(err => {
 		interaction.reply({content: 'Something went wrong authenticating this command o-o'});
 		console.log(err);
 		return;
@@ -80,7 +80,7 @@ async function onStringSelect(interaction, con, knownInteractions) {
 		return;
 	}
 	
-	let permCheck = await checkPermissions(con, smCommand.data.permissions, interaction.user.id)	
+	let permCheck = await checkPermissions(con, smCommand.data.permissions, interaction.member)	
 	if (permCheck) {
 		smCommand.execute(interaction, con, idArgs);
 		console.log('  [Bot]: Select Menu Handled');

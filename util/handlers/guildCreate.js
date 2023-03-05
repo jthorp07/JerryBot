@@ -8,11 +8,11 @@ module.exports = {
    */
   async onGuildCreate(guild, con) {
     let trans = con.transaction();
-    trans
-      .begin(async (err) => {
+    trans.begin(async (err) => {
 
         if (err) {
-          trans.rollback();
+          console.log(err);
+          console.log("GuildCreate handler failed");
           return;
         }
 
@@ -35,6 +35,15 @@ module.exports = {
           console.log("Failed to run GuildCreate handler");
           return;
         }
+
+        trans.commit(async (err) => {
+          if (err) {
+            console.log(err);
+            console.log("GuildCreate handler failed");
+            return;
+          }
+        })
+
       })
   },
 };

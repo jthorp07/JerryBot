@@ -1,4 +1,5 @@
-const mssql = require('mssql');
+const {ConnectionPool} = require('mssql');
+const {GuildMember} = require('discord.js');
 
 module.exports = {
 
@@ -7,9 +8,9 @@ module.exports = {
      * command's user has permission to use the command
      * or as false if the user does not have permission.
      * 
-     * @param {mssql.ConnectionPool} con 
+     * @param {ConnectionPool} con 
      * @param {string} permissionLevel 
-     * @param {string} user 
+     * @param {GuildMember} user 
      * 
      * @returns {Promise<boolean>}
      */
@@ -29,7 +30,7 @@ module.exports = {
                 admins.push(process.env.ANIMUZ);
                 
                 for (let admin of admins) {
-                    if (user == admin) {
+                    if (user.id == admin) {
                         resolve(true);
                         return;
                     }
@@ -38,12 +39,16 @@ module.exports = {
                 return;
             }
 
+            if (permissionLevel == 'queuehost') {
+
+            }
+
             // TODO: Add permission rules here
 
-            // Timeout after 30 seconds (should not take nearly that long to finish)
+            // Timeout after 2.5 seconds 
             setTimeout(() => {
                 reject('Timeout');
-            }, 30000);
+            }, 2500);
 
         });
     }

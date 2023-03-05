@@ -35,6 +35,13 @@ module.exports = {
 
     let trans = con.transaction();
     trans.begin(async (err) => {
+
+      if (err) {
+        console.log(err);
+        await interaction.editReply({content:"Something went wrong and you could not be joined to the queue"});
+        return;
+      }
+
       // DBMS error handling
       let rolledBack = false;
       trans.on("rollback", (aborted) => {
@@ -93,8 +100,7 @@ module.exports = {
         let host = await interaction.guild.members.fetch(result.output.HostId);
 
         // Grab guild's rank roles
-        result = await con
-          .request(trans)
+        result = await con.request(trans)
           .input("GuildId", interaction.guildId)
           .execute("GetRankRoles");
 
@@ -102,16 +108,20 @@ module.exports = {
 
         // If necessary, choose captains
         if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
-          result = await con
-            .request(trans)
+          console.log("  [Bot] Starting draft");
+          result = await con.request(trans)
             .input("QueueId", queueId)
             .output("EnforceRankRoles", Bit)
             .execute("ImStartingDraft");
 
-          if (result.returnValue === 0) {
-            let enforce = result.output.EnforceRankRoles;
+          console.log("ImStartingDraft finished");
 
+          if (result.returnValue === 0) {
+
+            console.log("I did the procedure but it didn't update the value");
+            let enforce = result.output.EnforceRankRoles;
             // Assuming success, reassign values with updated data after selecting captaibns and starting draft
+            console.log("selectCaptains starting");
             let newVals = await selectCaptains(
               numCaptains,
               playersAndCanBeCapt,
@@ -126,9 +136,12 @@ module.exports = {
             teamOnePlayers = newVals.newTeamOne;
             teamTwoPlayers = newVals.newTeamTwo;
             queueStatus = newVals.newStatus;
-          } else if (result.returnValue !== -1) {
+          } else if (result.returnValue != -1) {
             // Something bad happened
             throw new Error("Database error");
+          }
+          else {
+            console.log("Idk what's happening");
           }
         }
 
@@ -144,6 +157,7 @@ module.exports = {
           0
         );
 
+        console.log(`Queuestatus before making comps: ${queueStatus}`);
         let comps = tenMansClassicNextComps(
           queueId,
           queueStatus,

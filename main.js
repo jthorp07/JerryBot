@@ -33,6 +33,7 @@ const SQL = {
  *	commands are up to date on Discord's end
  */
 fork("./deploy-commands.js");
+fork("./deploy-gca.js");
 
 // Holy crap that's a lot of intention :flushed:
 const intent_flags = [

@@ -21,7 +21,14 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
     let queueId = parseInt(idArgs[1]);
     let hostId = idArgs[2];
-    console.log(idArgs);
+
+    if (hostId != interaction.member.id) {
+      await interaction.editReply({
+        content: "You do not have permission to start the queue",
+      });
+      return;
+    }
+
     let trans = con.transaction();
     trans.begin(async (err) => {
       // Transaction begin error
@@ -31,15 +38,6 @@ module.exports = {
             "Something went wrong and the command could not be completed.",
         });
         console.log(err);
-        return;
-      }
-
-      console.log(hostId, interaction.member.id);
-
-      if (hostId != interaction.member.id) {
-        await interaction.editReply({
-          content: "You do not have permission to start the queue",
-        });
         return;
       }
 

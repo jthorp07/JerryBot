@@ -37,32 +37,7 @@ CREATE PROCEDURE DraftPlayer(
 
     PRINT 'Player moved'
 
-    -- Select DraftPickTeamId to next team
-    DECLARE @OldTeamValue NVARCHAR(100)
-    DECLARE @NewTeamValue NVARCHAR(100)
-    EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue=@TeamToDraftTo, @EnumDesc=@OldTeamValue OUTPUT
-
-    SET @Team = @OldTeamValue
-    SET @NewTeamValue = 'TEAM_ONE'
-    IF @OldTeamValue = 'TEAM_ONE'
-    BEGIN
-        SET @NewTeamValue = 'TEAM_TWO'
-    END
-
-    DECLARE @NewTeamId INT
-    EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc=@NewTeamValue, @EnumValue=@NewTeamId OUTPUT
-
-    -- Select DraftPickId to next captain
-    DECLARE @NewCaptId DiscordSnowflake
-    SELECT @NewCaptId=PlayerId
-    FROM QueuedPlayers
-    WHERE QueueId=@QueueId AND QueuePool=@NewTeamId AND IsCaptain=1
-
-    -- Query to update DraftPickTeamId and DraftPickId
-    UPDATE Queues 
-    SET DraftPickTeamId=@NewTeamId, DraftPickId=@NewCaptId
-    WHERE [Id]=@QueueId
-
+    
     -- If no more players to draft OR teams full => advance to pack select
     DECLARE @Team1Size INT
     DECLARE @Team2Size INT
@@ -85,6 +60,34 @@ CREATE PROCEDURE DraftPlayer(
         SET QueueStatus=dbo.GetEnumVal('QUEUE_STATE', 'MAP_PICK')
         WHERE [Id]=@QueueId
     END
+    
+    -- Select DraftPickTeamId to next team
+    DECLARE @OldTeamValue NVARCHAR(100)
+    DECLARE @NewTeamValue NVARCHAR(100)
+    EXEC GetEnumDesc @EnumName = 'QUEUE_POOL', @EnumValue=@TeamToDraftTo, @EnumDesc=@OldTeamValue OUTPUT
+
+    SET @Team = @OldTeamValue
+    SET @NewTeamValue = 'TEAM_ONE'
+    IF (@OldTeamValue = 'TEAM_ONE' AND @Team2Size < 5) OR @Team1Size >= 5
+    BEGIN
+        SET @NewTeamValue = 'TEAM_TWO'
+    END
+
+    DECLARE @NewTeamId INT
+    EXEC GetEnumValue @EnumName = 'QUEUE_POOL', @EnumDesc=@NewTeamValue, @EnumValue=@NewTeamId OUTPUT
+
+    -- Select DraftPickId to next captain
+    DECLARE @NewCaptId DiscordSnowflake
+    SELECT @NewCaptId=PlayerId
+    FROM QueuedPlayers
+    WHERE QueueId=@QueueId AND QueuePool=@NewTeamId AND IsCaptain=1
+
+    -- Query to update DraftPickTeamId and DraftPickId
+    UPDATE Queues 
+    SET DraftPickTeamId=@NewTeamId, DraftPickId=@NewCaptId
+    WHERE [Id]=@QueueId
+
+    
 
     -- Grab queue information for frontend to update
     DECLARE @TempOne INT

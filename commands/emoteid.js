@@ -3,10 +3,10 @@ const {ConnectionPool} = require('mssql');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('hello')
-        .setDescription('Says hello')
+        .setName('emoteid')
+        .setDescription('Sends the emote and id')
         .addStringOption(option =>
-            option.setName('stringone')
+            option.setName('emote')
                 .setDescription('a string')
                 .setRequired(true)),
     /**
@@ -16,10 +16,10 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        let stringoption = interaction.options.getString('stringone');
+        let stringoption = interaction.options.getString('emote');
         console.log(stringoption);
-        await interaction.reply({content: `\`\`\`Hello ${stringoption}\`\`\``});
+        await interaction.reply({content: `\`\`\`${stringoption}\`\`\``});
 
     },
-    permissions: "all"
+    permissions: "admin"
 }

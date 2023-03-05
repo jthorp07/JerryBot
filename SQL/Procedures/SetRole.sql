@@ -2,7 +2,9 @@ CREATE PROCEDURE SetRole(
     @GuildId DiscordSnowflake,
     @RoleId DiscordSnowflake,
     @RoleName VARCHAR(32),
-    @OrderBy INT
+    @OrderBy INT,
+    @RoleIcon VARCHAR(255),
+    @RoleEmote VARCHAR(57)
 ) AS BEGIN
 
     -- Validate --
@@ -29,7 +31,7 @@ CREATE PROCEDURE SetRole(
     END
 
     -- Otherwise insert new value to set role --
-    INSERT INTO GuildRoles(GuildId, RoleId, RoleName, OrderBy) VALUES(@GuildId, @RoleId, @RoleName, @OrderBy)
+    INSERT INTO GuildRoles(GuildId, RoleId, RoleName, OrderBy, RoleIcon, RoleEmote) VALUES(@GuildId, @RoleId, @RoleName, @OrderBy, @RoleIcon, @RoleEmote)
     PRINT 'Role set'
     RETURN 0
 

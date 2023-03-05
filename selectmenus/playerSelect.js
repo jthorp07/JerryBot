@@ -78,6 +78,7 @@ module.exports = {
       if (result.returnValue != 0) {
         await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
         console.log("Database error");
+        trans.rollback();
         return;
       }
 
@@ -100,6 +101,7 @@ module.exports = {
       if (result.returnValue != 0) {
         await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
         console.log("Database error");
+        trans.rollback();
         return;
       }
 

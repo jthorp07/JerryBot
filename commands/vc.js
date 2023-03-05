@@ -1,11 +1,11 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, ChannelType, VoiceChannel } = require('discord.js');
-const {ConnectionPool, VarChar, Bit} = require('mssql');
+const { ConnectionPool, VarChar, Bit } = require('mssql');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('vc')
         .setDescription('Creates a personal voice channel for the user')
-        .addNumberOption(option => 
+        .addNumberOption(option =>
             option.setMaxValue(16)
                 .setMinValue(1)
                 .setName('capacity')
@@ -18,24 +18,31 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        await interaction.deferReply();
+        await interaction.deferReply({ ephemeral: true });
 
         // Create the channel in the Discord server
         let cap = interaction.options.getNumber('capacity');
         /**@type {VoiceChannel} */
-        let channel = await interaction.guild.channels.create({
-            name: `${interaction.user.username}'s channel`,
-            type: ChannelType.GuildVoice,
-            reason: 'cmd'
-        });
-        
+        let channel;
+        try {
+            channel = await interaction.guild.channels.create({
+                name: `${interaction.user.username}'s channel`,
+                type: ChannelType.GuildVoice,
+                reason: 'cmd'
+            });
+        } catch (err) {
+            await interaction.editReply({ content: 'An error occured creating a new channel' });
+            console.log(err);
+            return;
+        }
+
         // Begin a database transaction to store newly made channel's information
         let trans = con.transaction();
         trans.begin(async (err) => {
 
             if (err) {
                 console.log(err);
-                await interaction.editReply({content:"Something went wrong"});
+                await interaction.editReply({ content: "Something went wrong" });
                 return;
             }
 
@@ -50,29 +57,34 @@ module.exports = {
             });
 
             let result = await con.request(trans)
-                                .input('ChannelName', 'VCCAT')
-                                .input('GuildId', interaction.guildId)
-                                .output('ChannelId', VarChar(21))
-                                .output('Triggerable', Bit)
-                                .output('Type', VarChar(20))
-                                .execute('GetChannel');
+                .input('ChannelName', 'VCCAT')
+                .input('GuildId', interaction.guildId)
+                .output('ChannelId', VarChar(21))
+                .output('Triggerable', Bit)
+                .output('Type', VarChar(20))
+                .execute('GetChannel');
 
             let parentId = result.output.ChannelId;
-            channel.edit((await channel.setUserLimit(cap ? cap : 99)).setParent(parentId));
+            try {
+                channel.edit((await channel.setUserLimit(cap ? cap : 99)).setParent(parentId));
+            } catch (err) {
+                console.log(err);
+                await interaction.editReply({content:'Your channel could not be placed in the correct category. Make sure your server\'s staff have set up the "Private VC Category" channel with the /setchannel command!'});
+                if (channel.deletable) {
+                    channel.delete();
+                }
+                return;
+            }
 
             result = await con.request(trans)
-                            .input('GuildId', interaction.guildId)
-                            .input('ChannelId', channel.id)
-                            .input('ChannelName', channel.name)
-                            .input('ChannelType', 'voice')
-                            .input('Triggerable', 1)
-                            .execute('CreateChannel');
+                .input('GuildId', interaction.guildId)
+                .input('ChannelId', channel.id)
+                .input('ChannelName', channel.name)
+                .input('ChannelType', 'voice')
+                .input('Triggerable', 1)
+                .execute('CreateChannel');
 
-            interaction.editReply({content:"All done! Your channel should be in the VC Category now!"}).then(message => {
-                setTimeout(() => {
-                    message.delete();
-                }, 5000)
-            });
+            interaction.editReply({ content: "All done! Your channel should be in the VC Category now!" });
 
             trans.commit(err => {
                 if (err) {

@@ -30,7 +30,10 @@ CREATE PROCEDURE GetQueue(
     FROM QueuedPlayers
     WHERE QueueId=@QueueId
 
-    IF @PlayerCount >= 10 BEGIN
+    DECLARE @WaitingState INT
+    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='WAITING', @EnumValue=@WaitingState OUTPUT
+
+    IF (@PlayerCount >= 10) AND (EXISTS (SELECT * FROM Queues WHERE [Id]=@QueueId AND QueueStatus=@WaitingState)) BEGIN
 
         DECLARE @NewState INT
         EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='START_DRAFT', @EnumValue=@NewState OUTPUT

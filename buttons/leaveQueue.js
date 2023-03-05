@@ -18,14 +18,7 @@ module.exports = {
     // Go ahead and edit embed
     await interaction.deferReply({ ephemeral: true });
 
-    playerList.forEach((player, i) => {
-      if (player.includes(userToRemove)) {
-        playerList.splice(i, 1);
-      }
-    });
-
-
-    
+    let queueId = parseInt(idArgs[1]);
 
     let trans = con.transaction();
     trans.begin(async (err) => {
@@ -48,7 +41,7 @@ module.exports = {
 
       let result = await con
         .request(trans)
-        .input("GuildId", interaction.guildId)
+        .input("QueueId", queueId)
         .input("UserId", interaction.user.id)
         .execute("LeaveTenmans");
 
