@@ -70,28 +70,28 @@ CREATE PROCEDURE GetQueue(
     SELECT PlayerId, Q.GuildId GuildId, CanBeCaptain, DiscordDisplayName, ValorantDisplayName, GR.RoleName RoleName, GR.RoleEmote RoleEmote, GR.RoleIcon RoleIcon
     FROM QueuedPlayers Q
     JOIN GuildMember GM ON Q.PlayerId = GM.MemberId AND Q.GuildId = GM.GuildId
-    JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
+    LEFT JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
     WHERE QueueId=@QueueId AND GM.GuildId = @GuildId
 
     -- Index 1: Available players in queue AS { PlayerId, GuildId, DiscordDisplayName, ValorantDisplayName, RoleName, RoleEmote, RoleIcon }
     SELECT PlayerId, Q.GuildId GuildId, DiscordDisplayName, ValorantDisplayName, GR.RoleName RoleName, GR.RoleEmote RoleEmote, GR.RoleIcon RoleIcon
     FROM QueuedPlayers Q
     JOIN GuildMember GM ON Q.PlayerId = GM.MemberId AND Q.GuildId = GM.GuildId
-    JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
+    LEFT JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
     WHERE QueueId=@QueueId AND QueuePool=@AvailablePool 
 
     -- Index 2: Team One roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, RoleName, RoleEmote, RoleIcon }
     SELECT PlayerId, Q.GuildId GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, GR.RoleName RoleName, GR.RoleEmote RoleEmote, GR.RoleIcon RoleIcon
     FROM QueuedPlayers Q
     JOIN GuildMember GM ON Q.PlayerId = GM.MemberId AND Q.GuildId = GM.GuildId
-    JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
+    LEFT JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
     WHERE QueueId=@QueueId AND QueuePool=@TeamOnePool
 
     -- Index 3: Team Two roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, RoleName, RoleEmote, RoleIcon }
     SELECT PlayerId, Q.GuildId GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, GR.RoleName RoleName, GR.RoleEmote RoleEmote, GR.RoleIcon RoleIcon
     FROM QueuedPlayers Q
     JOIN GuildMember GM ON Q.PlayerId = GM.MemberId AND Q.GuildId = GM.GuildId
-    JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
+    LEFT JOIN GuildRole GR ON GR.RoleName=GM.ValorantRankRoleName AND GR.GuildId=Q.GuildId
     WHERE QueueId=@QueueId AND QueuePool=@TeamTwoPool
 
     PRINT 'Queue Selected'

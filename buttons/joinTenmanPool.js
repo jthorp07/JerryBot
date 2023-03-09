@@ -38,7 +38,7 @@ module.exports = {
 
       if (err) {
         console.log(err);
-        await interaction.editReply({content:"Something went wrong and you could not be joined to the queue"});
+        await interaction.editReply({ content: "Something went wrong and you could not be joined to the queue" });
         return;
       }
 
@@ -65,17 +65,24 @@ module.exports = {
         .execute("JoinQueue");
 
       let ret = result.returnValue;
-      if (ret == 6) {
-        await interaction.editReply({
-          content: "You are already in this queue!",
-        });
-        return;
+
+      let cnt = undefined;
+      switch (ret) {
+        case 6:
+          cnt = "You are already in this queue!";
+          break;
+        case 2:
+          cnt = "You need to register with /register before joining queues in this server!";
+          break;
+        case 5:
+          cnt = "This server is enforcing rank roles and you do not have one!";
+          break;
       }
 
-      if (ret == 5) {
+      if (cnt) {
         await interaction.editReply({
           content:
-            "You need to register with /register before joining queues in this server!",
+            cnt,
         });
         return;
       }
@@ -88,7 +95,7 @@ module.exports = {
           content: "You need to register your rank before you can join!",
         });
         return;
-      } else if (result.returnValue === 0) {
+      } else if (ret == 0) {
         // Grab outputs from JoinQueue procedure
         let numCaptains = result.output.NumCaptains;
         let queueStatus = result.output.QueueStatus;
@@ -108,20 +115,15 @@ module.exports = {
 
         // If necessary, choose captains
         if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
-          console.log("  [Bot] Starting draft");
           result = await con.request(trans)
             .input("QueueId", queueId)
             .output("EnforceRankRoles", Bit)
             .execute("ImStartingDraft");
 
-          console.log("ImStartingDraft finished");
-
           if (result.returnValue === 0) {
 
-            console.log("I did the procedure but it didn't update the value");
             let enforce = result.output.EnforceRankRoles;
             // Assuming success, reassign values with updated data after selecting captaibns and starting draft
-            console.log("selectCaptains starting");
             let newVals = await selectCaptains(
               numCaptains,
               playersAndCanBeCapt,
@@ -157,7 +159,6 @@ module.exports = {
           0
         );
 
-        console.log(`Queuestatus before making comps: ${queueStatus}`);
         let comps = tenMansClassicNextComps(
           queueId,
           queueStatus,

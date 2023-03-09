@@ -52,6 +52,11 @@ module.exports = {
 
       const userObj = result.recordsets[0][0];
 
+      if (!userObj) {
+        await interaction.editReply({content:"Something went wrong"});
+        return;
+      }
+
       result = await con.request(trans)
         .input('UserId', interaction.user.id)
         .input('GuildId', interaction.guildId)

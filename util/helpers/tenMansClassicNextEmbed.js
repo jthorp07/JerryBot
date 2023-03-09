@@ -29,19 +29,22 @@ module.exports = {
 
     // Available Players
     let draftListString = playersAvailable ? "" : undefined;
-    if (playersAvailable) playersAvailable.forEach(player => {
-      console.log(JSON.stringify(player));
-      let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-      let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
-      draftListString = `${draftListString}${dispName} ${dispRole}\n`;
-    });
+    if (playersAvailable) {
+      playersAvailable.forEach(player => {
+        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
+        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        draftListString = `${draftListString}${dispName} ${dispRole}\n`;
+      });
+    }
 
     // Spectators
     let specString = spectators ? "" : undefined;
-    if (spectators) spectators.forEach(spectator => {
-      let dispName = spectator.ValorantDisplayName ? spectator.ValorantDisplayName : spectator.DiscordDisplayName;
-      specString = `${specString}${dispName}\n`;
-    });
+    if (spectators) {
+      spectators.forEach(spectator => {
+        let dispName = spectator.ValorantDisplayName ? spectator.ValorantDisplayName : spectator.DiscordDisplayName;
+        specString = `${specString}${dispName}\n`;
+      });
+    }
 
 
     // Queue states of drafting or in-game: Make Draft embed 
