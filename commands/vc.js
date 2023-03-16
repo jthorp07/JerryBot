@@ -1,5 +1,6 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, ChannelType, VoiceChannel } = require('discord.js');
 const { ConnectionPool, VarChar, Bit } = require('mssql');
+const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -38,61 +39,39 @@ module.exports = {
 
         // Begin a database transaction to store newly made channel's information
         let trans = con.transaction();
-        trans.begin(async (err) => {
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
-            if (err) {
-                console.log(err);
-                await interaction.editReply({ content: "Something went wrong" });
-                return;
+        let result = await con.request(trans)
+            .input('ChannelName', 'VCCAT')
+            .input('GuildId', interaction.guildId)
+            .output('ChannelId', VarChar(21))
+            .output('Triggerable', Bit)
+            .output('Type', VarChar(20))
+            .execute('GetChannel');
+
+        let parentId = result.output.ChannelId;
+        try {
+            channel.edit((await channel.setUserLimit(cap ? cap : 99)).setParent(parentId));
+        } catch (err) {
+            console.log(err);
+            await interaction.editReply({ content: 'Your channel could not be placed in the correct category. Make sure your server\'s staff have set up the "Private VC Category" channel with the /setchannel command!' });
+            if (channel.deletable) {
+                channel.delete();
             }
+            return;
+        }
 
-            // DBMS error handling
-            let rolledBack = false;
-            trans.on("rollback", (aborted) => {
-                if (aborted) {
-                    console.log("This rollback was triggered by SQL server");
-                }
-                rolledBack = true;
-                return;
-            });
+        result = await con.request(trans)
+            .input('GuildId', interaction.guildId)
+            .input('ChannelId', channel.id)
+            .input('ChannelName', channel.name)
+            .input('ChannelType', 'voice')
+            .input('Triggerable', 1)
+            .execute('CreateChannel');
 
-            let result = await con.request(trans)
-                .input('ChannelName', 'VCCAT')
-                .input('GuildId', interaction.guildId)
-                .output('ChannelId', VarChar(21))
-                .output('Triggerable', Bit)
-                .output('Type', VarChar(20))
-                .execute('GetChannel');
+        interaction.editReply({ content: "All done! Your channel should be in the VC Category now!" });
 
-            let parentId = result.output.ChannelId;
-            try {
-                channel.edit((await channel.setUserLimit(cap ? cap : 99)).setParent(parentId));
-            } catch (err) {
-                console.log(err);
-                await interaction.editReply({content:'Your channel could not be placed in the correct category. Make sure your server\'s staff have set up the "Private VC Category" channel with the /setchannel command!'});
-                if (channel.deletable) {
-                    channel.delete();
-                }
-                return;
-            }
-
-            result = await con.request(trans)
-                .input('GuildId', interaction.guildId)
-                .input('ChannelId', channel.id)
-                .input('ChannelName', channel.name)
-                .input('ChannelType', 'voice')
-                .input('Triggerable', 1)
-                .execute('CreateChannel');
-
-            interaction.editReply({ content: "All done! Your channel should be in the VC Category now!" });
-
-            trans.commit(err => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-            });
-        });
+        trans.commit(commitOnErrMaker(interaction));
     },
     permissions: "all"
 }
