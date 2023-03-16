@@ -1,5 +1,6 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
 const { ConnectionPool } = require('mssql');
+const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -24,53 +25,27 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        await interaction.deferReply({ephemeral:true});
+        await interaction.deferReply({ ephemeral: true });
 
         let valName = interaction.options.getString('name');
         let tagline = interaction.options.getString('tagline');
 
         let trans = con.transaction();
-        trans.begin(async (err) => {
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
-            if (err) {
-                console.log(err);
-                await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-                return;
-            }
+        let result = await con.request(trans)
+            .input('GuildId', interaction.guildId)
+            .input('UserId', interaction.user.id)
+            .input('ValName', `${valName}#${tagline}`)
+            .execute('SetValorantName');
 
-            // DBMS error handling
-            let rolledBack = false;
-            trans.on("rollback", (aborted) => {
-                if (aborted) {
-                    console.log("This rollback was triggered by SQL server");
-                }
-                rolledBack = true;
-                return;
-            });
+        if (result.returnValue != 0) {
+            await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+            return;
+        }
 
-            let result = await con.request(trans)
-                .input('GuildId', interaction.guildId)
-                .input('UserId', interaction.user.id)
-                .input('ValName', `${valName}#${tagline}`)
-                .execute('SetValorantName');
-
-            if (result.returnValue != 0) {
-                await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-                return;
-            }
-
-            trans.commit(async (err) => {
-
-                if (err) {
-                    console.log(err);
-                    await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-                    return;
-                }
-
-                await interaction.editReply({content:"Your name has been updated"});
-
-            });
-        });
+        trans.commit(commitOnErrMaker(interaction));
+        await interaction.editReply({ content: "Your name has been updated" });
     },
     permissions: "all"
 }

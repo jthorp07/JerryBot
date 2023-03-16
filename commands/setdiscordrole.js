@@ -1,5 +1,6 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
 const { ConnectionPool } = require('mssql');
+const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,48 +40,25 @@ module.exports = {
         let roleEmote = interaction.options.getString('emote');
 
         let trans = con.transaction();
-        trans.begin(async (err) => {
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
-            if (err) {
-                console.log(err);
-                await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-                return;
-            }
+        let result = await con.request(trans)
+            .input('GuildId', interaction.guildId)
+            .input('RoleId', role.id)
+            .input('RoleName', roleName)
+            .input('OrderBy', roleGroup)
+            .input('RoleIcon', role.iconURL() ? role.iconURL() : null)
+            .input('RoleEmote', roleEmote ? roleEmote : null)
+            .execute('SetRole');
 
-            // DBMS error handling
-            let rolledBack = false;
-            trans.on("rollback", (aborted) => {
-                if (aborted) {
-                    console.log("This rollback was triggered by SQL server");
-                }
-                rolledBack = true;
-                return;
-            });
+        if (result.returnValue !== 0) {
+            //TODO: Error
+            await trans.rollback();
+            return;
+        }
 
-            let result = await con.request(trans)
-                .input('GuildId', interaction.guildId)
-                .input('RoleId', role.id)
-                .input('RoleName', roleName)
-                .input('OrderBy', roleGroup)
-                .input('RoleIcon', role.iconURL() ? role.iconURL() : null)
-                .input('RoleEmote', roleEmote ? roleEmote : null)
-                .execute('SetRole');
-
-            if (result.returnValue !== 0) {
-                //TODO: Error
-                await trans.rollback();
-                return;
-            }
-
-            trans.commit(async (err) => {
-                if (err) {
-                    console.log(err);
-                    await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-                    return;
-                }
-                await interaction.editReply({ ephemeral: true, content: 'Role Set!' });
-            });
-        });
+        trans.commit(commitOnErrMaker(interaction));
+        await interaction.editReply({ ephemeral: true, content: 'Role Set!' });
     },
     permissions: "admin"
 }

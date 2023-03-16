@@ -1,5 +1,6 @@
 const { ButtonInteraction } = require('discord.js');
 const { ConnectionPool } = require('mssql');
+const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 module.exports = {
 
@@ -19,30 +20,11 @@ module.exports = {
         await interaction.deferReply({ephemeral:true});
 
         let trans = con.transaction();
-        trans.begin(async (err) => {
-
-            if (err) {
-                console.log(err);
-                await interaction.editReply({content:"Something went wrong"});
-                return;
-            }
-
-            let result = await con.request();
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
 
-            trans.commit(async (err) => {
-
-                if (err) {
-                    console.log(err);
-                    await interaction.editReply({content:"Something went wrong"});
-                    return;
-                }
-
-
-
-            });
-
-        });
+        trans.commit(commitOnErrMaker(interaction));
+        
 
     }
 

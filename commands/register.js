@@ -3,6 +3,7 @@ const {
   SlashCommandBuilder,
 } = require("discord.js");
 const { ConnectionPool } = require("mssql");
+const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,79 +18,53 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     let trans = con.transaction();
-    trans.begin(async (err) => {
+    await trans.begin(beginOnErrMaker(interaction, trans));
 
-      if (err) {
-        console.log(err);
-        await interaction.editReply({content:"Something went wrong and the command could not be completed"});
-        return;
-      }
+    let result = await con
+      .request(trans)
+      .input("GuildId", interaction.guildId)
+      .input("GuildName", interaction.guild.name)
+      .execute("CreateGuild");
 
-      // DBMS error handling
-      let rolledBack = false;
-      trans.on("rollback", (aborted) => {
-        if (aborted) {
-          console.log("This rollback was triggered by SQL server");
-        }
-        rolledBack = true;
-        return;
+    if (result.returnValue !== 0 && !result.returnValue === 2) {
+      interaction.editReply({
+        ephemeral: true,
+        content: "Something went wrong",
       });
+      trans.rollback();
+      return;
+    }
 
-      let result = await con
-        .request(trans)
-        .input("GuildId", interaction.guildId)
-        .input("GuildName", interaction.guild.name)
-        .execute("CreateGuild");
+    result = await con.request(trans)
+      .input('GuildId', interaction.guildId)
+      .input('UserId', interaction.user.id)
+      .input('IsOwner', (interaction.user.id == interaction.guild.ownerId) ? 1 : 0)
+      .input('Username', interaction.user.username)
+      .input('GuildDisplayName', interaction.member.displayName)
+      .input('ValorantRankRoleName', null)
+      .execute('CreateGuildMember');
 
-      if (result.returnValue !== 0 && !result.returnValue === 2) {
-        interaction.editReply({
-          ephemeral: true,
-          content: "Something went wrong",
-        });
-        trans.rollback();
-        return;
-      }
-
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('UserId', interaction.user.id)
-        .input('IsOwner', (interaction.user.id == interaction.guild.ownerId) ? 1 : 0)
-        .input('Username', interaction.user.username)
-        .input('GuildDisplayName', interaction.member.displayName)
-        .input('ValorantRankRoleName', null)
-        .execute('CreateGuildMember');
-
-
-      if (result.returnValue === 2) {
-        interaction.editReply({
-          ephemeral: true,
-          content: "You are already registered in this server!",
-        });
-        trans.rollback();
-        return;
-      } else if (result.returnValue !== 0) {
-        interaction.editReply({
-          ephemeral: true,
-          content: "Something went wrong",
-        });
-        trans.rollback();
-        return;
-      }
-
-      trans.commit(async (err) => {
-
-        if (err) {
-          console.log(err);
-          await interaction.editReply({content:"Something went wrong and the command could not be completed"});
-          return;
-        }
-
-        interaction.editReply({
-          ephemeral: true,
-          content: "You are now registered in this server!",
-        });
-        return;
+    if (result.returnValue === 2) {
+      interaction.editReply({
+        ephemeral: true,
+        content: "You are already registered in this server!",
       });
+      trans.rollback();
+      return;
+    } else if (result.returnValue !== 0) {
+      interaction.editReply({
+        ephemeral: true,
+        content: "Something went wrong",
+      });
+      trans.rollback();
+      return;
+    }
+
+    trans.commit(commitOnErrMaker(interaction));
+
+    interaction.editReply({
+      ephemeral: true,
+      content: "You are now registered in this server!",
     });
   },
   permissions: "all",

@@ -1,6 +1,7 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, ChannelType, Channel } = require('discord.js');
 const { ConnectionPool } = require('mssql');
 const { CHANNEL_TYPES } = require('../util');
+const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 const ChannelsByCategory = {
     CATEGORY_CHANNELS: [
@@ -40,60 +41,37 @@ module.exports = {
      */
     async execute(interaction, con) {
 
-        await interaction.deferReply({ephemeral:true});
+        await interaction.deferReply({ ephemeral: true });
         let channel = interaction.options.getChannel('channel');
         let channelName = interaction.options.getString('channelname');
 
         let validityCheck = validateType(channel, channelName);
         if (!validityCheck.valid) {
-            interaction.editReply({content: `The channel provided was an invalid type. This channel should be a ${validityCheck.type} channel.`});
+            interaction.editReply({ content: `The channel provided was an invalid type. This channel should be a ${validityCheck.type} channel.` });
             return;
         }
 
         let trans = con.transaction();
-        trans.begin(async (err) => {
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
-            if (err) {
-                await interaction.editReply({content: 'Something went wrong'});
-                console.log(err);
-                return;
-            }
+        let result = await con.request(trans)
+            .input('GuildId', interaction.guildId)
+            .input('ChannelId', channel.id)
+            .input('ChannelName', channelName.toUpperCase())
+            .input('ChannelType', validityCheck.dbType)
+            .input('Triggerable', 0)
+            .execute('CreateChannel');
 
-            // DBMS error handling
-            let rolledBack = false;
-            trans.on("rollback", async (aborted) => {
-                if (aborted) {
-                    console.log("This rollback was triggered by SQL server");
-                }
-                rolledBack = true;
-                await interaction.editReply({content: 'Something went wrong'});
-                return;
-            });
+        if (result.returnValue !== 0) {
+            //TODO: Error
+            await trans.rollback();
+            await interaction.editReply({ content: 'Something went wrong...' });
+            return;
+        }
 
-            let result = await con.request(trans)
-                .input('GuildId', interaction.guildId)
-                .input('ChannelId', channel.id)
-                .input('ChannelName', channelName.toUpperCase())
-                .input('ChannelType', validityCheck.dbType)
-                .input('Triggerable', 0)
-                .execute('CreateChannel');
+        trans.commit(commitOnErrMaker(interaction));
+        await interaction.editReply({ content: 'Channel Set' });
 
-            if (result.returnValue !== 0) {
-                //TODO: Error
-                await trans.rollback();
-                await interaction.editReply({content: 'Something went wrong...'});
-                return;
-            }
-
-            trans.commit(async (err) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                await interaction.editReply({content: 'Channel Set'});
-                return;
-            });
-        });
     },
     permissions: "admin"
 }
@@ -132,5 +110,5 @@ function validateType(channel, channelName) {
         };
     }
 
-    return {valid: false, type: 'error', dbType: 'error'}; // Should never reach here
+    return { valid: false, type: 'error', dbType: 'error' }; // Should never reach here
 }

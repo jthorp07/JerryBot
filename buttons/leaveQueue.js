@@ -1,6 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
 const { ConnectionPool, Int, VarChar, NVarChar } = require("mssql");
-const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require("../util/helpers");
+const { tenMansClassicNextEmbed, tenMansClassicNextComps, beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -22,95 +22,71 @@ module.exports = {
     let queueId = parseInt(idArgs[1]);
 
     let trans = con.transaction();
-    trans.begin(async (err) => {
+    await trans.begin(beginOnErrMaker(interaction, trans));
 
-      if (err) {
-        await interaction.editReply({ content: "Something went wrong" });
-        console.log(err);
-        return;
-      }
+    let result = await con
+      .request(trans)
+      .input("QueueId", queueId)
+      .input("UserId", interaction.user.id)
+      .input("GuildId", interaction.guildId)
+      .execute("LeaveTenmans");
 
-      // DBMS error handling
-      let rolledBack = false;
-      trans.on("rollback", (aborted) => {
-        if (aborted) {
-          console.log("This rollback was triggered by SQL server");
-        }
-        rolledBack = true;
-        return;
+    if (result.returnValue !== 0) {
+      trans.rollback();
+      interaction.editReply({
+        ephemeral: true,
+        content: "Something went wrong o-o",
       });
+      return;
+    }
 
-      let result = await con
-        .request(trans)
-        .input("QueueId", queueId)
-        .input("UserId", interaction.user.id)
-        .input("GuildId", interaction.guildId)
-        .execute("LeaveTenmans");
+    // Grab queue data
+    result = await con
+      .request(trans)
+      .input("QueueId", queueId)
+      .output("NumCaptains", Int)
+      .output("PlayerCount", Int)
+      .output("QueueStatus", NVarChar(100))
+      .output("HostId", VarChar(21))
+      .execute("GetQueue");
 
-      if (result.returnValue !== 0) {
-        trans.rollback();
-        interaction.editReply({
-          ephemeral: true,
-          content: "Something went wrong o-o",
-        });
-        return;
-      }
+    trans.commit(commitOnErrMaker(interaction));
 
-      // Grab queue data
-      result = await con
-        .request(trans)
-        .input("QueueId", queueId)
-        .output("NumCaptains", Int)
-        .output("PlayerCount", Int)
-        .output("QueueStatus", NVarChar(100))
-        .output("HostId", VarChar(21))
-        .execute("GetQueue");
+    let queueStatus = result.output.QueueStatus;
+    let playersAvailable = result.recordsets[1];
+    let teamOnePlayers = result.recordsets[2];
+    let teamTwoPlayers = result.recordsets[3];
+    let spectators = result.recordsets[4];
+    let host = await interaction.guild.members.fetch(result.output.HostId);
 
-      trans.commit(async (err) => {
+    let embeds = tenMansClassicNextEmbed(
+      queueStatus,
+      playersAvailable,
+      teamOnePlayers,
+      teamTwoPlayers,
+      spectators,
+      host.displayName,
+      host.displayAvatarURL(),
+      null,
+      0
+    );
 
-        if (err) {
-          console.log(err);
-          await interaction.editReply({ content: 'Something went wrong o-o' })
-          return;
-        }
+    let comps = tenMansClassicNextComps(
+      queueId,
+      queueStatus,
+      playersAvailable,
+      null,
+      host.id
+    );
 
-        let queueStatus = result.output.QueueStatus;
-        let playersAvailable = result.recordsets[1];
-        let teamOnePlayers = result.recordsets[2];
-        let teamTwoPlayers = result.recordsets[3];
-        let spectators = result.recordsets[4];
-        let host = await interaction.guild.members.fetch(result.output.HostId);
+    interaction.message.edit({
+      embeds: embeds,
+      components: comps
+    });
 
-        let embeds = tenMansClassicNextEmbed(
-          queueStatus,
-          playersAvailable,
-          teamOnePlayers,
-          teamTwoPlayers,
-          spectators,
-          host.displayName,
-          host.displayAvatarURL(),
-          null,
-          0
-        );
-  
-        let comps = tenMansClassicNextComps(
-          queueId,
-          queueStatus,
-          playersAvailable,
-          null,
-          host.id
-        );
-
-        interaction.message.edit({
-          embeds: embeds,
-          components: comps
-        });
-
-        await interaction.editReply({
-          ephemeral: true,
-          content: `${interaction.user.username} left the player pool!`,
-        });
-      });
+    await interaction.editReply({
+      ephemeral: true,
+      content: `${interaction.user.username} left the player pool!`,
     });
   },
 };

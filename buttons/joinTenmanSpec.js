@@ -14,8 +14,9 @@ module.exports = {
    */
   async execute(interaction, con, idArgs) {
     //TODO: Implement button command
-    await interaction.reply(
-      `${interaction.user.username} joined the spectators`
-    );
+    await interaction.reply({
+      content:`Not yet implemented`,
+      ephemeral:true
+    });
   },
 };
