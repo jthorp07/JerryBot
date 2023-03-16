@@ -15,14 +15,16 @@ CREATE PROCEDURE ImStartingDraft(
     END
 
     -- Do it --
-    DECLARE @NewState INT
-    DECLARE @OldState INT
-    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='DRAFTING', @EnumValue=@NewState OUTPUT
-    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='START_DRAFT', @EnumValue=@OldState OUTPUT
+    DECLARE @DraftingState INT
+    DECLARE @StartingState INT
+    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='DRAFTING', @EnumValue=@DraftingState OUTPUT
+    EXEC GetEnumValue @EnumName='QUEUE_STATE', @EnumDesc='START_DRAFT', @EnumValue=@StartingState OUTPUT
+
+    PRINT @StartingState
 
     UPDATE Queues
-    SET QueueStatus=@NewState
-    WHERE [Id]=@QueueId AND QueueStatus!=@OldState
+    SET QueueStatus=@DraftingState
+    WHERE [Id]=@QueueId AND QueueStatus=@StartingState
 
     IF @@ROWCOUNT = 0 BEGIN
         PRINT 'Someone else already took this queue'

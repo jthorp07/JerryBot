@@ -31,11 +31,17 @@ module.exports = {
       return;
     }
 
+    let result = await con
+      .request()
+      .input("QueueId", queueId)
+      .output("EnforceRankRoles", Bit)
+      .execute("ImStartingDraft");
+
     let trans = con.transaction();
     await trans.begin(beginOnErrMaker(interaction, trans));
 
     // Grab queue data
-    let result = await con
+    result = await con
       .request(trans)
       .input("QueueId", queueId)
       .output("NumCaptains", Int)
@@ -66,13 +72,7 @@ module.exports = {
       .input("GuildId", interaction.guildId)
       .execute("GetRankRoles");
 
-    let rankedRoles = result.recordset;
-    // Set starting so that other threads know not to attempt to start
-    result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .output("EnforceRankRoles", Bit)
-      .execute("ImStartingDraft");
+    let rankedRoles = result.recordset;    
 
     if (result.returnValue === 0) {
       let enforce = result.output.EnforceRankRoles;

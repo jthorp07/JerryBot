@@ -279,11 +279,14 @@ module.exports = {
 
         trans.commit(commitOnErrMaker(interaction));
 
-
         result = await con.request()
           .input("QueueId", queueId)
           .output("EnforceRankRoles", Bit)
           .execute("ImStartingDraft");
+
+        // start a new transaction after attempting to grab the draft
+        trans = con.transaction();
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
         if (result.returnValue == 0) {
 
@@ -309,7 +312,7 @@ module.exports = {
 
         }
         else {
-          console.log("Idk what's happening");
+          console.log(result.returnValue);
           return;
         }
       }
@@ -340,25 +343,14 @@ module.exports = {
       });
 
       // Success, reply and commit transaction
-      trans.commit(async (err) => {
-        if (err) {
-          console.log(err);
-          await interaction.editReply({
-            ephemeral: true,
-            content:
-              "Something went wrong and the command could not be completed.",
-          });
-          // TODO: Have bot report error
-          return;
-        }
+      trans.commit(commitOnErrMaker(interaction));
 
-        interaction.editReply({
-          ephemeral: true,
-          content: `You are now in queue and in the 10 mans waiting area!\n\n**WARNING:**\nTo leave the queue, please either use the "Leave" button or leave all voice calls. Otherwise, you will be dragged back into a 10 mans call if/when you are assigned a team!\n<@${interaction.user.id}>`,
-        });
-
-        return;
+      interaction.editReply({
+        ephemeral: true,
+        content: `You are now in queue and in the 10 mans waiting area!\n\n**WARNING:**\nTo leave the queue, please either use the "Leave" button or leave all voice calls. Otherwise, you will be dragged back into a 10 mans call if/when you are assigned a team!\n<@${interaction.user.id}>`,
       });
+
+      return;
     } else {
       await trans.rollback();
       throw new Error(`Database failure: Code ${result.returnValue}`);
