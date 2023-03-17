@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool, Int } = require("mssql");
+const { ConnectionPool, Int, VarChar, Bit } = require("mssql");
 const { tenMansStartEmbed } = require("../util/embeds");
 const { tenMansStartComps } = require("../util/components");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
@@ -50,8 +50,23 @@ module.exports = {
     );
     let comps = tenMansStartComps(queueId, interaction.member.id);
 
-    await interaction.channel.send({ embeds: embeds, components: comps });
+    result = await con.request(trans)
+      .input("GuildId", interaction.guildId)
+      .input("ChannelName", "TENMANTXT")
+      .output("ChannelId", VarChar(21))
+      .output("Triggerable", Bit)
+      .output("Type", VarChar(20))
+      .execute("GetChannel");
 
+    if (result.returnValue == 2) {
+      await interaction.channel.send({ embeds: embeds, components: comps });
+    } else if (result.returnValue == 0) {
+      await (await interaction.guild.channels.fetch(result.output.ChannelId)).send({embeds: embeds, components: comps});
+    } else {
+      await interaction.editReply({content:"Something went wrong"});
+      trans.rollback();
+      return;
+    }
     trans.commit(commitOnErrMaker(interaction));
 
     await interaction.editReply({

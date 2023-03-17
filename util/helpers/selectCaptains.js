@@ -83,21 +83,26 @@ module.exports = {
         return cap1.rank - cap2.rank;
       });
     } else if (numCaps < 2) {
-      capPool.push([
-        { id: potentialCaps[0].PlayerId, rank: 0 },
-        { id: potentialCaps[1].PlayerId, rank: 0 }
-      ]);
+      for (record of potentialCaps) {
+        capPool.push({ id: record.PlayerId, rank: 0 });
+      }
     } else {
       for (record of potentialCaps) {
         if (record.CanBeCaptain == 1) {
           capPool.push({ id: record.PlayerId, rank: 0 });
-          if (capPool.length >= 2) break;
         }
       }
     }
 
-    let capOne = capPool[0]
-    let capTwo = capPool[1]
+    let capOneIndex = Math.floor(Math.random() * (capPool.length - 1));
+    let capTwoIndex = capOneIndex + 1;
+
+    if (capTwoIndex == -1) {
+      capTwoIndex = capPool.length - 1;
+    }
+
+    let capOne = capPool[capOneIndex];
+    let capTwo = capPool[capTwoIndex];
     let result = await con.request(trans)
       .input('QueueId', queueId)
       .input('CapOne', capOne.id)

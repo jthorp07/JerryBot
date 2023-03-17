@@ -35,7 +35,7 @@ module.exports = {
       .request()
       .input("QueueId", queueId)
       .output("EnforceRankRoles", Bit)
-      .execute("ImStartingDraft");
+      .execute("ImManuallyStartingDraft");
 
     let trans = con.transaction();
     await trans.begin(beginOnErrMaker(interaction, trans));

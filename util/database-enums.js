@@ -58,5 +58,8 @@ module.exports = {
         TIER_ONE_SUB: 'TIERONESUB',
         TIER_TWO_SUB: 'TIERTWOSUB',
         TIER_THREE_SUB: 'TIERTHREESUB'
+    },
+    DISCORD_CHANNELS: {
+        
     }
 }
