@@ -129,5 +129,21 @@ module.exports = {
 
             });
         });
+    },
+
+    /**
+     * 
+     * @param {ConnectionPool} con 
+     * @returns 
+     */
+    async tryReconnect(con) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await con.connect();
+                resolve(con);
+            } catch (err) {
+                reject("fail");
+            }
+        });
     }
 }

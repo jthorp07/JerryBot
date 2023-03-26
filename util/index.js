@@ -1,4 +1,4 @@
-const { connectToMSSQL, connectToMySQL } = require("./connect-db");
+const { connectToMSSQL, connectToMySQL, tryReconnect } = require("./connect-db");
 const { checkPermissions } = require("./permission");
 const Handlers = require("./handlers");
 const Embeds = require("./embeds");
@@ -20,6 +20,7 @@ const {
 module.exports = {
   connectToMSSQL,
   connectToMySQL,
+  tryReconnect,
   checkPermissions,
   Handlers,
   Embeds,

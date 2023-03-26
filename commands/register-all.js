@@ -16,7 +16,7 @@ module.exports = {
         await interaction.reply({ content: "Beginning to register all guild users...\n\n**WARNING**\nThis may take a while! When the job is completed, this message will be updated." });
 
         let trans = con.transaction();
-        await trans.begin(beginOnErrMaker(ionteraction, trans));
+        await trans.begin(beginOnErrMaker(interaction, trans));
 
         let users = interaction.guild.members.cache;
         let guildId = interaction.guildId;

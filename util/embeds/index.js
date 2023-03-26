@@ -3,6 +3,7 @@ const { tenMansDraftEmbed } = require("./tenMansDraftEmbed");
 const { tenMansInGameEmbed } = require("./tenMansInGameEmbed");
 const { helpEmbed } = require("./helpEmbed");
 const { profileEmbed } = require("./profileEmbed");
+const { prefsEmbed } = require("./prefsEmbed");
 
 module.exports = {
   tenMansStartEmbed,
@@ -10,4 +11,5 @@ module.exports = {
   tenMansInGameEmbed,
   helpEmbed,
   profileEmbed,
+  prefsEmbed
 };
