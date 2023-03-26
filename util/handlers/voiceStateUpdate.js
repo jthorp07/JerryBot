@@ -33,7 +33,7 @@ async function checkForDeletion(oldState, con) {
     await trans.begin(async (err) => {
 
         if (err) {
-            console.log("2\n" + err);
+            console.log(err);
             return;
         }
 
@@ -47,13 +47,10 @@ async function checkForDeletion(oldState, con) {
 
     });
 
-    console.log(3);
     let result = await con.request(trans)
         .input('GuildId', guildId)
         .input('ChannelId', channelId)
         .execute('GetTriggerableChannels');
-
-        console.log(4);
 
     // Channel is triggerable and empty - delete
     if (result.recordset.length && oldState.channel.members.size === 0) {
@@ -64,8 +61,6 @@ async function checkForDeletion(oldState, con) {
             .input('ChannelId', channelId)
             .execute('DeleteChannelById');
 
-            console.log(5);
-
         // ERROR Handling
         if (result.returnValue != 0) {
             console.log('Database issue on query \'DeleteChannelById\' in voiceStateUpdate.js');
@@ -75,9 +70,10 @@ async function checkForDeletion(oldState, con) {
         oldState.channel.delete();
     }
 
+    // TODO: Unidentified non-critical bug causing error callback to trigger
     trans.commit(async (err) => {
         if (err) {
-            console.log("1\n" + err);
+            console.log(err.message);
             return;
         }
     });
@@ -98,7 +94,6 @@ module.exports = {
      */
     async onVoiceStateUpdate(oldState, newState, con) {
 
-        console.log("VC Update");
         let oldChannelId = oldState.channelId;
         let newChannelId = newState.channelId;
 
