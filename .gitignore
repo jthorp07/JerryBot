@@ -6,3 +6,4 @@ config.json
 
 # Jack's Ignores
 test.js
+/SQL_Deployment

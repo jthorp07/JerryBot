@@ -12,15 +12,31 @@ const { ConnectionPool } = require("mssql");
 
 require("dotenv").config();
 const TOKEN = process.env.TOKEN;
+// const SQL = {
+//   user: process.env.MSSQL_USER,
+//   password: process.env.MSSQL_PASSWORD,
+//   database: process.env.MSSQL_DATABASE,
+//   server: process.env.MSSQL_SERVER,
+//   pool: {
+//     max: 10,
+//     min: 0,
+//     idleTimeoutMillis: 30000,
+//   },
+//   options: {
+//     encrypt: true,
+//     trustServerCertificate: true,
+//   },
+// };
+
 const SQL = {
-  user: process.env.MSSQL_USER,
-  password: process.env.MSSQL_PASSWORD,
-  database: process.env.MSSQL_DATABASE,
-  server: process.env.MSSQL_SERVER,
+  user: process.env.PROD_MSSQL_USER,
+  password: process.env.PROD_MSSQL_PASSWORD,
+  database: process.env.PROD_MSSQL_DATABASE,
+  server: process.env.PROD_MSSQL_SERVER,
   pool: {
     max: 10,
     min: 0,
-    idleTimeoutMillis: 30000,
+    idleTimeoutMillis: Number.MAX_SAFE_INTEGER,
   },
   options: {
     encrypt: true,
@@ -56,18 +72,30 @@ var client = new Client({ intents: intent_flags });
   Log in to database 
 */
 console.log("[Startup]: Connecting to database");
-/** @type {ConnectionPool} */
-var con;
-var pool = new ConnectionPool(SQL);
-pool
-  .connect()
-  .then((conPool) => {
-    con = conPool;
-    console.log("[Startup]: Database connection ready");
-  })
-  .catch((err) => {
-    console.log(err);
+var con = new ConnectionPool(SQL);
+/**
+ * 
+ * @param {Error} err 
+ * @returns 
+ */
+const conOnErr = async (err) => {
+  if (err.message.contains("operation timed out for an unknown reason") || err.code == 'ETIMEOUT') {
+    console.log("Reconnecting...");
+    return (async () => {
+    con = new ConnectionPool(SQL);
+    con.on("error", conOnErr)
+    await con.connect();
+    return;
   });
+  }
+  throw err;
+}
+con.on("error", conOnErr);
+con.connect().then(pool => {
+  console.log("[Startup]: Connected to database");
+  //pool.close();
+});
+
 
 // Read commands and interactable components into the bot's main memory
 client = readCommands(client);

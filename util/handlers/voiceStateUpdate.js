@@ -1,5 +1,6 @@
 const { VoiceState } = require('discord.js');
 const { ConnectionPool } = require('mssql');
+const { beginOnErrMaker, commitOnErrMaker } = require("../helpers");
 
 /**
  * 
@@ -29,10 +30,10 @@ async function checkForDeletion(oldState, con) {
     let channelId = oldState.channelId;
 
     let trans = con.transaction();
-    trans.begin(async (err) => {
+    await trans.begin(async (err) => {
 
         if (err) {
-            console.log(err);
+            console.log("2\n" + err);
             return;
         }
 
@@ -44,29 +45,41 @@ async function checkForDeletion(oldState, con) {
             rolledBack = true;
         });
 
-        let result = await con.request(trans)
+    });
+
+    console.log(3);
+    let result = await con.request(trans)
+        .input('GuildId', guildId)
+        .input('ChannelId', channelId)
+        .execute('GetTriggerableChannels');
+
+        console.log(4);
+
+    // Channel is triggerable and empty - delete
+    if (result.recordset.length && oldState.channel.members.size === 0) {
+
+        // QUERY: Delete channel in DB
+        result = await con.request(trans)
             .input('GuildId', guildId)
             .input('ChannelId', channelId)
-            .execute('GetTriggerableChannels');
+            .execute('DeleteChannelById');
 
-        // Channel is triggerable and empty - delete
-        if (result.recordset.length && oldState.channel.members.size === 0) {
+            console.log(5);
 
-            // QUERY: Delete channel in DB
-            result = await con.request(trans)
-                .input('GuildId', guildId)
-                .input('ChannelId', channelId)
-                .execute('DeleteChannelById');
-
-            // ERROR Handling
-            if (result.returnValue != 0) {
-                console.log('Database issue on query \'DeleteChannelById\' in voiceStateUpdate.js');
-                trans.rollback();
-                return;
-            }
-            oldState.channel.delete();
+        // ERROR Handling
+        if (result.returnValue != 0) {
+            console.log('Database issue on query \'DeleteChannelById\' in voiceStateUpdate.js');
+            trans.rollback();
+            return;
         }
+        oldState.channel.delete();
+    }
 
+    trans.commit(async (err) => {
+        if (err) {
+            console.log("1\n" + err);
+            return;
+        }
     });
 
 }
@@ -85,6 +98,7 @@ module.exports = {
      */
     async onVoiceStateUpdate(oldState, newState, con) {
 
+        console.log("VC Update");
         let oldChannelId = oldState.channelId;
         let newChannelId = newState.channelId;
 
@@ -94,7 +108,7 @@ module.exports = {
         }
 
         // Check if newState chanel is 10 mans queue
-        
+
 
 
     }
