@@ -5,7 +5,7 @@ module.exports = {
     prefsEmbed(username, userPfp, guildName, canBeCaptain) {
         return [
             new EmbedBuilder()
-        .setColor("0x0099ff")
+        .setColor(0x0099ff)
         .setDescription(`Preferences For Server: ${guildName}`)
         .setAuthor({
           name: `${username}'s Profile`,

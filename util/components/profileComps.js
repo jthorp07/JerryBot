@@ -18,7 +18,6 @@ module.exports = {
                 .setCustomId("prefs")
                 .setLabel("My Prefs")
                 .setStyle(ButtonStyle.Primary)
-                .setDisabled(true)
         )];
     }
 }

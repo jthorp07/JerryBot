@@ -1,23 +1,19 @@
-const { ButtonInteraction } = require('discord.js');
-const { ConnectionPool, Bit } = require('mssql');
+const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
+const {ConnectionPool, Bit} = require('mssql');
 const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 const { prefsComps } = require('../util/components');
 const { prefsEmbed } = require('../util/embeds');
 
 module.exports = {
-
-    data: {
-        customId: "prefs", // customId of buttons that will execute this command
-        permissions: "all",
-    },
-
+    data: new SlashCommandBuilder()
+        .setName('prefs')
+        .setDescription('Displays a user\'s preferences and allows them to edit their preferences'),
     /**
      * 
-     * @param {ButtonInteraction} interaction 
+     * @param {ChatInputCommandInteraction} interaction 
      * @param {ConnectionPool} con 
-     * @param {any} idArgs 
      */
-    async execute(interaction, con, idArgs) {
+    async execute(interaction, con) {
 
         await interaction.deferReply({ephemeral:true});
 
@@ -42,5 +38,7 @@ module.exports = {
         let embeds = prefsEmbed(interaction.member.displayName, interaction.member.displayAvatarURL(), interaction.guild.name, result.output.CanBeCaptain);
 
         await interaction.editReply({embeds:embeds, components:comps});
-    }
+
+    },
+    permissions: "all"
 }

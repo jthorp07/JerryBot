@@ -11,7 +11,7 @@ module.exports = {
     prefsComps(canBeCaptain) {
         return [new ActionRowBuilder().setComponents(
             new ButtonBuilder()
-                .setCustomId("toggle-canbecapt")
+                .setCustomId(`toggle-canbecapt:${canBeCaptain}`)
                 .setLabel("Can Be Captain")
                 .setStyle(canBeCaptain ? ButtonStyle.Success : ButtonStyle.Danger),
         )];

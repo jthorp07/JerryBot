@@ -26,7 +26,7 @@ module.exports = {
   ) {
     return [
       new EmbedBuilder()
-        .setColor("0x0099ff")
+        .setColor(0x0099ff)
         .setDescription(`For Server: ${GuildName}`)
         .setAuthor({
           name: `${Username}'s Profile`,

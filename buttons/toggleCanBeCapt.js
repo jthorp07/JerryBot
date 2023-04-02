@@ -16,6 +16,8 @@ module.exports = {
      */
     async execute(interaction, con, idArgs) {
 
+        let canBeCapt = (idArgs[1] == 'false') ? false : true;
+
         await interaction.deferReply({ephemeral:true});
 
         let trans = con.transaction();
@@ -24,7 +26,7 @@ module.exports = {
         let result = await con.request(trans)
             .input('UserId', interaction.user.id)
             .input('GuildId', interaction.guildId)
-            .input('CanBeCaptain', false)
+            .input('CanBeCaptain', !canBeCapt)
             .execute('SetCanbeCaptain');
 
         if (result.returnValue != 0) {
@@ -35,6 +37,11 @@ module.exports = {
         }
 
         trans.commit(commitOnErrMaker(interaction));
+
+        let comps = prefsComps(!canBeCapt);
+        let embeds = prefsEmbed(interaction.member.displayName, interaction.member.displayAvatarURL(), interaction.guild.name, !canBeCapt);
+
+        await interaction.editReply({embeds:embeds, components:comps});
 
     }
 }

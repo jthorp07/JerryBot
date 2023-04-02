@@ -17,7 +17,7 @@ module.exports = {
     tenMansDraftEmbed(capOne, capTwo, draftList, teamOne, teamTwo, specs, host, hostPfp) {
 
         return [new EmbedBuilder()
-            .setColor("0x0099ff")
+            .setColor(0x0099ff)
             .setTitle("Ten Mans Queue")
             .setDescription("Waiting for players...")
             .setAuthor({

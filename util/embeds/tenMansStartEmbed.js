@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { EmbedBuilder, Colors } = require("discord.js");
 
 module.exports = {
 
@@ -8,7 +8,7 @@ module.exports = {
    * @param {ConnectionPool} con
    */
   baseEmbed: new EmbedBuilder()
-    .setColor("0x0099ff")
+    .setColor(0x0099ff)
     .setTitle("Ten Mans Queue")
     .setDescription("Waiting for players...")
     .setAuthor({
@@ -40,7 +40,7 @@ module.exports = {
    */
   tenMansStartEmbed(players, specs, host, hostPfp) {
     return [new EmbedBuilder()
-      .setColor("0x0099ff")
+      .setColor(Colors.Blurple)
       .setTitle("Ten Mans Queue")
       .setDescription("Waiting for players...")
       .setAuthor({

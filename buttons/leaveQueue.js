@@ -1,5 +1,5 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool, Int, VarChar, NVarChar } = require("mssql");
+const { ConnectionPool, Int, VarChar, NVarChar, Bit } = require("mssql");
 const { tenMansClassicNextEmbed, tenMansClassicNextComps, beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
 module.exports = {
@@ -29,15 +29,33 @@ module.exports = {
       .input("QueueId", queueId)
       .input("UserId", interaction.user.id)
       .input("GuildId", interaction.guildId)
+      .output("WasCaptain", Bit)
+      .output("QueuePool", Bit)
       .execute("LeaveTenmans");
 
-    if (result.returnValue !== 0) {
+    if (result.returnValue != 0) {
       trans.rollback();
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong o-o",
       });
       return;
+    }
+
+    if (result.output.WasCaptain) {
+      result = await con.request(trans)
+        .input("QueueId", queueId)
+        .input("QueuePool", result.output.QueuePool)
+        .execute("ReplaceCaptain");
+
+      if (result.returnValue != 0) {
+        trans.rollback();
+        interaction.editReply({
+          ephemeral: true,
+          content: "Something went wrong o-o",
+        });
+        return;
+      }
     }
 
     // Grab queue data
@@ -58,6 +76,14 @@ module.exports = {
     let teamTwoPlayers = result.recordsets[3];
     let spectators = result.recordsets[4];
     let host = await interaction.guild.members.fetch(result.output.HostId);
+
+    if (!host) {
+      await interaction.editReply({ content: "Something went wrong and the interaction could not be completed" });
+      console.log("no host oops");
+      console.log(JSON.stringify(host));
+      await trans.rollback();
+      return;
+    }
 
     let embeds = tenMansClassicNextEmbed(
       queueStatus,
