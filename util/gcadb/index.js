@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getConnection = exports.ValorantRank = exports.DiscordStaffRole = exports.DiscordMemberRole = exports.DiscordChannelType = exports.DiscordChannelName = exports.env = exports.BaseDBError = void 0;
+exports.getConnection = exports.ValorantRank = exports.DiscordStaffRole = exports.DiscordMemberRole = exports.DiscordChannelType = exports.DiscordChannelName = exports.env = exports.BaseDBError = exports.GCADB = void 0;
 const mssql_1 = require("mssql");
 const stored_procedures_1 = require("./stored-procedures");
 const non_procedure_functions_1 = require("./non-procedure-functions");
@@ -303,4 +303,5 @@ class GCADB {
         });
     }
 }
+exports.GCADB = GCADB;
 exports.getConnection = GCADB.GetConnection;

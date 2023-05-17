@@ -2,9 +2,10 @@ import { ConnectionPool, Transaction } from "mssql";
 import { BaseDBError } from "./errors/base-db-error";
 import { DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaffRole, ValorantRank } from "./enums";
 import env from "./env-vars.config";
-declare class GCADB {
+export declare class GCADB {
     con: ConnectionPool;
-    constructor(conPool: ConnectionPool);
+    reconnecting: boolean;
+    private constructor();
     /**
      * Takes a SQL login config object and returns a connection
      * to a SQL database.
@@ -120,14 +121,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
@@ -198,14 +192,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
@@ -266,14 +253,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
@@ -324,14 +304,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
@@ -378,14 +351,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
@@ -431,14 +397,7 @@ declare class GCADB {
                 discordDisplayName: string;
                 valorantDisplayName: string;
                 roleName: string;
-                roleEmote: string; /**
-                 * Writes a new guild to the GCA Database
-                 *
-                 * @param guildId Discord ID of target guild
-                 * @param guildName Name of target guild
-                 * @param trans Database transaction to run this procedure against
-                 * @returns BaseDBError upon failure, void upon success
-                 */
+                roleEmote: string;
                 roleIcon: string;
             }[];
             teamTwo: {
