@@ -43,7 +43,7 @@ export declare class GCADB {
      *
      * @param transaction
      */
-    commitTransaction(transaction: Transaction): Promise<void>;
+    commitTransaction(transaction: Transaction): Promise<BaseDBError>;
     /**
      * Closes the connection to the database for graceful exit
      */

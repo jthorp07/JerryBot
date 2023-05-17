@@ -1,5 +1,5 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
-const { ConnectionPool } = require('mssql');
+const { GCADB } = require('../util/gcadb');
 const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
 
 module.exports = {
@@ -14,30 +14,31 @@ module.exports = {
      * 
      * 
      * @param {ChatInputCommandInteraction} interaction 
-     * @param {ConnectionPool} con 
+     * @param {GCADB} db 
      */
-    async execute(interaction, con) {
+    async execute(interaction, db) {
 
         let enforce = interaction.options.getBoolean('enforce');
         await interaction.deferReply({ ephemeral: true });
 
-        let trans = con.transaction();
-        await trans.begin(beginOnErrMaker(interaction, trans));
+        let trans = await db.beginTransaction();
+        if (!trans) {
+            await interaction.editReply({ content: 'Something went wrong and the command could not be completed.' });
+            return;
+        }
+        
         // Set value in database
-        let result = await con.request(trans)
-            .input('Enforce', enforce ? 1 : 0)
-            .input('GuildId', interaction.guildId)
-            .execute('SetEnforceRankRoles');
+        let result = await db.setEnforceRankRoles(interaction.guildId, enforce);
 
         // Ensure valid database response
-        if (result.returnValue != 0) {
+        if (result) {
             await interaction.editReply({ content: 'Something went wrong and the command could not be completed.' });
             trans.rollback();
             return;
         }
 
         // Commit transaction and respond on Discord
-        trans.commit(commitOnErrMaker(interaction));
+        await db.commitTransaction(trans);
 
         interaction.editReply({ ephemeral: true, content: `Rank roles will ${enforce ? 'now' : 'no longer'} be enforced on this server!` });
         return;

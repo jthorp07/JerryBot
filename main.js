@@ -73,29 +73,8 @@ var client = new Client({ intents: intent_flags });
   Log in to database 
 */
 console.log("[Startup]: Connecting to database");
-var con = new ConnectionPool(SQL);
-/**
- * 
- * @param {Error} err 
- * @returns 
- */
-const conOnErr = async (err) => {
-  if (err.message.contains("operation timed out for an unknown reason") || err.code == 'ETIMEOUT') {
-    console.log("Reconnecting...");
-    return (async () => {
-    con = new ConnectionPool(SQL);
-    con.on("error", conOnErr)
-    await con.connect();
-    return;
-  });
-  }
-  throw err;
-}
-con.on("error", conOnErr);
-con.connect().then(pool => {
-  console.log("[Startup]: Connected to database");
-  //pool.close();
-});
+let db = await getConnection(SQL);
+console.log("[Startup]: Connection established");
 
 
 // Read commands and interactable components into the bot's main memory
@@ -122,7 +101,7 @@ client.on(Events.ClientReady, () => {
 // On joining a new Discord server
 client.on(Events.GuildCreate, async (guild) => {
   try {
-    Handlers.onGuildCreate(guild, con);
+    Handlers.onGuildCreate(guild, db.con);
   } catch (err) {
     console.log(err);
     return;
@@ -132,7 +111,7 @@ client.on(Events.GuildCreate, async (guild) => {
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   try {
-    Handlers.onVoiceStateUpdate(oldState, newState, con);
+    Handlers.onVoiceStateUpdate(oldState, newState, db.con);
   } catch (err) {
     console.log(err);
     return;
@@ -142,7 +121,7 @@ client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
 // Command Handling
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-    Handlers.onInteractionCreate(interaction, con, knownInteractions);
+    Handlers.onInteractionCreate(interaction, db, knownInteractions);
   } catch (err) {
     console.log(err);
     return;

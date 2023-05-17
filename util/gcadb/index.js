@@ -84,7 +84,12 @@ class GCADB {
      */
     commitTransaction(transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            transaction.commit();
+            try {
+                transaction.commit();
+            }
+            catch (err) {
+                return new base_db_error_1.BaseDBError("The transaction failed to commit", -50);
+            }
         });
     }
     /**
