@@ -1,9 +1,9 @@
-CREATE PROCEDURE LeaveTenmans(
+ALTER PROCEDURE LeaveTenmans(
     @QueueId INT,
     @UserId DiscordSnowflake,
     @GuildId DiscordSnowflake,
     @WasCaptain BIT OUTPUT,
-    @QueuePool INT OUTPUT
+    @QueuePool NVARCHAR(100) OUTPUT
 ) AS BEGIN
 
     -- VALIDATE --
@@ -12,9 +12,13 @@ CREATE PROCEDURE LeaveTenmans(
         RETURN 1
     END
 
-    SELECT @WasCaptain=IsCaptain
+    DECLARE @Qp INT
+
+    SELECT @WasCaptain=IsCaptain, @Qp=QueuePool
     FROM QueuedPlayers
     WHERE QueueId=@QueueId AND PlayerId=@UserId AND GuildId=@GuildId
+
+    SELECT @QueuePool = dbo.GetEnumDescription('QUEUE_POOL', @Qp)
 
     DELETE FROM QueuedPlayers
     WHERE QueueId=@QueueId AND Playerid=@UserId AND GuildId=@GuildId

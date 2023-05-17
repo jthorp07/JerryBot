@@ -9,6 +9,7 @@ const {
 const { fork } = require("child_process");
 const process = require("process");
 const { ConnectionPool } = require("mssql");
+const { getConnection } = require("./util/gcadb");
 
 require("dotenv").config();
 const TOKEN = process.env.TOKEN;

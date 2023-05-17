@@ -94,12 +94,10 @@ module.exports = {
       }
     }
 
-    let capOneIndex = Math.floor(Math.random() * (capPool.length - 1));
-    let capTwoIndex = capOneIndex + 1;
+    let capOneIndex = Math.floor(Math.random() * (capPool.length));
+    if (capOneIndex == capPool.length) capOneIndex-= 2;
 
-    if (capTwoIndex == -1) {
-      capTwoIndex = capPool.length - 1;
-    }
+    let capTwoIndex = capOneIndex + 1;
 
     let capOne = capPool[capOneIndex];
     let capTwo = capPool[capTwoIndex];
