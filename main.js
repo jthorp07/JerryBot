@@ -36,7 +36,7 @@ const SQL = {
   server: process.env.PROD_MSSQL_SERVER,
   pool: {
     max: 10,
-    min: 0,
+    min: 2,
     idleTimeoutMillis: Number.MAX_SAFE_INTEGER,
   },
   options: {
@@ -73,8 +73,11 @@ var client = new Client({ intents: intent_flags });
   Log in to database 
 */
 console.log("[Startup]: Connecting to database");
-let db = await getConnection(SQL);
-console.log("[Startup]: Connection established");
+let db;
+getConnection(SQL).then(newDb => {
+  db = newDb;
+  console.log("[Startup]: Connection established");
+});
 
 
 // Read commands and interactable components into the bot's main memory
