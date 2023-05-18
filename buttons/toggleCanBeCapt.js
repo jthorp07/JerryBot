@@ -42,6 +42,7 @@ module.exports = {
       await trans.rollback();
       return;
     }
+
     await db.commitTransaction(trans);
 
     let comps = prefsComps(!canBeCapt);
