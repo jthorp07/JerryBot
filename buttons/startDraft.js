@@ -1,11 +1,11 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const {
   tenMansClassicNextComps,
   tenMansClassicNextEmbed,
   selectCaptains,
   beginOnErrMaker,
-  commitOnErrMaker
+  commitOnErrMaker,
 } = require("../util/helpers");
 
 module.exports = {
@@ -15,10 +15,10 @@ module.exports = {
   },
   /**
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     // Defer, grab queueId from ID args, and start transaction
     await interaction.deferReply({ ephemeral: true });
     let queueId = parseInt(idArgs[1]);
@@ -31,26 +31,22 @@ module.exports = {
       return;
     }
 
-    let result = await con
-      .request()
-      .input("QueueId", queueId)
-      .output("EnforceRankRoles", Bit)
-      .execute("ImManuallyStartingDraft");
-
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
-
+    // NOT SURE IF THIS ORDER IS CORRECT THIS IS HOW IT WAS WRITTEN BEFORE //
+    // ********************************************************************* //
+    let result = await db.startDraft(queueId);
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
+    // ********************************************************************* //
     // Grab queue data
-    result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .output("NumCaptains", Int)
-      .output("PlayerCount", Int)
-      .output("QueueStatus", NVarChar(100))
-      .output("HostId", VarChar(21))
-      .execute("GetQueue");
 
-    if (result.output.PlayerCount < 3) {
+    result = await db.getQueue(queueId);
+
+    if (result.PlayerCount < 3) {
       interaction.editReply({
         content: "There are not enough players to start a draft.",
       });
@@ -67,14 +63,12 @@ module.exports = {
     let host = await interaction.guild.members.fetch(result.output.HostId);
 
     // Grab rankedroles for guild
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .execute("GetRankRoles");
 
-    let rankedRoles = result.recordset;    
+    result = await db.getRankedRoles(interaction.guildId);
 
-    if (result.returnValue === 0) {
+    let rankedRoles = result.recordset;
+
+    if (result) {
       let enforce = result.output.EnforceRankRoles;
 
       let newVals = await selectCaptains(
@@ -103,7 +97,7 @@ module.exports = {
     }
 
     // Commit transaction and respond on Discord
-    trans.commit(commitOnErrMaker(interaction));
+    await db.commitTransaction(trans);
 
     let embeds = tenMansClassicNextEmbed(
       queueStatus,
@@ -124,8 +118,6 @@ module.exports = {
       null,
       host.id
     );
-
-    
 
     interaction.message.edit({
       embeds: embeds,

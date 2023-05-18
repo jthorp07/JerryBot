@@ -1,5 +1,5 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const {
   helpCategories,
   paginationButtons,
@@ -16,13 +16,13 @@ module.exports = {
   /**
    *
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    * idArgs[1] === currentIdx
    * idArgs[2] === endIdx
    * idArgs[3] === menuLevel
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     await interaction.deferReply();
 
     const arrayLengthDiff = (currentIdx, endIdx) => {

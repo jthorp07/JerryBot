@@ -2,10 +2,9 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool, Int, VarChar, Bit } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const { tenMansStartEmbed } = require("../util/embeds");
 const { tenMansStartComps } = require("../util/components");
-const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -21,24 +20,28 @@ module.exports = {
   /**
    *
    * @param {ChatInputCommandInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    */
-  async execute(interaction, con) {
+  async execute(interaction, db) {
     let type = interaction.options.getString("type");
 
     await interaction.deferReply({ ephemeral: true });
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
     let queueId;
-    let result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input("HostId", interaction.member.id)
-      .input("QueueType", type)
-      .output("QueueId", Int)
-      .execute("CreateQueue");
+
+    let result = await db.createQueue(
+      interaction.guildId,
+      interaction.member.id,
+      type
+    );
 
     queueId = result.output.QueueId;
 
@@ -50,24 +53,23 @@ module.exports = {
     );
     let comps = tenMansStartComps(queueId, interaction.member.id);
 
-    result = await con.request(trans)
-      .input("GuildId", interaction.guildId)
-      .input("ChannelName", "TENMANTXT")
-      .output("ChannelId", VarChar(21))
-      .output("Triggerable", Bit)
-      .output("Type", VarChar(20))
-      .execute("GetChannel");
+    result = await db.getChannel(interaction.guildId, "TENMANTXT");
 
-    if (result.returnValue == 2) {
+    // LOGIC FOR THIS CHECK MIGHT BE WRONG //
+
+    if (result.code == 2) {
       await interaction.channel.send({ embeds: embeds, components: comps });
-    } else if (result.returnValue == 0) {
-      await (await interaction.guild.channels.fetch(result.output.ChannelId)).send({embeds: embeds, components: comps});
+    } else if (!result) {
+      await (
+        await interaction.guild.channels.fetch(result.output.ChannelId)
+      ).send({ embeds: embeds, components: comps });
     } else {
-      await interaction.editReply({content:"Something went wrong"});
+      await interaction.editReply({ content: "Something went wrong" });
       trans.rollback();
       return;
     }
-    trans.commit(commitOnErrMaker(interaction));
+
+    await db.commitTransaction(trans);
 
     await interaction.editReply({
       ephemeral: true,

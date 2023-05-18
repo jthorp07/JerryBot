@@ -1,7 +1,6 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const { helpEmbed } = require("../util/embeds");
-const { helpCommands, paginationButtons } = require("../util/components");
 const helpInfo = require("../util/help.json");
 
 module.exports = {
@@ -12,12 +11,12 @@ module.exports = {
   /**
    *
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    * [1] === category
    * [2] === command
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     await interaction.deferReply();
     const exampleArr =
       (await helpInfo[idArgs[1]][idArgs[2]].examples.length) > 0
