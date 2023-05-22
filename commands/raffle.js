@@ -96,8 +96,8 @@ async function freeCoachingRaffle(interaction) {
         for (let role of myRoles) {
             if (role[1].id == raffleRoles.t1) {
                 console.log("T1");
-                found = found | 0b0001;  
-                console.log(found)              
+                found = found | 0b0001;
+                console.log(found)
             } else if (role[1].id == raffleRoles.t2) {
                 console.log("T2");
                 found = found | 0b0010;
@@ -105,11 +105,11 @@ async function freeCoachingRaffle(interaction) {
             } else if (role[1].id == raffleRoles.t3) {
                 console.log("T3");
                 found = found | 0b0100;
-                console.log(found)               
+                console.log(found)
             } else if (role[1].id == raffleRoles.coach) {
                 console.log("coach");
                 console.log(found)
-                found = found | 0b1000;                
+                found = found | 0b1000;
             }
             // User has all roles
             if (found == 15) break;
@@ -147,30 +147,47 @@ async function freeCoachingRaffle(interaction) {
     console.log(`Coaches: ${coaches.length}\nT3s: ${t3s.length}\nT2s: ${t2s.length}\nT1s: ${t1s.length}\n`);
 
     // Build raffle pool and assign weightings with multiple entries
-    /** @type {GuildMember[]} */
+    /** @type {number[]} */
     let rafflePool = [];
 
-    let poolToPick = Math.random();
-    if (poolToPick <= .27) {
-        rafflePool = t3s;
-    } else if (poolToPick <= .48) {
-        rafflePool = t2s;
-    } else if (poolToPick <= .6) {
-        rafflePool = t1s;
-    } else {
-        rafflePool = serverMembers;
+    for (let i = 0; i < coaches.length; i++) {
+        let poolToPick = Math.random();
+        if (poolToPick <= .27) {
+            rafflePool.push(3);
+        } else if (poolToPick <= .48) {
+            rafflePool.push(2);
+        } else if (poolToPick <= .6) {
+            rafflePool.push(1);
+        } else {
+            rafflePool.push(0);
+        }
     }
-    // rafflePool = rafflePool.concat(serverMembers);
-    // rafflePool = rafflePool.concat(t1s);
-    // rafflePool = rafflePool.concat(t2s);
-    // rafflePool = rafflePool.concat(t3s);
 
-    // console.log(rafflePool.length);
 
     // Select winners & their coach
     let winners = [];
-    coaches.forEach(coach => {
-        let poolSize = rafflePool.length;
+    coaches.forEach((coach, index) => {
+        /** @type {GuildMember[]} */
+        let winnerPool;
+        switch (rafflePool[index]) {
+            case 0:
+                winnerPool = serverMembers;
+                console.log("Regular member win");
+                break;
+            case 1:
+                winnerPool = t1s;
+                console.log("T1 member win");
+                break;
+            case 2:
+                winnerPool = t2s;
+                console.log("T2 member win");
+                break;
+            case 3:
+                winnerPool = t3s;
+                console.log("T3 member win");
+                break;
+        }
+        let poolSize = winnerPool.length;
         let winner;
         do {
             winner = Math.floor(Math.random() * (poolSize - 1))
@@ -178,38 +195,34 @@ async function freeCoachingRaffle(interaction) {
 
         winners.push({
             coach: coach,
-            coachee: rafflePool[winner]
+            coachee: winnerPool[winner]
         });
 
+
         // remove winner & dupes from rafflePool
-        removeMonthlyCoachingRaffleDupes(rafflePool, winner, rafflePool[winner].id);
+        switch (rafflePool[index]) {
+            case 0:
+                serverMembers.splice(winner, 1);
+                break;
+            case 1:
+                t1s.splice(winner, 1);
+                break;
+            case 2:
+                t2s.splice(winner, 1);
+                break;
+            case 3:
+                t3s.splice(winner, 1);
+                break;
+        }
 
     });
 
     // Reply results
     let winnersString = ``;
     winners.forEach(winner => {
-        winnersString = `${winnersString}\n${winner.coachee.displayName} has won a coaching session with ${winner.coach.displayName}`;
+        winnersString = `${winnersString}\n${winner.coachee.toString()} has won a coaching session with ${winner.coach.toString()}`;
     });
 
     await interaction.editReply({ content: `Here are the results:${winnersString}` });
-
-}
-
-/**
- * 
- * @param {GuildMember[]} rafflePool 
- * @param {number} index 
- * @param {string} userId
- */
-function removeMonthlyCoachingRaffleDupes(rafflePool, index, userId) {
-
-    if (rafflePool[index].id == userId) {
-        rafflePool.splice(index, 1);
-        removeMonthlyCoachingRaffleDupes(rafflePool, index, userId);
-    } else if (rafflePool[index - 1].id == userId) {
-        rafflePool.splice(index - 1, 1);
-        removeMonthlyCoachingRaffleDupes(rafflePool, index - 1, userId);
-    }
 
 }
