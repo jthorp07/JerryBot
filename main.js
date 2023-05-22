@@ -9,7 +9,7 @@ const {
 const { fork } = require("child_process");
 const process = require("process");
 const { ConnectionPool } = require("mssql");
-const { getConnection } = require("./util/gcadb");
+const { getConnection, GCADB } = require("./util/gcadb");
 
 require("dotenv").config();
 const TOKEN = process.env.TOKEN;
@@ -73,6 +73,7 @@ var client = new Client({ intents: intent_flags });
   Log in to database 
 */
 console.log("[Startup]: Connecting to database");
+/**@type {GCADB} */
 let db;
 getConnection(SQL).then(newDb => {
   db = newDb;

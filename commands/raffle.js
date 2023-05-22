@@ -1,5 +1,5 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, GuildMember } = require('discord.js');
-const { ConnectionPool } = require('mssql');
+const { ConnectionPool, pool } = require('mssql');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -55,6 +55,8 @@ async function freeCoachingRaffle(interaction) {
         2. Fetching all t3, t2, t1, and members and assigning weights
 
         Percentages to set: 60% patreon (45-35-20), 40% non
+
+        .27, .21, .12, .4
 
     */
 
@@ -122,25 +124,19 @@ async function freeCoachingRaffle(interaction) {
         }
         if ((found & 0b0100) === 0b0100) {
 
-            for (let i = 0; i < 4; i++) {
-                t3s.push(member);
-            }
+            t3s.push(member);
             console.log("User is T3");
             console.log(found)
             continue;
         }
         if ((found & 0b0010) === 0b0010) {
-            for (let i = 0; i < 3; i++) {
-                t2s.push(member);
-            }
+            t2s.push(member);
             console.log("User is T2");
             console.log(found)
             continue;
         }
         if ((found & 0b0001) === 0b0001) {
-            for (let i = 0; i < 2; i++) {
-                t1s.push(member);
-            }
+            t1s.push(member);
             console.log("User is T1");
             console.log(found)
             continue;
@@ -153,12 +149,23 @@ async function freeCoachingRaffle(interaction) {
     // Build raffle pool and assign weightings with multiple entries
     /** @type {GuildMember[]} */
     let rafflePool = [];
-    rafflePool = rafflePool.concat(serverMembers);
-    rafflePool = rafflePool.concat(t1s);
-    rafflePool = rafflePool.concat(t2s);
-    rafflePool = rafflePool.concat(t3s);
 
-    console.log(rafflePool.length);
+    let poolToPick = Math.random();
+    if (poolToPick <= .27) {
+        rafflePool = t3s;
+    } else if (poolToPick <= .48) {
+        rafflePool = t2s;
+    } else if (poolToPick <= .6) {
+        rafflePool = t1s;
+    } else {
+        rafflePool = serverMembers;
+    }
+    // rafflePool = rafflePool.concat(serverMembers);
+    // rafflePool = rafflePool.concat(t1s);
+    // rafflePool = rafflePool.concat(t2s);
+    // rafflePool = rafflePool.concat(t3s);
+
+    // console.log(rafflePool.length);
 
     // Select winners & their coach
     let winners = [];
