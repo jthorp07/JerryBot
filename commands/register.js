@@ -24,7 +24,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.createGuild(
+    const result = await db.createGuild(
       interaction.guildId,
       interaction.guild.name
     );
@@ -38,7 +38,7 @@ module.exports = {
       return;
     }
 
-    result = await db.createGuildMember(
+    const result2 = await db.createGuildMember(
       interaction.guildId,
       interaction.user.id,
       interaction.user.id == interaction.guild.ownerId ? 1 : 0,
@@ -47,14 +47,14 @@ module.exports = {
       null
     );
 
-    if (result.returnValue === 3) {
+    if (result2.returnValue === 3) {
       interaction.editReply({
         ephemeral: true,
         content: "You are already registered in this server!",
       });
       trans.rollback();
       return;
-    } else if (result) {
+    } else if (result2) {
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",

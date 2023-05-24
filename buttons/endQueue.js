@@ -36,36 +36,36 @@ module.exports = {
       return;
     }
 
-    let result = await db.endQueue(queueId);
+    const result = await db.endQueue(queueId);
 
-    result = await db.getChannel(interaction.guildId, "TENMANLOBBY");
+    const result2 = await db.getChannel(interaction.guildId, "TENMANLOBBY");
 
-    let lobbyId = result.ChannelId;
+    let lobbyId = result2.ChannelId;
 
-    result = await db.getChannel(
+    const result3 = await db.getChannel(
       interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
     );
 
-    let teamOneId = result.ChannelId;
+    let teamOneId = result3.ChannelId;
 
-    result = await db.getChannel(
+    const result4 = await db.getChannel(
       interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
     );
 
-    let teamTwoId = result.ChannelId;
+    let teamTwoId = result4.ChannelId;
 
-    result = await db.deleteChannelByName(
+    const result5 = await db.deleteChannelByName(
       guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
     );
-    result = await db.deleteChannelByName(
+    const result6 = await db.deleteChannelByName(
       guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
     );
 
-    if (result) {
+    if (result6) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });

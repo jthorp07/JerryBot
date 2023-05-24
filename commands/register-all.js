@@ -37,7 +37,7 @@ module.exports = {
     let owner = await interaction.guild.members.fetch(
       interaction.guild.ownerId
     );
-    let result = await db.createGuild(guildId, interaction.guild.name);
+    const result = await db.createGuild(guildId, interaction.guild.name);
 
     if (result) {
       interaction.editReply({
@@ -48,7 +48,7 @@ module.exports = {
       return;
     }
 
-    result = await db.createGuildMember(
+    const result2 = await db.createGuildMember(
       guildId,
       owner.id,
       1,
@@ -57,9 +57,9 @@ module.exports = {
       null
     );
 
-    if (result.code === 3) {
+    if (result2.code === 3) {
       alreadyIn++;
-    } else if (result) {
+    } else if (result2) {
       interaction.editReply({
         ephemeral: true,
         content:
@@ -73,7 +73,7 @@ module.exports = {
 
     for (let item of users) {
       let user = item[1];
-      result = await db.createGuildMember(
+      const result3 = await db.createGuildMember(
         guildId,
         user.id,
         0,
@@ -82,7 +82,7 @@ module.exports = {
         null
       );
 
-      if (result.code === 3) {
+      if (result3.code === 3) {
         alreadyIn++;
       } else if (result) {
         interaction.editReply({

@@ -43,7 +43,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.setValorantName(
+    const result = await db.setValorantName(
       interaction.guildId,
       interaction.user.id,
       `${valName}#${tagline}`

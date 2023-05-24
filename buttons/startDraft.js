@@ -30,7 +30,7 @@ module.exports = {
       });
       return;
     }
-    
+
     let trans = await db.beginTransaction();
     if (!trans) {
       await interaction.editReply({
@@ -39,11 +39,11 @@ module.exports = {
       return;
     }
 
-    let result = await db.imManuallyStartingDraft(queueId);
+    const result = await db.imManuallyStartingDraft(queueId);
     if (result instanceof BaseDBError) {
       result.log();
       trans.rollback();
-      await interaction.editReply({content:"Something went wrong"});
+      await interaction.editReply({ content: "Something went wrong" });
       return;
     }
     // Grab queue data
@@ -53,7 +53,7 @@ module.exports = {
     if (getQueueResult instanceof BaseDBError) {
       result.log();
       trans.rollback();
-      await interaction.editReply({content:"Something went wrong"});
+      await interaction.editReply({ content: "Something went wrong" });
       return;
     }
 
@@ -75,20 +75,18 @@ module.exports = {
 
     // Grab rankedroles for guild
 
-    let rankRoleResult = await db.getRankRoles(interaction.guildId, trans);
+    const rankedRoles = await db.getRankRoles(interaction.guildId, trans);
     if (rankRoleResult instanceof BaseDBError) {
       rankRoleResult.log();
       trans.rollback();
-      await interaction.editReply({content:"Something went wrong"});
+      await interaction.editReply({ content: "Something went wrong" });
       return;
     }
-
-    let rankedRoles = rankRoleResult;
 
     if (rankedRoles) {
       let enforce = result.enforce;
 
-      let newVals = await selectCaptains(
+      const newVals = await selectCaptains(
         numCaptains,
         playersAndCanBeCapt,
         rankedRoles,

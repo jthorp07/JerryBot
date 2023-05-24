@@ -60,7 +60,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.setRole(
+    const result = await db.setRole(
       interaction.guildId,
       role.id,
       roleName,

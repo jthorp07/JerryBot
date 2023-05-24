@@ -22,7 +22,7 @@ module.exports = {
    * idArgs[1] === currentIdx
    * idArgs[2] === endIdx
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     console.log(idArgs);
     const arrayLengthDiff = (currentIdx) => {
       if (parseInt(currentIdx) <= 0) {

@@ -61,7 +61,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.createChannel(interaction.guildId, channel.id);
+    const result = await db.createChannel(interaction.guildId, channel.id);
 
     if (result) {
       //TODO: Error

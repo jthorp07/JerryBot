@@ -1,6 +1,15 @@
 const { SelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, Int, NVarChar, VarChar, PreparedStatement } = require("mssql");
-const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require("../util/helpers");
+const {
+  ConnectionPool,
+  Int,
+  NVarChar,
+  VarChar,
+  PreparedStatement,
+} = require("mssql");
+const {
+  tenMansClassicNextEmbed,
+  tenMansClassicNextComps,
+} = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -23,37 +32,41 @@ module.exports = {
     let firstUpper = mapPick.charAt(0).toUpperCase();
     mapPick = firstUpper.concat(mapPick.substring(1));
 
-    let choice = interaction.values[0] == 'atk' ? 1 : 2;
+    let choice = interaction.values[0] == "atk" ? 1 : 2;
 
     // Authorize map/side picker
     let stmt = new PreparedStatement(con)
-      .input('UserId', VarChar(21))
-      .input('QueueId', Int);
+      .input("UserId", VarChar(21))
+      .input("QueueId", Int);
 
     let result;
     try {
-      await stmt.prepare('SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId');
+      await stmt.prepare(
+        "SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId"
+      );
       result = await stmt.execute({
         UserId: interaction.user.id,
-        QueueId: queueId
+        QueueId: queueId,
       });
       await stmt.unprepare();
     } catch (err) {
       console.log(` [DB]: ${err}`);
       interaction.editReply({
-        content: 'Something went wrong and the command was unable to be processed'
+        content:
+          "Something went wrong and the command was unable to be processed",
       });
       return;
     }
 
     if (result.recordset.length == 0) {
       interaction.editReply({
-        content: 'It is not your turn to pick!'
+        content: "It is not your turn to pick!",
       });
       return;
     }
 
-    result = await con.request()
+    const pickSideResult = await con
+      .request()
       .input("QueueId", queueId)
       .output("NumCaptains", Int)
       .output("PlayerCount", Int)
@@ -61,27 +74,46 @@ module.exports = {
       .output("HostId", VarChar(21))
       .execute("PickSide");
 
-    if (result.returnValue != 0) {
-      await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+    if (pickSideResult.returnValue != 0) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed",
+      });
       console.log("Database error");
       return;
     }
 
-    let queueStatus = result.output.QueueStatus;
-    let playersAvailable = result.recordsets[1];
-    let teamOnePlayers = result.recordsets[2];
-    let teamTwoPlayers = result.recordsets[3];
-    let spectators = result.recordsets[4];
-    let host = await interaction.guild.members.fetch(result.output.HostId);
+    let queueStatus = pickSideResult.output.QueueStatus;
+    let playersAvailable = pickSideResult.recordsets[1];
+    let teamOnePlayers = pickSideResult.recordsets[2];
+    let teamTwoPlayers = pickSideResult.recordsets[3];
+    let spectators = pickSideResult.recordsets[4];
+    let host = await interaction.guild.members.fetch(
+      pickSideResult.output.HostId
+    );
 
-    let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
-      teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, choice);
+    let embeds = tenMansClassicNextEmbed(
+      queueStatus,
+      playersAvailable,
+      teamOnePlayers,
+      teamTwoPlayers,
+      spectators,
+      host.displayName,
+      host.displayAvatarURL(),
+      mapPick,
+      choice
+    );
 
-    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick, host.id);
+    let comps = tenMansClassicNextComps(
+      queueId,
+      queueStatus,
+      playersAvailable,
+      mapPick,
+      host.id
+    );
 
     await interaction.message.edit({
       embeds: embeds,
-      components: comps
+      components: comps,
     });
   },
 };

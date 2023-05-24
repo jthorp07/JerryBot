@@ -29,7 +29,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.getRankRoles(interaction.guildId);
+    const result = await db.getRankRoles(interaction.guildId);
 
     if (result) {
       trans.rollback();
@@ -42,7 +42,7 @@ module.exports = {
     let rankedRoles = result.recordset;
     let roleIcon = getRoleIcon(rankedRoles, interaction.member);
 
-    result = await db.updateDiscordProfile(
+    const result2 = await db.updateDiscordProfile(
       interaction.user.id,
       interaction.guildId,
       interaction.user.username,
@@ -52,7 +52,7 @@ module.exports = {
       roleIcon ? true : false
     );
 
-    if (result) {
+    if (result2) {
       trans.rollback();
       await interaction.editReply({
         content: "There was an error fetching your profile",

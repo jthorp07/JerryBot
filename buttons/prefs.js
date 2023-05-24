@@ -27,7 +27,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.getPrefs(interaction.user.id, interaction.guildId);
+    const result = await db.getPrefs(interaction.user.id, interaction.guildId);
 
     if (result) {
       await trans.rollback();

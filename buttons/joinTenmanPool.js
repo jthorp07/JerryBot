@@ -46,7 +46,11 @@ module.exports = {
 
     // Join player to queue
 
-    let result = await db.joinQueue(queueId, user.id, interaction.guildId);
+    const joinQueueResult = await db.joinQueue(
+      queueId,
+      user.id,
+      interaction.guildId
+    );
 
     let ret = result.code;
 
@@ -73,26 +77,28 @@ module.exports = {
 
     if (ret == 0) {
       // Grab outputs from JoinQueue procedure
-      let numCaptains = result.output.NumCaptains;
-      let queueStatus = result.output.QueueStatus;
-      let playersAndCanBeCapt = result.recordsets[0];
-      let playersAvailable = result.recordsets[1];
-      let teamOnePlayers = result.recordsets[2];
-      let teamTwoPlayers = result.recordsets[3];
-      let spectators = result.recordsets[4];
-      let host = await interaction.guild.members.fetch(result.output.HostId);
+      let numCaptains = joinQueueResult.output.NumCaptains;
+      let queueStatus = joinQueueResult.output.QueueStatus;
+      let playersAndCanBeCapt = joinQueueResult.recordsets[0];
+      let playersAvailable = joinQueueResult.recordsets[1];
+      let teamOnePlayers = joinQueueResult.recordsets[2];
+      let teamTwoPlayers = joinQueueResult.recordsets[3];
+      let spectators = joinQueueResult.recordsets[4];
+      let host = await interaction.guild.members.fetch(
+        joinQueueResult.output.HostId
+      );
 
       // Grab guild's rank roles
 
-      result = await db.getRankRoles(interaction.guildId);
+      const getRankRolesResult = await db.getRankRoles(interaction.guildId);
 
-      let rankedRoles = result.recordset;
+      const rankedRoles = getRankRolesResult.recordset;
 
       // If necessary, choose captains
       if (queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT) {
         await db.commitTransaction(trans);
 
-        result = await db.startDraft(queueId);
+        const startDraftResult = await db.startDraft(queueId);
 
         // start a new transaction after attempting to grab the draft
         await db.commitTransaction(trans);
@@ -105,8 +111,8 @@ module.exports = {
           return;
         }
 
-        if (!result) {
-          let enforce = result.output.EnforceRankRoles;
+        if (!startDraftResult) {
+          let enforce = startDraftResult.output.EnforceRankRoles;
           // Assuming success, reassign values with updated data after selecting captaibns and starting draft
           let newVals = await selectCaptains(
             numCaptains,
@@ -122,9 +128,9 @@ module.exports = {
           teamOnePlayers = newVals.newTeamOne;
           teamTwoPlayers = newVals.newTeamTwo;
           queueStatus = newVals.newStatus;
-        } else if (result.returnValue != -1) {
+        } else if (startDraftResult.returnValue != -1) {
         } else {
-          console.log(result.returnValue);
+          console.log(startDraftResult.returnValue);
           return;
         }
       }

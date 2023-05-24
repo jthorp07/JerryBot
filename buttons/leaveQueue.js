@@ -32,7 +32,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.leaveTenmans(
+    const result = await db.leaveTenmans(
       queueId,
       interaction.user.id,
       interaction.guildId
@@ -48,9 +48,12 @@ module.exports = {
     }
 
     if (result.wasCaptain) {
-      result = await db.replaceCaptain(queueId, result.QueuePool);
+      const replaceCaptainResult = await db.replaceCaptain(
+        queueId,
+        result.QueuePool
+      );
 
-      if (result) {
+      if (replaceCaptainResult) {
         trans.rollback();
         interaction.editReply({
           ephemeral: true,
@@ -60,7 +63,7 @@ module.exports = {
       }
     }
 
-    let queueResult = await db.getQueue(queueId);
+    const queueResult = await db.getQueue(queueId);
     if (queueResult instanceof BaseDBError) {
       trans.rollback();
       interaction.editReply({
@@ -76,8 +79,8 @@ module.exports = {
 
     await db.commitTransaction(trans);
 
-    let queueStatus = result.QueueStatus;
-    // MIGHT NEED TO CHANGE THIS NOT SURE IF RECORDSETS EXISTS //
+    const queueStatus = result.QueueStatus;
+
     let playersAvailable = queueResult.records.availablePlayers;
     let teamOnePlayers = queueResult.records.teamOne;
     let teamTwoPlayers = queueResult.records.teamTwo;

@@ -26,7 +26,10 @@ module.exports = {
       return;
     }
 
-    let result = await db.getProfile(interaction.user.id, interaction.guildId);
+    const result = await db.getProfile(
+      interaction.user.id,
+      interaction.guildId
+    );
 
     if (result) {
       trans.rollback();
@@ -41,9 +44,12 @@ module.exports = {
       return;
     }
 
-    result = await db.getUserValRank(interaction.user.id, interaction.guildId);
+    const result2 = await db.getUserValRank(
+      interaction.user.id,
+      interaction.guildId
+    );
 
-    if (result) {
+    if (result2) {
       await interaction.editReply({ content: "Something went wrong" });
       return;
     }
@@ -53,7 +59,7 @@ module.exports = {
     let comps = profileComps();
 
     /**@type {string} */
-    let currentRank = result.output.RoleName;
+    let currentRank = result2.output.RoleName;
     if (currentRank) {
       let parts = currentRank.toLowerCase().split("_");
       for (let i = 0; i < parts.length; i++) {
@@ -68,7 +74,7 @@ module.exports = {
       userObj.GuildName,
       userObj.DisplayName,
       userObj.ValorantName,
-      result.output.RoleIcon,
+      result2.output.RoleIcon,
       userObj.Ranked,
       currentRank,
       userObj.Username,

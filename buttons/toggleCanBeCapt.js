@@ -27,7 +27,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.setCanBeCaptain(
+    const result = await db.setCanBeCaptain(
       interaction.user.id,
       interaction.guildId,
       !canBeCapt

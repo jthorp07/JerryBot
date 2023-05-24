@@ -32,7 +32,7 @@ module.exports = {
     }
 
     // Set value in database
-    let result = await db.setEnforceRankRoles(interaction.guildId, enforce);
+    const result = await db.setEnforceRankRoles(interaction.guildId, enforce);
 
     // Ensure valid database response
     if (result) {

@@ -53,7 +53,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.getChannel(interaction.guildId, "VCCAT");
+    const result = await db.getChannel(interaction.guildId, "VCCAT");
 
     let parentId = result.output.ChannelId;
     try {
@@ -72,7 +72,7 @@ module.exports = {
       return;
     }
 
-    result = await db.createChannel(
+    const result2 = await db.createChannel(
       interaction.guildId,
       channel.id,
       channel.name,
@@ -80,7 +80,7 @@ module.exports = {
       1
     );
 
-    if (result) {
+    if (result2) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });

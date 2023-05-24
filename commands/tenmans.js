@@ -37,7 +37,7 @@ module.exports = {
 
     let queueId;
 
-    let result = await db.createQueue(
+    const result = await db.createQueue(
       interaction.guildId,
       interaction.member.id,
       type
@@ -53,15 +53,15 @@ module.exports = {
     );
     let comps = tenMansStartComps(queueId, interaction.member.id);
 
-    result = await db.getChannel(interaction.guildId, "TENMANTXT");
+    const result2 = await db.getChannel(interaction.guildId, "TENMANTXT");
 
     // LOGIC FOR THIS CHECK MIGHT BE WRONG //
 
-    if (result.code == 2) {
+    if (result2.code == 2) {
       await interaction.channel.send({ embeds: embeds, components: comps });
-    } else if (!result) {
+    } else if (!result2) {
       await (
-        await interaction.guild.channels.fetch(result.output.ChannelId)
+        await interaction.guild.channels.fetch(result2.output.ChannelId)
       ).send({ embeds: embeds, components: comps });
     } else {
       await interaction.editReply({ content: "Something went wrong" });

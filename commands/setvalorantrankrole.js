@@ -89,7 +89,7 @@ module.exports = {
       return;
     }
 
-    let result = await db.setValorantRankRole(
+    const result = await db.setValorantRankRole(
       interaction.guildId,
       role.id,
       roleName,
