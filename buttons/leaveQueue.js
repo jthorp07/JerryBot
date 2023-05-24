@@ -1,5 +1,5 @@
 const { ButtonInteraction } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const {
   tenMansClassicNextEmbed,
   tenMansClassicNextComps,
@@ -38,7 +38,7 @@ module.exports = {
       interaction.guildId
     );
 
-    if (result) {
+    if (result instanceof BaseDBError) {
       trans.rollback();
       interaction.editReply({
         ephemeral: true,
@@ -47,7 +47,7 @@ module.exports = {
       return;
     }
 
-    if (result.WasCaptain) {
+    if (result.wasCaptain) {
       result = await db.replaceCaptain(queueId, result.QueuePool);
 
       if (result) {
@@ -60,7 +60,16 @@ module.exports = {
       }
     }
 
-    result = await db.getQueue(queueId);
+    let queueResult = await db.getQueue(queueId);
+    if (queueResult instanceof BaseDBError) {
+      trans.rollback();
+      interaction.editReply({
+        ephemeral: true,
+        content: "Something went wrong o-o",
+      });
+      result.log();
+      return;
+    }
     // Grab queue data
 
     trans.commit(commitOnErrMaker(interaction));
@@ -69,10 +78,9 @@ module.exports = {
 
     let queueStatus = result.QueueStatus;
     // MIGHT NEED TO CHANGE THIS NOT SURE IF RECORDSETS EXISTS //
-    let playersAvailable = result.recordsets[1];
-    let teamOnePlayers = result.recordsets[2];
-    let teamTwoPlayers = result.recordsets[3];
-    let spectators = result.recordsets[4];
+    let playersAvailable = queueResult.records.availablePlayers;
+    let teamOnePlayers = queueResult.records.teamOne;
+    let teamTwoPlayers = queueResult.records.teamTwo;
     let host = await interaction.guild.members.fetch(result.output.HostId);
 
     if (!host) {
@@ -91,7 +99,7 @@ module.exports = {
       playersAvailable,
       teamOnePlayers,
       teamTwoPlayers,
-      spectators,
+      null,
       host.displayName,
       host.displayAvatarURL(),
       null,

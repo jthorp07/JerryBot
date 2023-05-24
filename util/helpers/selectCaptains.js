@@ -103,15 +103,21 @@ module.exports = {
     let capOne = capPool[capOneIndex];
     let capTwo = capPool[capTwoIndex];
     let result = await db.setCaptain(queueId, capOne.id, capTwo.id, interaction.guildId, trans);
+    if (result instanceof BaseDBError) {
+      result.log();
+      await interaction.editReply({content:"Something went wrong"});
+      trans.rollback();
+      return;
+    }
 
     await createCaptainVC(capOne.id, queueId, TENMANS_QUEUE_POOLS.TEAM_ONE, interaction, db, trans);
     await createCaptainVC(capTwo.id, queueId, TENMANS_QUEUE_POOLS.TEAM_TWO, interaction, db, trans);
 
     return {
-      newAvailable: result.recordsets[1],
-      newTeamOne: result.recordsets[2],
-      newTeamTwo: result.recordsets[3],
-      newStatus: result.output.QueueStatus
+      newAvailable: result.records.availablePlayers,
+      newTeamOne: result.records.teamOne,
+      newTeamTwo: result.records.teamTwo,
+      newStatus: result.queueStatus
     }
 
   },
