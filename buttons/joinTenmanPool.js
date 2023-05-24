@@ -114,7 +114,7 @@ module.exports = {
             rankedRoles,
             interaction,
             queueId,
-            con,
+            db,
             trans,
             enforce
           );
