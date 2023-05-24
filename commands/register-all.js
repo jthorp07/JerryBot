@@ -28,7 +28,7 @@ module.exports = {
       return;
     }
 
-    let users = interaction.guild.members.cache;
+    let users = await interaction.guild.members.fetch();
     let guildId = interaction.guildId;
     let alreadyIn = 0;
     let usersAdded = 0;
@@ -39,7 +39,10 @@ module.exports = {
     );
     const result = await db.createGuild(guildId, interaction.guild.name);
 
-    if (result) {
+    if (result && result.code === 3) {
+      result.log();
+    } else if (result) {
+      result.log();
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",
@@ -51,15 +54,16 @@ module.exports = {
     const result2 = await db.createGuildMember(
       guildId,
       owner.id,
-      1,
+      true,
       owner.user.username,
       owner.displayName,
       null
     );
 
-    if (result2.code === 3) {
+    if (result2 && result2.code === 3) {
       alreadyIn++;
     } else if (result2) {
+      result2.log();
       interaction.editReply({
         ephemeral: true,
         content:
@@ -76,15 +80,16 @@ module.exports = {
       const result3 = await db.createGuildMember(
         guildId,
         user.id,
-        0,
+        false,
         user.user.username,
         user.displayName,
         null
       );
 
-      if (result3.code === 3) {
+      if (result3 && result3.code === 3) {
         alreadyIn++;
-      } else if (result) {
+      } else if (result3) {
+        result3.log();
         interaction.editReply({
           ephemeral: true,
           content:

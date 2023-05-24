@@ -39,6 +39,8 @@ function createGuild(con, guildId, guildName, trans) {
                 return new errors_1.NullArgError(["GuildId"], "CreateGuild");
             case 2:
                 return new errors_1.DoesNotExistError("CreateGuild");
+            case 3:
+                return new errors_1.AlreadyExistsError("CreateGuild");
         }
         return new base_db_error_1.default("An unknown error occurred", -99);
     });

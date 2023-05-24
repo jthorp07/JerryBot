@@ -34,8 +34,6 @@ function createGuildMember(con, guildId, userId, isOwner, username, guildDisplay
         // Validate
         if (guildId.length > 21 || userId.length > 21)
             return new errors_1.DataConstraintError(['GuildId', 'UserId', 'GuildDisplayName'], ['Must be between 17 and 21 characters', 'Must be between 17 and 21 characters', 'Must be between 3 and 32 characters'], 'CreateGuildMember');
-        if (guildDisplayName.length > 32 || guildDisplayName.length < 3)
-            return new errors_1.DataConstraintError(['GuildId', 'UserId', 'GuildDisplayName'], ['Must be between 17 and 21 characters', 'Must be between 17 and 21 characters', 'Must be between 3 and 32 characters'], 'CreateGuildMember');
         if (!con.connected)
             return new errors_1.NotConnectedError("CreateGuildMember");
         let req = (0, _1.initReq)(con, trans);

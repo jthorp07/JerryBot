@@ -1,4 +1,4 @@
-ALTER PROCEDURE CreateGuildMember(
+CREATE PROCEDURE CreateGuildMember(
     @GuildId DiscordSnowflake,
     @UserId DiscordSnowflake,
     @IsOwner BIT,
@@ -13,11 +13,18 @@ ALTER PROCEDURE CreateGuildMember(
         RETURN 1
     END
 
+    IF NOT EXISTS
+    (SELECT * FROM Guild WHERE [Id]=@GuildId)
+    BEGIN
+        PRINT 'Guild not registered'
+        RETURN 2
+    END
+
     IF EXISTS
     (SELECT * FROM GuildMember WHERE GuildId=@GuildId AND MemberId=@UserId)
     BEGIN
         PRINT 'User already exists'
-        RETURN 2
+        RETURN 3
     END
 
     -- If user doesn't exist, create user first --
