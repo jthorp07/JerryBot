@@ -1,5 +1,5 @@
 const { ButtonInteraction, VoiceChannel } = require("discord.js");
-const { ConnectionPool, VarChar, Bit } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const { TENMANS_QUEUE_POOLS } = require("../util");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
@@ -11,10 +11,10 @@ module.exports = {
   /**
    *
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     //TODO: Implement button command
 
     await interaction.deferReply({ ephemeral: true });
@@ -28,72 +28,51 @@ module.exports = {
       return;
     }
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-    let result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .execute("EndQueue");
+    const result = await db.endQueue(queueId);
 
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input("ChannelName", "TENMANLOBBY")
-      .output("ChannelId", VarChar(21))
-      .output("Triggerable", Bit)
-      .output("Type", VarChar(20))
-      .execute("GetChannel");
+    const result2 = await db.getChannel(interaction.guildId, "TENMANLOBBY");
 
-    let lobbyId = result.output.ChannelId;
+    let lobbyId = result2.ChannelId;
 
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input(
-        "ChannelName",
-        `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
-      )
-      .output("ChannelId", VarChar(21))
-      .output("Triggerable", Bit)
-      .output("Type", VarChar(20))
-      .execute("GetChannel");
+    const result3 = await db.getChannel(
+      interaction.guildId,
+      `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
+    );
 
-    let teamOneId = result.output.ChannelId;
+    let teamOneId = result3.ChannelId;
 
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input(
-        "ChannelName",
-        `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
-      )
-      .output("ChannelId", VarChar(21))
-      .output("Triggerable", Bit)
-      .output("Type", VarChar(20))
-      .execute("GetChannel");
+    const result4 = await db.getChannel(
+      interaction.guildId,
+      `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
+    );
 
-    let teamTwoId = result.output.ChannelId;
+    let teamTwoId = result4.ChannelId;
 
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input(
-        "ChannelName",
-        `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
-      )
-      .execute("DeleteChannelByName");
+    const result5 = await db.deleteChannelByName(
+      guildId,
+      `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
+    );
+    const result6 = await db.deleteChannelByName(
+      guildId,
+      `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
+    );
 
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input(
-        "ChannelName",
-        `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
-      )
-      .execute("DeleteChannelByName");
-
-    trans.commit(commitOnErrMaker(interaction));
+    if (result6) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      trans.rollback();
+      return;
+    }
+    await db.commitTransaction(trans);
 
     /** @type {VoiceChannel} */
     let lobbyChan = await interaction.guild.channels.fetch(lobbyId);

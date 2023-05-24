@@ -2,7 +2,6 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool } = require("mssql");
 const { helpEmbed } = require("../util/embeds");
 const { helpCategories, paginationButtons } = require("../util/components");
 const helpInfo = require("../util/help.json");
@@ -14,9 +13,8 @@ module.exports = {
   /**
    *
    * @param {ChatInputCommandInteraction} interaction
-   * @param {ConnectionPool} con
    */
-  async execute(interaction, con) {
+  async execute(interaction) {
     await interaction.deferReply();
     const embed = helpEmbed({
       title: "Jerry Bot Help Home",

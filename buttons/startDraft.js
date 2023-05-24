@@ -1,11 +1,11 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool, Int, NVarChar, VarChar, Bit } = require("mssql");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const {
   tenMansClassicNextComps,
   tenMansClassicNextEmbed,
   selectCaptains,
   beginOnErrMaker,
-  commitOnErrMaker
+  commitOnErrMaker,
 } = require("../util/helpers");
 
 module.exports = {
@@ -15,10 +15,10 @@ module.exports = {
   },
   /**
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     // Defer, grab queueId from ID args, and start transaction
     await interaction.deferReply({ ephemeral: true });
     let queueId = parseInt(idArgs[1]);
@@ -31,59 +31,68 @@ module.exports = {
       return;
     }
 
-    let result = await con
-      .request()
-      .input("QueueId", queueId)
-      .output("EnforceRankRoles", Bit)
-      .execute("ImManuallyStartingDraft");
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
-
+    const result = await db.imManuallyStartingDraft(queueId);
+    if (result instanceof BaseDBError) {
+      result.log();
+      trans.rollback();
+      await interaction.editReply({ content: "Something went wrong" });
+      return;
+    }
     // Grab queue data
-    result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .output("NumCaptains", Int)
-      .output("PlayerCount", Int)
-      .output("QueueStatus", NVarChar(100))
-      .output("HostId", VarChar(21))
-      .execute("GetQueue");
 
-    if (result.output.PlayerCount < 3) {
+    let getQueueResult = await db.getQueue(queueId);
+
+    if (getQueueResult instanceof BaseDBError) {
+      result.log();
+      trans.rollback();
+      await interaction.editReply({ content: "Something went wrong" });
+      return;
+    }
+
+    if (getQueueResult.playerCount < 3) {
       interaction.editReply({
         content: "There are not enough players to start a draft.",
       });
       return;
     }
 
-    let numCaptains = result.output.NumCaptains;
-    let queueStatus = result.output.QueueStatus;
-    let playersAndCanBeCapt = result.recordsets[0];
-    let playersAvailable = result.recordsets[1];
-    let teamOnePlayers = result.recordsets[2];
-    let teamTwoPlayers = result.recordsets[3];
-    let spectators = result.recordsets[4];
-    let host = await interaction.guild.members.fetch(result.output.HostId);
+    let numCaptains = getQueueResult.captainCount;
+    let queueStatus = getQueueResult.queueStatus;
+    let playersAndCanBeCapt = getQueueResult.records.allPlayers;
+    let playersAvailable = getQueueResult.records.availablePlayers;
+    let teamOnePlayers = getQueueResult.records.teamOne;
+    let teamTwoPlayers = getQueueResult.records.teamTwo;
+    //let spectators = result.recordsets[4];
+    let host = await interaction.guild.members.fetch(getQueueResult.hostId);
 
     // Grab rankedroles for guild
-    result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .execute("GetRankRoles");
 
-    let rankedRoles = result.recordset;    
+    const rankedRoles = await db.getRankRoles(interaction.guildId, trans);
+    if (rankRoleResult instanceof BaseDBError) {
+      rankRoleResult.log();
+      trans.rollback();
+      await interaction.editReply({ content: "Something went wrong" });
+      return;
+    }
 
-    if (result.returnValue === 0) {
-      let enforce = result.output.EnforceRankRoles;
+    if (rankedRoles) {
+      let enforce = result.enforce;
 
-      let newVals = await selectCaptains(
+      const newVals = await selectCaptains(
         numCaptains,
         playersAndCanBeCapt,
         rankedRoles,
         interaction,
         queueId,
-        con,
+        db,
         trans,
         enforce
       );
@@ -103,14 +112,14 @@ module.exports = {
     }
 
     // Commit transaction and respond on Discord
-    trans.commit(commitOnErrMaker(interaction));
+    await db.commitTransaction(trans);
 
     let embeds = tenMansClassicNextEmbed(
       queueStatus,
       playersAvailable,
       teamOnePlayers,
       teamTwoPlayers,
-      spectators,
+      null, // spectators
       host.displayName,
       host.displayAvatarURL(),
       null,
@@ -124,8 +133,6 @@ module.exports = {
       null,
       host.id
     );
-
-    
 
     interaction.message.edit({
       embeds: embeds,

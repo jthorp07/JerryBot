@@ -2,10 +2,9 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool, NVarChar, VarChar } = require("mssql");
+const { GCADB } = require("../util/gcadb");
 const { profileEmbed } = require("../util/embeds");
 const { profileComps } = require("../util/components");
-const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,22 +13,25 @@ module.exports = {
   /**
    *
    * @param {ChatInputCommandInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    */
-  async execute(interaction, con) {
+  async execute(interaction, db) {
     await interaction.deferReply({ ephemeral: true });
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-    let result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input("UserId", interaction.user.id)
-      .output("CurrentRank", NVarChar(100))
-      .execute("GetProfile");
+    const result = await db.getProfile(
+      interaction.user.id,
+      interaction.guildId
+    );
 
-    if (!result.returnValue == 0) {
+    if (result) {
       trans.rollback();
       await interaction.editReply({ content: "Something went wrong" });
       return;
@@ -42,47 +44,47 @@ module.exports = {
       return;
     }
 
-    result = await con.request(trans)
-      .input('UserId', interaction.user.id)
-      .input('GuildId', interaction.guildId)
-      .output('RoleName', NVarChar(100))
-      .output('RoleEmote', VarChar(57))
-      .output('RoleIcon', VarChar(255))
-      .execute('GetUserValRank');
+    const result2 = await db.getUserValRank(
+      interaction.user.id,
+      interaction.guildId
+    );
 
-    if (result.returnValue != 0) {
+    if (result2) {
       await interaction.editReply({ content: "Something went wrong" });
       return;
     }
 
-    trans.commit(commitOnErrMaker(interaction));
+    await db.commitTransaction(trans);
 
     let comps = profileComps();
 
     /**@type {string} */
-    let currentRank = result.output.RoleName;
+    let currentRank = result2.output.RoleName;
     if (currentRank) {
-      let parts = currentRank.toLowerCase().split('_');
+      let parts = currentRank.toLowerCase().split("_");
       for (let i = 0; i < parts.length; i++) {
         let part = parts[i];
         parts[i] = part.charAt(0).toUpperCase().concat(part.substring(1));
       }
-      currentRank = parts.join(' ');
+      currentRank = parts.join(" ");
     }
-
 
     const profile = profileEmbed(
       interaction.member.displayAvatarURL(),
       userObj.GuildName,
       userObj.DisplayName,
       userObj.ValorantName,
-      result.output.RoleIcon,
+      result2.output.RoleIcon,
       userObj.Ranked,
       currentRank,
       userObj.Username,
       userObj.CanBeCaptain
     );
-    await interaction.editReply({ embeds: profile, ephemeral: true, components: comps });
+    await interaction.editReply({
+      embeds: profile,
+      ephemeral: true,
+      components: comps,
+    });
   },
-permissions: "all",
+  permissions: "all",
 };

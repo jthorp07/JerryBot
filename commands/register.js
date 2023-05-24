@@ -2,8 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { ConnectionPool } = require("mssql");
-const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
+const { GCADB } = require("../util/gcadb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,21 +11,25 @@ module.exports = {
   /**
    *
    * @param {ChatInputCommandInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    */
-  async execute(interaction, con) {
+  async execute(interaction, db) {
     await interaction.deferReply({ ephemeral: true });
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-    let result = await con
-      .request(trans)
-      .input("GuildId", interaction.guildId)
-      .input("GuildName", interaction.guild.name)
-      .execute("CreateGuild");
+    const result = await db.createGuild(
+      interaction.guildId,
+      interaction.guild.name
+    );
 
-    if (result.returnValue !== 0 && !result.returnValue === 2) {
+    if (result) {
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",
@@ -35,23 +38,23 @@ module.exports = {
       return;
     }
 
-    result = await con.request(trans)
-      .input('GuildId', interaction.guildId)
-      .input('UserId', interaction.user.id)
-      .input('IsOwner', (interaction.user.id == interaction.guild.ownerId) ? 1 : 0)
-      .input('Username', interaction.user.username)
-      .input('GuildDisplayName', interaction.member.displayName)
-      .input('ValorantRankRoleName', null)
-      .execute('CreateGuildMember');
+    const result2 = await db.createGuildMember(
+      interaction.guildId,
+      interaction.user.id,
+      interaction.user.id == interaction.guild.ownerId ? 1 : 0,
+      interaction.user.username,
+      interaction.member.displayName,
+      null
+    );
 
-    if (result.returnValue === 2) {
+    if (result2.returnValue === 3) {
       interaction.editReply({
         ephemeral: true,
         content: "You are already registered in this server!",
       });
       trans.rollback();
       return;
-    } else if (result.returnValue !== 0) {
+    } else if (result2) {
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",
@@ -60,7 +63,8 @@ module.exports = {
       return;
     }
 
-    trans.commit(commitOnErrMaker(interaction));
+    // Commit transaction and respond on Discord
+    await db.commitTransaction(trans);
 
     interaction.editReply({
       ephemeral: true,

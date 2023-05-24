@@ -1,5 +1,3 @@
-const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool } = require("mssql");
 const { helpEmbed } = require("../util/embeds");
 const { helpCategories, paginationButtons } = require("../util/components");
 

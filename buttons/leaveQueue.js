@@ -1,6 +1,11 @@
 const { ButtonInteraction } = require("discord.js");
-const { ConnectionPool, Int, VarChar, NVarChar, Bit } = require("mssql");
-const { tenMansClassicNextEmbed, tenMansClassicNextComps, beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
+const { GCADB, BaseDBError } = require("../util/gcadb");
+const {
+  tenMansClassicNextEmbed,
+  tenMansClassicNextComps,
+  beginOnErrMaker,
+  commitOnErrMaker,
+} = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -10,30 +15,30 @@ module.exports = {
   /**
    *
    * @param {ButtonInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
-  async execute(interaction, con, idArgs) {
-
-
+  async execute(interaction, db, idArgs) {
     // Go ahead and edit embed
     await interaction.deferReply({ ephemeral: true });
 
     let queueId = parseInt(idArgs[1]);
 
-    let trans = con.transaction();
-    await trans.begin(beginOnErrMaker(interaction, trans));
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-    let result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .input("UserId", interaction.user.id)
-      .input("GuildId", interaction.guildId)
-      .output("WasCaptain", Bit)
-      .output("QueuePool", Bit)
-      .execute("LeaveTenmans");
+    const result = await db.leaveTenmans(
+      queueId,
+      interaction.user.id,
+      interaction.guildId
+    );
 
-    if (result.returnValue != 0) {
+    if (result instanceof BaseDBError) {
       trans.rollback();
       interaction.editReply({
         ephemeral: true,
@@ -42,43 +47,50 @@ module.exports = {
       return;
     }
 
-    if (result.output.WasCaptain) {
-      result = await con.request(trans)
-        .input("QueueId", queueId)
-        .input("QueuePool", result.output.QueuePool)
-        .execute("ReplaceCaptain");
+    if (result.wasCaptain) {
+      const replaceCaptainResult = await db.replaceCaptain(
+        queueId,
+        result.QueuePool
+      );
 
-      if (result.returnValue != 0) {
+      if (replaceCaptainResult) {
         trans.rollback();
         interaction.editReply({
           ephemeral: true,
-          content: "Something went wrong o-o",
+          content: "Something went wrong o-o;",
         });
         return;
       }
     }
 
+    const queueResult = await db.getQueue(queueId);
+    if (queueResult instanceof BaseDBError) {
+      trans.rollback();
+      interaction.editReply({
+        ephemeral: true,
+        content: "Something went wrong o-o",
+      });
+      result.log();
+      return;
+    }
     // Grab queue data
-    result = await con
-      .request(trans)
-      .input("QueueId", queueId)
-      .output("NumCaptains", Int)
-      .output("PlayerCount", Int)
-      .output("QueueStatus", NVarChar(100))
-      .output("HostId", VarChar(21))
-      .execute("GetQueue");
 
     trans.commit(commitOnErrMaker(interaction));
 
-    let queueStatus = result.output.QueueStatus;
-    let playersAvailable = result.recordsets[1];
-    let teamOnePlayers = result.recordsets[2];
-    let teamTwoPlayers = result.recordsets[3];
-    let spectators = result.recordsets[4];
+    await db.commitTransaction(trans);
+
+    const queueStatus = result.QueueStatus;
+
+    let playersAvailable = queueResult.records.availablePlayers;
+    let teamOnePlayers = queueResult.records.teamOne;
+    let teamTwoPlayers = queueResult.records.teamTwo;
     let host = await interaction.guild.members.fetch(result.output.HostId);
 
     if (!host) {
-      await interaction.editReply({ content: "Something went wrong and the interaction could not be completed" });
+      await interaction.editReply({
+        content:
+          "Something went wrong and the interaction could not be completed",
+      });
       console.log("no host oops");
       console.log(JSON.stringify(host));
       await trans.rollback();
@@ -90,7 +102,7 @@ module.exports = {
       playersAvailable,
       teamOnePlayers,
       teamTwoPlayers,
-      spectators,
+      null,
       host.displayName,
       host.displayAvatarURL(),
       null,
@@ -107,7 +119,7 @@ module.exports = {
 
     interaction.message.edit({
       embeds: embeds,
-      components: comps
+      components: comps,
     });
 
     await interaction.editReply({

@@ -1,6 +1,19 @@
 const { ButtonInteraction, ChannelType } = require("discord.js");
-const { IRecordSet, ConnectionPool, Transaction, NVarChar, VarChar, Bit } = require("mssql");
+const {
+  IRecordSet,
+  ConnectionPool,
+  Transaction,
+  NVarChar,
+  VarChar,
+  Bit,
+} = require("mssql");
 const { CHANNEL_TYPES, TENMANS_QUEUE_POOLS } = require("../database-enums");
+const {
+  GCADB,
+  DiscordChannelName,
+  BaseDBError,
+  DiscordChannelType,
+} = require("../gcadb");
 
 module.exports = {
   /**
@@ -13,14 +26,22 @@ module.exports = {
    * @param {IRecordSet<any>} rankedRoles
    * @param {ButtonInteraction} interaction
    * @param {number} queueId
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {Transaction} trans
    * @param {boolean} enforce
-   * 
+   *
    * @returns
    */
-  async selectCaptains(numCaps, potentialCaps, rankedRoles, interaction, queueId, con, trans, enforce) {
-
+  async selectCaptains(
+    numCaps,
+    potentialCaps,
+    rankedRoles,
+    interaction,
+    queueId,
+    db,
+    trans,
+    enforce
+  ) {
     // Establishing capPool type for intellisense
     let capPool = [
       {
@@ -32,7 +53,6 @@ module.exports = {
 
     // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
     if (numCaps < 2 && enforce) {
-
       potentialCaps.forEach(async (record) => {
         let userId = record.PlayerId;
         let user = await interaction.guild.members.fetch(userId);
@@ -94,31 +114,50 @@ module.exports = {
       }
     }
 
-    let capOneIndex = Math.floor(Math.random() * (capPool.length));
-    if (capOneIndex == capPool.length) capOneIndex-= 2;
+    let capOneIndex = Math.floor(Math.random() * capPool.length);
+    if (capOneIndex == capPool.length) capOneIndex -= 2;
 
     let capTwoIndex = capOneIndex + 1;
 
     let capOne = capPool[capOneIndex];
     let capTwo = capPool[capTwoIndex];
-    let result = await con.request(trans)
-      .input('QueueId', queueId)
-      .input('CapOne', capOne.id)
-      .input('CapTwo', capTwo.id)
-      .input('GuildId', interaction.guildId)
-      .output('QueueStatus', NVarChar(100))
-      .execute('SetCaptains');
-
-    await createCaptainVC(capOne.id, queueId, TENMANS_QUEUE_POOLS.TEAM_ONE, interaction, con, trans);
-    await createCaptainVC(capTwo.id, queueId, TENMANS_QUEUE_POOLS.TEAM_TWO, interaction, con, trans);
-
-    return {
-      newAvailable: result.recordsets[1],
-      newTeamOne: result.recordsets[2],
-      newTeamTwo: result.recordsets[3],
-      newStatus: result.output.QueueStatus
+    const result = await db.setCaptain(
+      queueId,
+      capOne.id,
+      capTwo.id,
+      interaction.guildId,
+      trans
+    );
+    if (result instanceof BaseDBError) {
+      result.log();
+      await interaction.editReply({ content: "Something went wrong" });
+      trans.rollback();
+      return;
     }
 
+    await createCaptainVC(
+      capOne.id,
+      queueId,
+      TENMANS_QUEUE_POOLS.TEAM_ONE,
+      interaction,
+      db,
+      trans
+    );
+    await createCaptainVC(
+      capTwo.id,
+      queueId,
+      TENMANS_QUEUE_POOLS.TEAM_TWO,
+      interaction,
+      db,
+      trans
+    );
+
+    return {
+      newAvailable: result.records.availablePlayers,
+      newTeamOne: result.records.teamOne,
+      newTeamTwo: result.records.teamTwo,
+      newStatus: result.queueStatus,
+    };
   },
 };
 
@@ -127,38 +166,50 @@ module.exports = {
  * channel for them, moves them to the created
  * voice channel, and stores the channel in the
  * database for future retrieval
- * 
+ *
  * @param {string} capId ID of the captain this channel is for
  * @param {number} queueId ID of the queue this channel is for
  * @param {string} team Team this channel is for
  * @param {ButtonInteraction} interaction Interaction that triggered selecting captains
- * @param {ConnectionPool} con Database connection
+ * @param {GCADB} db Database connection
  * @param {Transaction} trans Database transaction
  */
-async function createCaptainVC(capId, queueId, team, interaction, con, trans) {
-
+async function createCaptainVC(capId, queueId, team, interaction, db, trans) {
   let cap = await interaction.guild.members.fetch(capId);
   let channel = await interaction.guild.channels.create({
     type: ChannelType.GuildVoice,
-    name: `${cap.displayName}'s Channel (Team ${team})`
+    name: `${cap.displayName}'s Channel (Team ${team})`,
   });
 
-  let result = await con.request(trans)
-    .input('GuildId', interaction.guildId)
-    .input('ChannelName', 'TENMANCAT')
-    .output('ChannelId', VarChar(21))
-    .output('Triggerable', Bit)
-    .output('Type', VarChar(20))
-    .execute('GetChannel');
+  const result = await db.getChannel(
+    interaction.guildId,
+    DiscordChannelName.TENMANS_CATEGORY,
+    trans
+  );
+  if (result instanceof BaseDBError) {
+    trans.rollback();
+    result.log();
+    await interaction.editReply({ content: "Something went wrong" });
+    return;
+  }
 
-  await channel.edit(channel.setParent(await interaction.guild.channels.fetch(result.output.ChannelId)));
-  result = await con.request(trans)
-    .input('GuildId', interaction.guildId)
-    .input('ChannelId', channel.id)
-    .input('ChannelName', `QUEUE:${queueId}:${team}`)
-    .input('ChannelType', CHANNEL_TYPES.VOICE)
-    .input('Triggerable', 0)
-    .execute('CreateChannel');
+  await channel.edit(
+    channel.setParent(await interaction.guild.channels.fetch(result.channelId))
+  );
+  const newResult = await db.createChannel(
+    interaction.guildId,
+    channel.id,
+    `QUEUE:${queueId}:${team}`,
+    DiscordChannelType.VOICE,
+    false,
+    trans
+  );
+  if (newResult) {
+    trans.rollback();
+    result.log();
+    await interaction.editReply({ content: "Something went wrong" });
+    return;
+  }
 
   await cap.voice.setChannel(channel);
 }
