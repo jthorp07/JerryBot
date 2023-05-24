@@ -1,51 +1,63 @@
-const { ChatInputCommandInteraction, SlashCommandBuilder } = require('discord.js');
-const { ConnectionPool } = require('mssql');
-const { beginOnErrMaker, commitOnErrMaker } = require('../util/helpers');
+const {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} = require("discord.js");
+const { GCADB } = require("../util/gcadb");
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('setvalorantname')
-        .setDescription('Sets your VALORANT display name')
-        .addStringOption(option =>
-            option.setName('name')
-                .setDescription('VALORANT username (the stuff before the #)')
-                .setMinLength(3)
-                .setMaxLength(16)
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('tagline')
-                .setDescription('VALORANT tagline (the stuff after the #)')
-                .setMinLength(3)
-                .setMaxLength(5)
-                .setRequired(true)),
-    /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
-     * @param {ConnectionPool} con 
-     */
-    async execute(interaction, con) {
+  data: new SlashCommandBuilder()
+    .setName("setvalorantname")
+    .setDescription("Sets your VALORANT display name")
+    .addStringOption((option) =>
+      option
+        .setName("name")
+        .setDescription("VALORANT username (the stuff before the #)")
+        .setMinLength(3)
+        .setMaxLength(16)
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("tagline")
+        .setDescription("VALORANT tagline (the stuff after the #)")
+        .setMinLength(3)
+        .setMaxLength(5)
+        .setRequired(true)
+    ),
+  /**
+   *
+   * @param {ChatInputCommandInteraction} interaction
+   * @param {GCADB} db
+   */
+  async execute(interaction, db) {
+    await interaction.deferReply({ ephemeral: true });
 
-        await interaction.deferReply({ ephemeral: true });
+    let valName = interaction.options.getString("name");
+    let tagline = interaction.options.getString("tagline");
 
-        let valName = interaction.options.getString('name');
-        let tagline = interaction.options.getString('tagline');
+    let trans = await db.beginTransaction();
+    if (!trans) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed.",
+      });
+      return;
+    }
 
-        let trans = con.transaction();
-        await trans.begin(beginOnErrMaker(interaction, trans));
+    const result = await db.setValorantName(
+      interaction.guildId,
+      interaction.user.id,
+      `${valName}#${tagline}`
+    );
 
-        let result = await con.request(trans)
-            .input('GuildId', interaction.guildId)
-            .input('UserId', interaction.user.id)
-            .input('ValName', `${valName}#${tagline}`)
-            .execute('SetValorantName');
+    if (result) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed",
+      });
+      return;
+    }
 
-        if (result.returnValue != 0) {
-            await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
-            return;
-        }
-
-        trans.commit(commitOnErrMaker(interaction));
-        await interaction.editReply({ content: "Your name has been updated" });
-    },
-    permissions: "all"
-}
+    await db.commitTransaction(trans);
+    await interaction.editReply({ content: "Your name has been updated" });
+  },
+  permissions: "all",
+};

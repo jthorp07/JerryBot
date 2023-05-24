@@ -1,6 +1,16 @@
 const { SelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, PreparedStatement, Int, NVarChar, VarChar } = require("mssql");
-const { tenMansClassicNextComps, tenMansClassicNextEmbed } = require("../util/helpers");
+const { GCADB } = require("../util/gcadb");
+const {
+  ConnectionPool,
+  PreparedStatement,
+  Int,
+  NVarChar,
+  VarChar,
+} = require("mssql");
+const {
+  tenMansClassicNextComps,
+  tenMansClassicNextEmbed,
+} = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -9,10 +19,10 @@ module.exports = {
   },
   /**
    * @param {SelectMenuInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     await interaction.deferReply({ ephemeral: true });
     //TODO: Implement button command
     let queueId = parseInt(idArgs[1]);
@@ -24,31 +34,35 @@ module.exports = {
     // Authorize map/side picker
     let result;
     try {
-    let stmt = new PreparedStatement(con)
-      .input('UserId', VarChar(21))
-      .input('QueueId', Int);
-      await stmt.prepare('SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId');
+      let stmt = new PreparedStatement(con)
+        .input("UserId", VarChar(21))
+        .input("QueueId", Int);
+      await stmt.prepare(
+        "SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId"
+      );
       result = await stmt.execute({
         UserId: interaction.user.id,
-        QueueId: queueId
+        QueueId: queueId,
       });
       await stmt.unprepare();
     } catch (err) {
       console.log(` [DB]: ${err}`);
       interaction.editReply({
-        content: 'Something went wrong and the command was unable to be processed'
+        content:
+          "Something went wrong and the command was unable to be processed",
       });
       return;
     }
 
     if (result.recordset.length == 0) {
       interaction.editReply({
-        content: 'It is not your turn to pick!'
+        content: "It is not your turn to pick!",
       });
       return;
     }
 
-    result = await con.request()
+    const pickMapResult = await con
+      .request()
       .input("QueueId", queueId)
       .output("NumCaptains", Int)
       .output("PlayerCount", Int)
@@ -56,27 +70,46 @@ module.exports = {
       .output("HostId", VarChar(21))
       .execute("PickMap");
 
-    if (result.returnValue != 0) {
-      await interaction.editReply({content:"Something went wrong and the command could not be completed"});
+    if (pickMapResult.returnValue != 0) {
+      await interaction.editReply({
+        content: "Something went wrong and the command could not be completed",
+      });
       console.log("Database failure");
       return;
     }
 
-    let queueStatus = result.output.QueueStatus;
-    let playersAvailable = result.recordsets[1];
-    let teamOnePlayers = result.recordsets[2];
-    let teamTwoPlayers = result.recordsets[3];
-    let spectators = result.recordsets[4];
-    let host = await interaction.guild.members.fetch(result.output.HostId);
+    let queueStatus = pickMapResult.output.QueueStatus;
+    let playersAvailable = pickMapResult.recordsets[1];
+    let teamOnePlayers = pickMapResult.recordsets[2];
+    let teamTwoPlayers = pickMapResult.recordsets[3];
+    let spectators = pickMapResult.recordsets[4];
+    let host = await interaction.guild.members.fetch(
+      pickMapResult.output.HostId
+    );
 
-    let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
-      teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), mapPick, 0);
+    let embeds = tenMansClassicNextEmbed(
+      queueStatus,
+      playersAvailable,
+      teamOnePlayers,
+      teamTwoPlayers,
+      spectators,
+      host.displayName,
+      host.displayAvatarURL(),
+      mapPick,
+      0
+    );
 
-    let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, mapPick, host.id);
+    let comps = tenMansClassicNextComps(
+      queueId,
+      queueStatus,
+      playersAvailable,
+      mapPick,
+      host.id
+    );
 
     await interaction.message.edit({
       embeds: embeds,
-      components: comps
+      components: comps,
     });
 
     await interaction.editReply("You selected a map!", { ephemeral: true });

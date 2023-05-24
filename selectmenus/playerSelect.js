@@ -1,6 +1,16 @@
 const { StringSelectMenuInteraction } = require("discord.js");
-const { ConnectionPool, NVarChar, Int, VarChar, PreparedStatement, Bit } = require('mssql');
-const { tenMansClassicNextEmbed, tenMansClassicNextComps } = require('../util/helpers');
+const {
+  ConnectionPool,
+  NVarChar,
+  Int,
+  VarChar,
+  PreparedStatement,
+  Bit,
+} = require("mssql");
+const {
+  tenMansClassicNextEmbed,
+  tenMansClassicNextComps,
+} = require("../util/helpers");
 
 module.exports = {
   data: {
@@ -20,10 +30,12 @@ module.exports = {
 
     let trans = con.transaction();
     trans.begin(async (err) => {
-
       // Transaction begin error
       if (err) {
-        await interaction.editReply({ content: 'Something went wrong and the command could not be completed.' });
+        await interaction.editReply({
+          content:
+            "Something went wrong and the command could not be completed.",
+        });
         console.log(err);
         return;
       }
@@ -39,85 +51,118 @@ module.exports = {
       });
 
       let stmt = new PreparedStatement(trans)
-        .input('UserId', VarChar(21))
-        .input('QueueId', Int);
+        .input("UserId", VarChar(21))
+        .input("QueueId", Int);
 
       let result;
       try {
-        await stmt.prepare('SELECT DraftPickId FROM Queues WHERE [Id]=@QueueId AND DraftPickId=@UserId');
+        await stmt.prepare(
+          "SELECT DraftPickId FROM Queues WHERE [Id]=@QueueId AND DraftPickId=@UserId"
+        );
         result = await stmt.execute({
           UserId: interaction.user.id,
-          QueueId: queueId
+          QueueId: queueId,
         });
         await stmt.unprepare();
       } catch (err) {
         console.log(` [DB]: ${err}`);
         interaction.editReply({
-          content: 'Something went wrong and the command was unable to be processed'
+          content:
+            "Something went wrong and the command was unable to be processed",
         });
         return;
       }
 
       if (result.recordset.length == 0) {
         interaction.editReply({
-          content: 'It is not your turn to pick!'
+          content: "It is not your turn to pick!",
         });
         trans.rollback();
         return;
       }
 
-      result = await con.request(trans)
-        .input('QueueId', queueId)
-        .input('PlayerId', draftedId)
-        .input('GuildId', interaction.guildId)
-        .output('QueueStatus', NVarChar(100))
-        .output('HostId', VarChar(21))
-        .output('Team', NVarChar(100))
-        .execute('DraftPlayer');
+      const draftPlayerResult = await con
+        .request(trans)
+        .input("QueueId", queueId)
+        .input("PlayerId", draftedId)
+        .input("GuildId", interaction.guildId)
+        .output("QueueStatus", NVarChar(100))
+        .output("HostId", VarChar(21))
+        .output("Team", NVarChar(100))
+        .execute("DraftPlayer");
 
-      if (result.returnValue != 0) {
-        await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+      if (draftPlayerResult.returnValue != 0) {
+        await interaction.editReply({
+          content:
+            "Something went wrong and the command could not be completed",
+        });
         console.log("Database error");
         trans.rollback();
         return;
       }
 
-      let queueStatus = result.output.QueueStatus;
-      let playersAvailable = result.recordsets[1];
-      let teamOnePlayers = result.recordsets[2];
-      let teamTwoPlayers = result.recordsets[3];
-      let spectators = result.recordsets[4];
-      let host = await interaction.guild.members.fetch(result.output.HostId);
-      let team = result.output.Team;
+      let queueStatus = draftPlayerResult.output.QueueStatus;
+      let playersAvailable = draftPlayerResult.recordsets[1];
+      let teamOnePlayers = draftPlayerResult.recordsets[2];
+      let teamTwoPlayers = draftPlayerResult.recordsets[3];
+      let spectators = draftPlayerResult.recordsets[4];
+      let host = await interaction.guild.members.fetch(
+        draftPlayerResult.output.HostId
+      );
+      let team = draftPlayerResult.output.Team;
 
-      result = await con.request(trans)
-        .input('GuildId', interaction.guildId)
-        .input('ChannelName', `QUEUE:${queueId}:${team}`)
-        .output('ChannelId', VarChar(21))
-        .output('Triggerable', Bit)
-        .output('Type', VarChar(20))
-        .execute('GetChannel');
+      const getChannelResult = await con
+        .request(trans)
+        .input("GuildId", interaction.guildId)
+        .input("ChannelName", `QUEUE:${queueId}:${team}`)
+        .output("ChannelId", VarChar(21))
+        .output("Triggerable", Bit)
+        .output("Type", VarChar(20))
+        .execute("GetChannel");
 
-      if (result.returnValue != 0) {
-        await interaction.editReply({ content: "Something went wrong and the command could not be completed" });
+      if (getChannelResult.returnValue != 0) {
+        await interaction.editReply({
+          content:
+            "Something went wrong and the command could not be completed",
+        });
         console.log("Database error");
         trans.rollback();
         return;
       }
 
-      let channel = await interaction.guild.channels.fetch(result.output.ChannelId);
+      let channel = await interaction.guild.channels.fetch(
+        getChannelResult.output.ChannelId
+      );
 
-      let embeds = tenMansClassicNextEmbed(queueStatus, playersAvailable,
-        teamOnePlayers, teamTwoPlayers, spectators, host.displayName, host.displayAvatarURL(), null, 0);
+      let embeds = tenMansClassicNextEmbed(
+        queueStatus,
+        playersAvailable,
+        teamOnePlayers,
+        teamTwoPlayers,
+        spectators,
+        host.displayName,
+        host.displayAvatarURL(),
+        null,
+        0
+      );
 
-      let comps = tenMansClassicNextComps(queueId, queueStatus, playersAvailable, null, host.id);
-
+      let comps = tenMansClassicNextComps(
+        queueId,
+        queueStatus,
+        playersAvailable,
+        null,
+        host.id
+      );
 
       // Commit transaction and respond on Discord
       trans.commit(async (err) => {
         if (err) {
           trans.rollback();
-          interaction.editReply({ ephemeral: true, content: 'Something went wrong and the command could not be completed.' });
+          interaction.editReply({
+            ephemeral: true,
+            content:
+              "Something went wrong and the command could not be completed.",
+          });
           console.log(err);
           return;
         }
@@ -126,20 +171,19 @@ module.exports = {
         try {
           drafted.voice.setChannel(channel);
         } catch (err) {
-          await interaction.editReply({ content: "User was unable to be moved into their team channel" });
+          await interaction.editReply({
+            content: "User was unable to be moved into their team channel",
+          });
           console.log(err);
         }
 
         await interaction.message.edit({
           embeds: embeds,
-          components: comps
+          components: comps,
         });
         await interaction.deleteReply();
         return;
       });
-
-    })
-
-
+    });
   },
 };
