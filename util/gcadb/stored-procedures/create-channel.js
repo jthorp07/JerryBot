@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
+const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
 /**
  * Writes a newly created Discord channel to the GCA Database
@@ -38,12 +39,11 @@ function createChannel(con, guildId, channelId, channelName, channelType, trigge
         err = null;
         switch (ret) {
             case 1:
-                err = new errors_1.NullArgError(["GuildId", "ChannelId", "ChannelName", "ChannelType"], "CreateChannel");
+                return new errors_1.NullArgError(["GuildId", "ChannelId", "ChannelName", "ChannelType"], "CreateChannel");
             case 2:
-                err = new errors_1.DoesNotExistError("CreateChannel");
+                return new errors_1.DoesNotExistError("CreateChannel");
         }
-        if (err)
-            return err;
+        return new base_db_error_1.default("An unknown error occurred", -99);
     });
 }
 exports.default = createChannel;

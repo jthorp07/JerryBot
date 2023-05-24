@@ -5,6 +5,7 @@ declare function joinQueue(con: ConnectionPool, userId: string, guildId: string,
     numPlayers: number;
     numCaptains: number;
     queueStatus: QueueState;
+    hostId: string;
     records: {
         allPlayers: {
             playerId: string;

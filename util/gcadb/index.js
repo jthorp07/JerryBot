@@ -23,8 +23,10 @@ Object.defineProperty(exports, "DiscordStaffRole", { enumerable: true, get: func
 Object.defineProperty(exports, "ValorantRank", { enumerable: true, get: function () { return enums_1.ValorantRank; } });
 const env_vars_config_1 = require("./env-vars.config");
 exports.env = env_vars_config_1.default;
-class GCADB {
+const events_1 = require("events");
+class GCADB extends events_1.EventEmitter {
     constructor(conPool) {
+        super();
         this.con = conPool;
     }
     /**
@@ -42,10 +44,17 @@ class GCADB {
             try {
                 let initCon = new mssql_1.ConnectionPool(sql);
                 let db = new GCADB(yield initCon.connect());
+                db.addListener("reconnect", () => __awaiter(this, void 0, void 0, function* () {
+                    let newCon = new mssql_1.ConnectionPool(sql);
+                    yield newCon.connect();
+                    db.con = newCon;
+                    db.reconnecting = false;
+                    console.log("Reconnected");
+                }));
                 return db;
             }
             catch (err) {
-                return null;
+                return;
             }
         });
     }
@@ -100,6 +109,26 @@ class GCADB {
             yield this.con.close();
         });
     }
+    callProcedure(proc, args) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let attempt = 0;
+            while (this.reconnecting && attempt <= 10) {
+                yield waitOneSecond();
+                attempt++;
+            }
+            try {
+                return yield proc.apply(this, args);
+            }
+            catch (err) {
+                if (!this.reconnecting) {
+                    console.log("Reconnect triggered");
+                    this.reconnecting = true;
+                    this.emit("reconnect");
+                    return new base_db_error_1.BaseDBError("Database connection failed or exceeded maximum attempts", -100);
+                }
+            }
+        });
+    }
     /*
       =======================================================================================================
       Stored Procedure Calls
@@ -114,11 +143,11 @@ class GCADB {
      * @param channelName The name of the created Discord channel
      * @param channelType The type of the created Discord channel
      * @param triggerable Whether or not VoiceState changes on the channel should be reacted to
-     * @param trans A Transaction on the GCA Database, if this request should be part of one
+     * @param transaction A Transaction on the GCA Database, if this request should be part of one
      */
     createChannel(guildId, channelId, channelName, channelType, triggerable, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.createChannel(this.con, guildId, channelId, channelName, channelType, triggerable, transaction);
+            return this.callProcedure(stored_procedures_1.default.createChannel, [this.con, guildId, channelId, channelName, channelType, triggerable, transaction]);
         });
     }
     ;
@@ -127,12 +156,12 @@ class GCADB {
      *
      * @param guildId Discord ID of target guild
      * @param guildName Name of target guild
-     * @param trans Database transaction to run this procedure against
+     * @param transaction Database transaction to run this procedure against
      * @returns BaseDBError upon failure, void upon success
      */
     createGuild(guildId, guildName, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.createGuild(this.con, guildId, guildName, transaction);
+            return this.callProcedure(stored_procedures_1.default.createGuild, [this.con, guildId, guildName, transaction]);
         });
     }
     /**
@@ -154,137 +183,137 @@ class GCADB {
      */
     createGuildMember(guildId, userId, isOwner, username, guildDisplayName, valorantRankRoleName, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.createGuildMember(this.con, guildId, userId, isOwner, username, guildDisplayName, valorantRankRoleName, transaction);
+            return this.callProcedure(stored_procedures_1.default.createGuildMember, [this.con, guildId, userId, isOwner, username, guildDisplayName, valorantRankRoleName, transaction]);
         });
     }
-    createQueue(guildId, hostId, queueType, queueId, transaction) {
+    createQueue(guildId, hostId, queueType, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.createQueue(this.con, guildId, hostId, queueType, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.createQueue, [this.con, guildId, hostId, queueType, transaction]);
         });
     }
     deleteChannelById(guildId, channelId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.deleteChannelById(this.con, guildId, channelId, transaction);
+            return this.callProcedure(stored_procedures_1.default.deleteChannelById, [this.con, guildId, channelId, transaction]);
         });
     }
     deleteChannelByName(guildId, channelName, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.deleteChannelByName(this.con, guildId, channelName, transaction);
+            return this.callProcedure(stored_procedures_1.default.deleteChannelByName, [this.con, guildId, channelName, transaction]);
         });
     }
     draftPlayer(playerId, guildId, queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.draftPlayer(this.con, playerId, guildId, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.draftPlayer, [this.con, playerId, guildId, queueId, transaction]);
         });
     }
     endQueue(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.endQueue(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.endQueue, [this.con, queueId, transaction]);
         });
     }
     getChannel(guildId, channelName, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getChannel(this.con, guildId, channelName, transaction);
+            return this.callProcedure(stored_procedures_1.default.getChannel, [this.con, guildId, channelName, transaction]);
         });
     }
     getEnforceRankRoles(guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getEnforceRankRoles(this.con, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.getEnforceRankRoles, [this.con, guildId, transaction]);
         });
     }
     getPrefs(userId, guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getPrefs(this.con, userId, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.getPrefs, [this.con, userId, guildId, transaction]);
         });
     }
     getProfile(userId, guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getProfile(this.con, userId, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.getProfile, [this.con, userId, guildId, transaction]);
         });
     }
     getQueue(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getQueue(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.getQueue, [this.con, queueId, transaction]);
         });
     }
     getRankRoles(guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.getRankRoles(this.con, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.getRankRoles, [this.con, guildId, transaction]);
         });
     }
     imManuallyStartingDraft(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.imManuallyStartingDraft(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.imManuallyStartingDraft, [this.con, queueId, transaction]);
         });
     }
     imStartingDraft(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.imStartingDraft(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.imStartingDraft, [this.con, queueId, transaction]);
         });
     }
     joinQueue(userId, guildId, queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.joinQueue(this.con, userId, guildId, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.joinQueue, [this.con, userId, guildId, queueId, transaction]);
         });
     }
     leaveTenmans(queueId, guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.leaveTenmans(this.con, queueId, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.leaveTenmans, [this.con, queueId, guildId, transaction]);
         });
     }
     pickMap(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.pickMap(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.pickMap, [this.con, queueId, transaction]);
         });
     }
     pickSide(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.pickSide(this.con, queueId, transaction);
+            return this.callProcedure(stored_procedures_1.default.pickSide, [this.con, queueId, transaction]);
         });
     }
     replaceCaptain(queueId, queuePool, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.replaceCaptain(this.con, queueId, queuePool, transaction);
+            return this.callProcedure(stored_procedures_1.default.replaceCaptain, [this.con, queueId, queuePool, transaction]);
         });
     }
     setCanBeCaptain(userId, guildId, canBeCaptain, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setCanBeCaptain(this.con, userId, guildId, canBeCaptain, transaction);
+            return this.callProcedure(stored_procedures_1.default.setCanBeCaptain, [this.con, userId, guildId, canBeCaptain, transaction]);
         });
     }
     setCaptain(queueId, capOne, capTwo, guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setCaptain(this.con, queueId, capOne, capTwo, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.setCaptain, [this.con, queueId, capOne, capTwo, guildId, transaction]);
         });
     }
     setEnforceRankRoles(guildId, enforce, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setEnforceRankRoles(this.con, guildId, enforce, transaction);
+            return this.callProcedure(stored_procedures_1.default.setEnforceRankRoles, [this.con, guildId, enforce, transaction]);
         });
     }
     setRole(guildId, roleId, roleName, orderBy, roleIcon, roleEmote, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setRole(this.con, guildId, roleId, roleName, orderBy, roleIcon, roleEmote, transaction);
+            return this.callProcedure(stored_procedures_1.default.setRole, [this.con, guildId, roleId, roleName, orderBy, roleIcon, roleEmote, transaction]);
         });
     }
     setValName(valName, userId, guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setValName(this.con, valName, userId, guildId, transaction);
+            return this.callProcedure(stored_procedures_1.default.setValName, [this.con, valName, userId, guildId, transaction]);
         });
     }
     setValorantRank(guildId, userId, rank, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.setValorantRank(this.con, guildId, userId, rank, transaction);
+            return this.callProcedure(stored_procedures_1.default.setValorantRank, [this.con, guildId, userId, rank, transaction]);
         });
     }
     updateDiscordProfile(guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.updateDiscordProfile(this.con, guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, transaction);
+            return this.callProcedure(stored_procedures_1.default.updateDiscordProfile, [this.con, guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, transaction]);
         });
     }
     updateValorantProfile(guildId, userId, valorantDisplayName, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return stored_procedures_1.default.updateValorantProfile(this.con, guildId, userId, valorantDisplayName, transaction);
+            return this.callProcedure(stored_procedures_1.default.updateValorantProfile, [this.con, guildId, userId, valorantDisplayName, transaction]);
         });
     }
     /*
@@ -309,4 +338,13 @@ class GCADB {
     }
 }
 exports.GCADB = GCADB;
+function waitOneSecond() {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(undefined);
+            }, 1000);
+        });
+    });
+}
 exports.getConnection = GCADB.GetConnection;

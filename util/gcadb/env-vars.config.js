@@ -5,14 +5,14 @@ const dotenv = require("dotenv");
 dotenv.config();
 exports.default = {
     SQL: {
-        user: (_a = process.env.MSSQL_USER) !== null && _a !== void 0 ? _a : '',
-        password: (_b = process.env.MSSQL_PASSWORD) !== null && _b !== void 0 ? _b : '',
-        database: (_c = process.env.MSSQL_DATABASE) !== null && _c !== void 0 ? _c : '',
-        server: (_d = process.env.MSSQL_SERVER) !== null && _d !== void 0 ? _d : '',
+        user: (_a = process.env.PROD_MSSQL_USER) !== null && _a !== void 0 ? _a : '',
+        password: (_b = process.env.PROD_MSSQL_PASSWORD) !== null && _b !== void 0 ? _b : '',
+        database: (_c = process.env.PROD_MSSQL_DATABASE) !== null && _c !== void 0 ? _c : '',
+        server: (_d = process.env.PROD_MSSQL_SERVER) !== null && _d !== void 0 ? _d : '',
         pool: {
-            max: 10,
-            min: 0,
-            idleTimeoutMillis: 30000,
+            max: 5,
+            min: 2,
+            idleTimeoutMillis: Number.MAX_SAFE_INTEGER,
         },
         options: {
             encrypt: true,

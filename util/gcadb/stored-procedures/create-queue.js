@@ -23,7 +23,7 @@ const _1 = require(".");
  * @param trans
  * @returns
  */
-function createQueue(con, guildId, hostId, queueType, queueId, trans) {
+function createQueue(con, guildId, hostId, queueType, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         // Validate
         if (!con.connected)

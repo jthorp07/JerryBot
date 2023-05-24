@@ -16,3 +16,14 @@ declare function getProfile(con: ConnectionPool, userId: string, guildId: string
     };
 }>;
 export default getProfile;
+export type GetProfileRecords = {
+    isPremium: boolean;
+    isOwner: boolean;
+    discordUsername: string;
+    discordGuildName: string;
+    discordDisplayName: string;
+    valorantDisplayName: string;
+    valorantRoleName: string;
+    hasValorantRank: boolean;
+    canBeCaptain: boolean;
+};

@@ -29,7 +29,6 @@ function createGuild(con, guildId, guildName, trans) {
             return new errors_1.NotConnectedError("CreateGuild");
         let req = (0, _1.initReq)(con, trans);
         let result = yield req.input("GuildId", guildId)
-            .input("GuildId", guildId)
             .input("GuildName", guildName)
             .execute("CreateGuild");
         let ret = result.returnValue;

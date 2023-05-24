@@ -1,5 +1,6 @@
 import { ConnectionPool, Transaction } from "mssql";
 import BaseDBError from "../errors/base-db-error";
+import { ValorantRank } from "../enums";
 /**
  * Writes a Discord GuildMember's information on the GCA Database.
  * A GuildMember represents a Discord user and their unique profile
@@ -17,5 +18,5 @@ import BaseDBError from "../errors/base-db-error";
  * @param trans Database transaction to run this request against
  * @returns
  */
-declare function createGuildMember(con: ConnectionPool, guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: string, trans?: Transaction): Promise<BaseDBError>;
+declare function createGuildMember(con: ConnectionPool, guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: ValorantRank | null, trans?: Transaction): Promise<BaseDBError>;
 export default createGuildMember;

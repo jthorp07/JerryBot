@@ -1,8 +1,12 @@
+/// <reference types="node" />
 import { ConnectionPool, Transaction } from "mssql";
 import { BaseDBError } from "./errors/base-db-error";
-import { DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaffRole, ValorantRank } from "./enums";
+import { DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaffRole, QueuePool, QueueState, QueueType, ValorantRank } from "./enums";
 import env from "./env-vars.config";
-export declare class GCADB {
+import { EventEmitter } from "events";
+import { GetQueueRecords } from "./stored-procedures/draft-player";
+import { GetProfileRecords } from "./stored-procedures/get-profile";
+export declare class GCADB extends EventEmitter {
     con: ConnectionPool;
     reconnecting: boolean;
     private constructor();
@@ -48,6 +52,7 @@ export declare class GCADB {
      * Closes the connection to the database for graceful exit
      */
     closeConnection(): Promise<void>;
+    private callProcedure;
     /**
      * Writes a Discord channel to the GCA Database.
      * Returns void on success; BaseDBError on failure
@@ -57,7 +62,7 @@ export declare class GCADB {
      * @param channelName The name of the created Discord channel
      * @param channelType The type of the created Discord channel
      * @param triggerable Whether or not VoiceState changes on the channel should be reacted to
-     * @param trans A Transaction on the GCA Database, if this request should be part of one
+     * @param transaction A Transaction on the GCA Database, if this request should be part of one
      */
     createChannel(guildId: string, channelId: string, channelName: string, channelType: DiscordChannelType, triggerable: boolean, transaction?: Transaction): Promise<BaseDBError>;
     /**
@@ -65,7 +70,7 @@ export declare class GCADB {
      *
      * @param guildId Discord ID of target guild
      * @param guildName Name of target guild
-     * @param trans Database transaction to run this procedure against
+     * @param transaction Database transaction to run this procedure against
      * @returns BaseDBError upon failure, void upon success
      */
     createGuild(guildId: string, guildName: string, transaction?: Transaction): Promise<BaseDBError>;
@@ -86,55 +91,15 @@ export declare class GCADB {
      * @param trans Database transaction to run this request against
      * @returns Void if successful, BaseDBError if failed
      */
-    createGuildMember(guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: string, transaction?: Transaction): Promise<BaseDBError>;
-    createQueue(guildId: string, hostId: string, queueType: string, queueId: number, transaction?: Transaction): Promise<number | BaseDBError>;
+    createGuildMember(guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: ValorantRank | null, transaction?: Transaction): Promise<BaseDBError>;
+    createQueue(guildId: string, hostId: string, queueType: QueueType, transaction?: Transaction): Promise<number | BaseDBError>;
     deleteChannelById(guildId: string, channelId: string, transaction?: Transaction): Promise<BaseDBError>;
     deleteChannelByName(guildId: string, channelName: DiscordChannelName, transaction?: Transaction): Promise<BaseDBError>;
     draftPlayer(playerId: string, guildId: string, queueId: number, transaction?: Transaction): Promise<BaseDBError | {
-        queueStatus: import("./enums").QueueState;
+        queueStatus: QueueState;
         hostId: string;
-        team: import("./enums").QueuePool;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        team: QueuePool;
+        records: GetQueueRecords;
     }>;
     endQueue(queueId: number, transaction?: Transaction): Promise<BaseDBError>;
     getChannel(guildId: string, channelName: DiscordChannelName, transaction?: Transaction): Promise<BaseDBError | {
@@ -148,64 +113,14 @@ export declare class GCADB {
     }>;
     getProfile(userId: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
         currentRank: ValorantRank;
-        records: {
-            isPremium: boolean;
-            isOwner: boolean;
-            discordUsername: string;
-            discordGuildName: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            valorantRoleName: string;
-            hasValorantRank: boolean;
-            canBeCaptain: boolean;
-        };
+        records: GetProfileRecords;
     }>;
     getQueue(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         captainCount: number;
         playerCount: number;
-        queueStatus: import("./enums").QueueState;
+        queueStatus: QueueState;
         hostId: string;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        records: GetQueueRecords;
     }>;
     getRankRoles(guildId: string, transaction?: Transaction): Promise<BaseDBError | {
         roleId: string;
@@ -225,192 +140,33 @@ export declare class GCADB {
     joinQueue(userId: string, guildId: string, queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         numPlayers: number;
         numCaptains: number;
-        queueStatus: import("./enums").QueueState;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        queueStatus: QueueState;
+        hostId: string;
+        records: GetQueueRecords;
     }>;
     leaveTenmans(queueId: number, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
         wasCaptain: boolean;
-        queuePool: import("./enums").QueuePool;
+        queuePool: QueuePool;
     }>;
     pickMap(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         numCaptains: number;
         playerCount: number;
-        queueStatus: import("./enums").QueueState;
+        queueStatus: QueueState;
         hostId: string;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        records: GetQueueRecords;
     }>;
     pickSide(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         numCaptains: number;
         playerCount: number;
-        queueStatus: import("./enums").QueueState;
+        queueStatus: QueueState;
         hostId: string;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        records: GetQueueRecords;
     }>;
     replaceCaptain(queueId: number, queuePool: number, transaction?: Transaction): Promise<BaseDBError>;
     setCanBeCaptain(userId: string, guildId: string, canBeCaptain: boolean, transaction?: Transaction): Promise<BaseDBError>;
     setCaptain(queueId: number, capOne: string, capTwo: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
-        queueStatus: import("./enums").QueueState;
-        records: {
-            allPlayers: {
-                playerId: string;
-                canBeCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            availablePlayers: {
-                playerId: string;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamOne: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-            teamTwo: {
-                playerId: string;
-                isCaptain: boolean;
-                guildId: string;
-                discordDisplayName: string;
-                valorantDisplayName: string;
-                roleName: string;
-                roleEmote: string;
-                roleIcon: string;
-            }[];
-        };
+        queueStatus: QueueState;
+        records: GetQueueRecords;
     }>;
     setEnforceRankRoles(guildId: string, enforce: boolean, transaction?: Transaction): Promise<BaseDBError>;
     setRole(guildId: string, roleId: string, roleName: ValorantRank | DiscordMemberRole | DiscordStaffRole, orderBy: number, roleIcon: string, roleEmote: string, transaction?: Transaction): Promise<BaseDBError>;

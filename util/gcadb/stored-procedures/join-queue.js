@@ -27,6 +27,7 @@ function joinQueue(con, userId, guildId, queueId, trans) {
             .output("NumPlayers", mssql_1.Int)
             .output("NumCaptains", mssql_1.Int)
             .output("QueueStatus", (0, mssql_1.NVarChar)(100))
+            .output("HostId", (0, mssql_1.VarChar)(22))
             .execute("JoinQueue");
         switch (result.returnValue) {
             case 0:
@@ -34,6 +35,7 @@ function joinQueue(con, userId, guildId, queueId, trans) {
                     numPlayers: result.output.NumPlayers,
                     numCaptains: result.output.NumCaptains,
                     queueStatus: result.output.QueueStatus,
+                    hostId: result.output.HostId,
                     records: (0, get_queue_1.parseGetQueueRecordsets)(result.recordsets)
                 };
             case 1:
