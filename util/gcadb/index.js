@@ -109,24 +109,44 @@ class GCADB extends events_1.EventEmitter {
             yield this.con.close();
         });
     }
+    /**
+     * Wraps a stored procedure call
+     *
+     * @param proc Procedure to be called
+     * @param args Arguments to give the procedure
+     * @returns The result of the procedure
+     */
     callProcedure(proc, args) {
         return __awaiter(this, void 0, void 0, function* () {
             let attempt = 0;
             while (this.reconnecting && attempt <= 10) {
+                if (attempt > 0)
+                    console.log("retrying...");
                 yield waitOneSecond();
                 attempt++;
             }
-            try {
-                return yield proc.apply(this, args);
-            }
-            catch (err) {
-                if (!this.reconnecting) {
-                    console.log("Reconnect triggered");
-                    this.reconnecting = true;
-                    this.emit("reconnect");
-                    return new base_db_error_1.BaseDBError("Database connection failed or exceeded maximum attempts", -100);
+            while (attempt <= 10) {
+                if (attempt > 0)
+                    console.log("retrying...");
+                try {
+                    return yield proc.apply(this, args);
+                }
+                catch (err) {
+                    console.log(err);
+                    if (!this.reconnecting) {
+                        console.log("Reconnect triggered");
+                        this.reconnecting = true;
+                        this.emit("reconnect");
+                        yield waitOneSecond();
+                        attempt++;
+                    }
+                    else {
+                        yield waitOneSecond();
+                        attempt++;
+                    }
                 }
             }
+            return new base_db_error_1.BaseDBError("Database connection failed or exceeded maximum attempts", -100);
         });
     }
     /*

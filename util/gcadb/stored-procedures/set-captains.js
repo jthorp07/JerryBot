@@ -26,7 +26,7 @@ function setCaptain(con, queueId, capOne, capTwo, guildId, trans) {
             .input("CapTwo", capTwo)
             .input("GuildId", guildId)
             .output("QueueStatus", (0, mssql_1.NVarChar)(100))
-            .execute("SetCaptain");
+            .execute("SetCaptains");
         switch (result.returnValue) {
             case 0:
                 return {

@@ -52,6 +52,13 @@ export declare class GCADB extends EventEmitter {
      * Closes the connection to the database for graceful exit
      */
     closeConnection(): Promise<void>;
+    /**
+     * Wraps a stored procedure call
+     *
+     * @param proc Procedure to be called
+     * @param args Arguments to give the procedure
+     * @returns The result of the procedure
+     */
     private callProcedure;
     /**
      * Writes a Discord channel to the GCA Database.

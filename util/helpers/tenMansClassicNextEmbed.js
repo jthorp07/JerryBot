@@ -1,5 +1,4 @@
 const { tenMansStartEmbed, tenMansDraftEmbed, tenMansInGameEmbed } = require("../embeds");
-const { IRecordSet } = require('mssql');
 const { EmbedBuilder } = require("discord.js");
 const { QUEUE_STATES } = require("../database-enums");
 
@@ -13,10 +12,10 @@ module.exports = {
    * a Classic Ten Mans queue
    * 
    * @param {string} queueStatus Current queue status
-   * @param {IRecordSet<any>} playersAvailable Set of available players in queue
-   * @param {IRecordSet<any>} teamOnePlayers Set of players in team one in queue
-   * @param {IRecordSet<any>} teamTwoPlayers Set of players in team two in queue
-   * @param {IRecordSet<any>} spectators Set of spectators in queue
+   * @param playersAvailable Set of available players in queue
+   * @param teamOnePlayers Set of players in team one in queue
+   * @param teamTwoPlayers Set of players in team two in queue
+   * @param spectators Set of spectators in queue
    * @param {string} hostName Display name of the host
    * @param {string} hostPfp Discord PFP of the host
    * @param {string} map Name of map if selected
@@ -31,8 +30,8 @@ module.exports = {
     let draftListString = playersAvailable ? "" : undefined;
     if (playersAvailable) {
       playersAvailable.forEach(player => {
-        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
+        let dispRole = player.roleEmote ? player.roleEmote : player.roleName ? parseRoleName(player.roleName) : "";
         draftListString = `${draftListString}${dispName} ${dispRole}\n`;
       });
     }
@@ -41,7 +40,7 @@ module.exports = {
     let specString = spectators ? "" : undefined;
     if (spectators) {
       spectators.forEach(spectator => {
-        let dispName = spectator.ValorantDisplayName ? spectator.ValorantDisplayName : spectator.DiscordDisplayName;
+        let dispName = spectator.valorantDisplayName ? spectator.valorantDisplayName : spectator.discordDisplayName;
         specString = `${specString}${dispName}\n`;
       });
     }
@@ -58,8 +57,8 @@ module.exports = {
           continue;
         }
 
-        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
+        let dispRole = player.roleEmote ? player.roleEmote : player.roleName ? parseRoleName(player.roleName) : "";
         teamOneString = `${teamOneString}${dispName} ${dispRole}\n`;
       };
 
@@ -70,8 +69,8 @@ module.exports = {
           continue;
         }
 
-        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
+        let dispRole = player.roleEmote ? player.roleEmote : player.roleName ? parseRoleName(player.roleName) : "";
         capOne = `${dispName} ${dispRole}`;
       };
 
@@ -81,8 +80,8 @@ module.exports = {
         if (player.IsCaptain == 1) {
           continue;
         }
-        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
+        let dispRole = player.roleEmote ? player.roleEmote : player.roleName ? parseRoleName(player.roleName) : "";
         teamTwoString = `${teamTwoString}${dispName} ${dispRole}\n`;
       }
 
@@ -93,8 +92,8 @@ module.exports = {
           continue;
         }
 
-        let dispName = player.ValorantDisplayName ? player.ValorantDisplayName : player.DiscordDisplayName;
-        let dispRole = player.RoleEmote ? player.RoleEmote : player.RoleName ? parseRoleName(player.RoleName) : "";
+        let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
+        let dispRole = player.roleEmote ? player.roleEmote : player.roleName ? parseRoleName(player.roleName) : "";
         capTwo = `${dispName} ${dispRole}`;
       };
 

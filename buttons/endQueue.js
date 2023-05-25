@@ -1,5 +1,5 @@
 const { ButtonInteraction, VoiceChannel } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const { TENMANS_QUEUE_POOLS } = require("../util");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 
@@ -37,40 +37,78 @@ module.exports = {
     }
 
     const result = await db.endQueue(queueId);
+    if (result) {
+      result.log();
+      await interaction.editReply({content:"Something went wrong"});
+      await trans.rollback();
+      return;
+    }
 
     const result2 = await db.getChannel(interaction.guildId, "TENMANLOBBY");
+    if (result2 instanceof BaseDBError) {
+      result2.log();
+      if (result2.code != 2) {
+        await interaction.editReply({content:"Something went wrong"});
+        await trans.rollback();
+        return;
+      }
+    }
 
-    let lobbyId = result2.ChannelId;
+    let lobbyId = result2.channelId;
 
     const result3 = await db.getChannel(
       interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
     );
+    if (result3 instanceof BaseDBError) {
+      result3.log();
+      if (result3.code != 2) {
+        await interaction.editReply({content:"Something went wrong"});
+        await trans.rollback();
+        return;
+      }
+    }
 
-    let teamOneId = result3.ChannelId;
+    let teamOneId = result3.channelId;
 
     const result4 = await db.getChannel(
       interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
     );
+    if (result4 instanceof BaseDBError) {
+      result4.log();
+      if (result4.code != 2) {
+        await interaction.editReply({content:"Something went wrong"});
+        await trans.rollback();
+        return;
+      }
+    }
 
-    let teamTwoId = result4.ChannelId;
+    let teamTwoId = result4.channelId;
 
     const result5 = await db.deleteChannelByName(
-      guildId,
+      interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_TWO}`
     );
+    if (result5) {
+      result5.log();
+      await interaction.editReply({content:"Something went wrong"});
+      await trans.rollback();
+      return;
+    }
+
     const result6 = await db.deleteChannelByName(
-      guildId,
+      interaction.guildId,
       `QUEUE:${queueId}:${TENMANS_QUEUE_POOLS.TEAM_ONE}`
     );
 
-    if (result6) {
-      await interaction.editReply({
-        content: "Something went wrong and the command could not be completed.",
-      });
-      trans.rollback();
+    if (result6 && result6.code != 2) {
+      result6.log();
+      await interaction.editReply({content:"Something went wrong"});
+      await trans.rollback();
       return;
+    } else if (result6) {
+      result6.log();
     }
     await db.commitTransaction(trans);
 
@@ -88,7 +126,7 @@ module.exports = {
             resolve(member.voice.setChannel(lobbyChan));
           } catch (err) {
             reject(new Error("Failed to move user"));
-            console.log("Failed to move user");
+            console.log("  [Bot]: Failed to move user");
           }
         });
       })

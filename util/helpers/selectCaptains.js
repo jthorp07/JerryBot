@@ -54,17 +54,17 @@ module.exports = {
     // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
     if (numCaps < 2 && enforce) {
       potentialCaps.forEach(async (record) => {
-        let userId = record.PlayerId;
+        let userId = record.playerId;
         let user = await interaction.guild.members.fetch(userId);
         let role;
 
         for (let entry of rankedRoles) {
           for (let item of user.roles.cache) {
             let roleId = item[1].id;
-            if (roleId == entry.RoleId) {
+            if (roleId == entry.roleId) {
               capPool.push({
                 id: userId,
-                rank: entry.OrderBy,
+                rank: entry.orderBy,
               });
               role = true;
               break;
@@ -80,17 +80,17 @@ module.exports = {
       });
     } else if (enforce) {
       for (let record of potentialCaps) {
-        if (record.CanBeCaptain == 0) continue;
+        if (record.canBeCaptain == 0) continue;
 
-        let userId = record.PlayerId;
+        let userId = record.playerId;
         let user = await interaction.guild.members.fetch(userId);
         let role;
 
         for (let entry of rankedRoles) {
           for (let item of user.roles.cache) {
             let roleId = item[1].id;
-            if (roleId == entry.RoleId) {
-              capPool.push({ id: userId, rank: entry.OrderBy });
+            if (roleId == entry.roleId) {
+              capPool.push({ id: userId, rank: entry.orderBy });
               role = true;
               break;
             }
@@ -104,12 +104,12 @@ module.exports = {
       });
     } else if (numCaps < 2) {
       for (record of potentialCaps) {
-        capPool.push({ id: record.PlayerId, rank: 0 });
+        capPool.push({ id: record.playerId, rank: 0 });
       }
     } else {
       for (record of potentialCaps) {
-        if (record.CanBeCaptain == 1) {
-          capPool.push({ id: record.PlayerId, rank: 0 });
+        if (record.canBeCaptain == 1) {
+          capPool.push({ id: record.playerId, rank: 0 });
         }
       }
     }
@@ -135,7 +135,7 @@ module.exports = {
       return;
     }
 
-    await createCaptainVC(
+    let done = await createCaptainVC(
       capOne.id,
       queueId,
       TENMANS_QUEUE_POOLS.TEAM_ONE,
@@ -143,6 +143,9 @@ module.exports = {
       db,
       trans
     );
+
+    if (done) return;
+
     await createCaptainVC(
       capTwo.id,
       queueId,
@@ -206,9 +209,9 @@ async function createCaptainVC(capId, queueId, team, interaction, db, trans) {
   );
   if (newResult) {
     trans.rollback();
-    result.log();
+    newResult.log();
     await interaction.editReply({ content: "Something went wrong" });
-    return;
+    return newResult;
   }
 
   await cap.voice.setChannel(channel);

@@ -1,5 +1,5 @@
 const { ButtonInteraction } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 const { prefsComps } = require("../util/components");
 const { prefsEmbed } = require("../util/embeds");
@@ -29,7 +29,8 @@ module.exports = {
 
     const result = await db.getPrefs(interaction.user.id, interaction.guildId);
 
-    if (result) {
+    if (result instanceof BaseDBError) {
+      result.log();
       await trans.rollback();
       await interaction.editReply({
         content:
@@ -40,12 +41,12 @@ module.exports = {
 
     await db.commitTransaction(trans);
 
-    let comps = prefsComps(result.output.CanBeCaptain);
+    let comps = prefsComps(result.canBeCaptain);
     let embeds = prefsEmbed(
       interaction.member.displayName,
       interaction.member.displayAvatarURL(),
       interaction.guild.name,
-      result.output.CanBeCaptain
+      result.canBeCaptain
     );
 
     await interaction.editReply({ embeds: embeds, components: comps });

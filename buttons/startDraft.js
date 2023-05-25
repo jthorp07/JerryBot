@@ -39,7 +39,7 @@ module.exports = {
       return;
     }
 
-    const result = await db.imManuallyStartingDraft(queueId);
+    const result = await db.imManuallyStartingDraft(queueId, trans);
     if (result instanceof BaseDBError) {
       result.log();
       trans.rollback();
@@ -48,7 +48,7 @@ module.exports = {
     }
     // Grab queue data
 
-    let getQueueResult = await db.getQueue(queueId);
+    let getQueueResult = await db.getQueue(queueId, trans);
 
     if (getQueueResult instanceof BaseDBError) {
       result.log();
@@ -76,7 +76,7 @@ module.exports = {
     // Grab rankedroles for guild
 
     const rankedRoles = await db.getRankRoles(interaction.guildId, trans);
-    if (rankRoleResult instanceof BaseDBError) {
+    if (rankedRoles instanceof BaseDBError) {
       rankRoleResult.log();
       trans.rollback();
       await interaction.editReply({ content: "Something went wrong" });

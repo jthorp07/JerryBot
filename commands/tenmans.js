@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const { tenMansStartEmbed } = require("../util/embeds");
 const { tenMansStartComps } = require("../util/components");
 
@@ -35,15 +35,20 @@ module.exports = {
       return;
     }
 
-    let queueId;
-
     const result = await db.createQueue(
       interaction.guildId,
       interaction.member.id,
       type
     );
 
-    queueId = result.output.QueueId;
+    if (result instanceof BaseDBError) {
+      result.log();
+      await interaction.editReply({content:"Something went wrong"});
+      await trans.rollback();
+      return;
+    }
+
+    let queueId = result;
 
     let embeds = tenMansStartEmbed(
       undefined,
@@ -57,13 +62,14 @@ module.exports = {
 
     // LOGIC FOR THIS CHECK MIGHT BE WRONG //
 
-    if (result2.code == 2) {
+    if (result2 instanceof BaseDBError && result2.code == 2) {
       await interaction.channel.send({ embeds: embeds, components: comps });
-    } else if (!result2) {
+    } else if (!(result2 instanceof BaseDBError)) {
       await (
-        await interaction.guild.channels.fetch(result2.output.ChannelId)
+        await interaction.guild.channels.fetch(result2.channelId)
       ).send({ embeds: embeds, components: comps });
     } else {
+      result2.log();
       await interaction.editReply({ content: "Something went wrong" });
       trans.rollback();
       return;
