@@ -13,6 +13,7 @@ const mssql_1 = require("mssql");
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 // returns OUTPUT.EnforceRankRoles
 function imStartingDraft(con, queueId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -21,6 +22,9 @@ function imStartingDraft(con, queueId, trans) {
         if (!queueId)
             return new errors_1.NullArgError(["QueueId"], "ImManuallyStartingDraft");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("QueueId", queueId)
             .output("EnforceRankRoles", mssql_1.Bit)
             .execute("ImManuallyStartingDraft");
@@ -34,7 +38,7 @@ function imStartingDraft(con, queueId, trans) {
             case -1:
                 return { success: false, enforce: false };
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = imStartingDraft;

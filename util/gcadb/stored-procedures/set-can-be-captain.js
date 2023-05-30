@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function setCanBeCaptain(con, userId, guildId, canBeCaptain, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function setCanBeCaptain(con, userId, guildId, canBeCaptain, trans) {
         if (!userId || !guildId || !canBeCaptain)
             return new errors_1.NullArgError(["UserId", "GuildId", "CanBeCaptain"], "SetCanBeCaptain");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("UserId", userId)
             .input("GuildId", guildId)
             .input("CanBeCaptain", canBeCaptain)
@@ -29,7 +33,7 @@ function setCanBeCaptain(con, userId, guildId, canBeCaptain, trans) {
             case 1:
                 return new errors_1.NullArgError(["UserId", "GuildId", "CanBeCaptain"], "SetCanBeCaptain");
         }
-        return new base_db_error_1.default("An unknown error has occurred", -99);
+        return new base_db_error_1.default("An unknown error has occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = setCanBeCaptain;

@@ -6,7 +6,8 @@ import { DiscordStaffRole } from "./db-enum-discord-staff-role";
 import { DiscordMemberRole } from "./db-enum-discord-member-role";
 import { DiscordChannelType } from "./db-enum-discord-channel-type";
 import { DiscordChannelName } from "./db-enum-discord-channel-name";
-export { ValorantRank, QueuePool, QueueType, QueueState, DiscordStaffRole, DiscordMemberRole, DiscordChannelType, DiscordChannelName };
+import { GCADBErrorCode } from "./db-enum-error-code";
+export { ValorantRank, QueuePool, QueueType, QueueState, DiscordStaffRole, DiscordMemberRole, DiscordChannelType, DiscordChannelName, GCADBErrorCode };
 declare const _default: {
     ValorantRank: typeof ValorantRank;
     QueuePool: typeof QueuePool;
@@ -16,5 +17,6 @@ declare const _default: {
     DiscordMemberRole: typeof DiscordMemberRole;
     DiscordChannelType: typeof DiscordChannelType;
     DiscordChannelName: typeof DiscordChannelName;
+    GCADBErrorCode: typeof GCADBErrorCode;
 };
 export default _default;

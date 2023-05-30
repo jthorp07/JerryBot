@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function replaceCaptain(con, queueId, queuePool, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function replaceCaptain(con, queueId, queuePool, trans) {
         if (!queueId || !queuePool)
             return new errors_1.NullArgError(["QueueId", "QueuePool"], "ReplaceCaptain");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("QueueId", queueId)
             .input("QueuePool", queuePool)
             .execute("ReplaceCaptain");
@@ -28,7 +32,7 @@ function replaceCaptain(con, queueId, queuePool, trans) {
             case 1:
                 return new errors_1.NullArgError(["QueueId", "QueuePool"], "ReplaceCaptain");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = replaceCaptain;

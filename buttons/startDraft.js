@@ -46,9 +46,14 @@ module.exports = {
       await interaction.editReply({ content: "Something went wrong" });
       return;
     }
+
+    if (!result.success) {
+      await interaction.editReply({content: "Another request is already starting this queue"});
+      return;
+    }
     // Grab queue data
 
-    let getQueueResult = await db.getQueue(queueId, trans);
+    const getQueueResult = await db.getQueue(queueId, trans);
 
     if (getQueueResult instanceof BaseDBError) {
       result.log();

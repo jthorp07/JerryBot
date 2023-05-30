@@ -13,6 +13,7 @@ const mssql_1 = require("mssql");
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function getPrefs(con, userId, guildId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -20,6 +21,9 @@ function getPrefs(con, userId, guildId, trans) {
         if (!userId || !guildId)
             return new errors_1.NullArgError(["UserId", "GuildId"], "GetPrefs");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("UserId", userId)
             .input("GuildId", guildId)
             .output("CanBeCaptain", mssql_1.Bit)
@@ -34,7 +38,7 @@ function getPrefs(con, userId, guildId, trans) {
             case 2:
                 return new errors_1.DoesNotExistError("GetPrefs");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = getPrefs;

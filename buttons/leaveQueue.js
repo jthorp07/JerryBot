@@ -35,7 +35,8 @@ module.exports = {
     const result = await db.leaveTenmans(
       queueId,
       interaction.user.id,
-      interaction.guildId
+      interaction.guildId,
+      trans
     );
 
     if (result instanceof BaseDBError) {
@@ -50,7 +51,7 @@ module.exports = {
     if (result.wasCaptain) {
       const replaceCaptainResult = await db.replaceCaptain(
         queueId,
-        result.QueuePool
+        result.queuePool
       );
 
       if (replaceCaptainResult) {
@@ -70,7 +71,7 @@ module.exports = {
         ephemeral: true,
         content: "Something went wrong o-o",
       });
-      result.log();
+      queueResult.log();
       return;
     }
     // Grab queue data
@@ -79,20 +80,18 @@ module.exports = {
 
     await db.commitTransaction(trans);
 
-    const queueStatus = result.QueueStatus;
+    const queueStatus = queueResult.queueStatus;
 
     let playersAvailable = queueResult.records.availablePlayers;
     let teamOnePlayers = queueResult.records.teamOne;
     let teamTwoPlayers = queueResult.records.teamTwo;
-    let host = await interaction.guild.members.fetch(result.output.HostId);
+    let host = await interaction.guild.members.fetch(queueResult.hostId);
 
     if (!host) {
       await interaction.editReply({
         content:
           "Something went wrong and the interaction could not be completed",
       });
-      console.log("no host oops");
-      console.log(JSON.stringify(host));
       await trans.rollback();
       return;
     }

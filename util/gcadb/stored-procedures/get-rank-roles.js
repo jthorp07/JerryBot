@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
+const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
 function getRankRoles(con, guildId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -18,9 +19,15 @@ function getRankRoles(con, guildId, trans) {
         if (!guildId)
             return new errors_1.NullArgError(["GuildId"], "GetRankRoles");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .execute("GetRankRoles");
-        return parseRankRoles(result.recordset);
+        switch (result.returnValue) {
+            case 0:
+                return parseRankRoles(result.recordset);
+        }
     });
 }
 function parseRankRoles(datum) {

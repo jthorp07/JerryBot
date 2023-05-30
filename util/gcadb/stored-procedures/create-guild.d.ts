@@ -9,5 +9,5 @@ import BaseDBError from "../errors/base-db-error";
  * @param trans Database transaction to run this procedure against
  * @returns BaseDBError upon failure, void upon success
  */
-declare function createGuild(con: ConnectionPool, guildId: string, guildName: string, trans?: Transaction): Promise<BaseDBError>;
+declare function createGuild(con: ConnectionPool, guildId: string, guildName: string, trans?: Transaction): Promise<BaseDBError | undefined>;
 export default createGuild;

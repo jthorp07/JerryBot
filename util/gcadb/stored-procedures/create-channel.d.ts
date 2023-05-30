@@ -12,5 +12,5 @@ import BaseDBError from "../errors/base-db-error";
  * @param triggerable Whether or not VoiceState changes on the channel should be reacted to
  * @param trans A Transaction on the GCA Database, if this request should be part of one
  */
-declare function createChannel(con: ConnectionPool, guildId: string, channelId: string, channelName: string, channelType: DiscordChannelType, triggerable?: boolean, trans?: Transaction): Promise<BaseDBError>;
+declare function createChannel(con: ConnectionPool, guildId: string, channelId: string, channelName: string, channelType: DiscordChannelType, triggerable?: boolean, trans?: Transaction): Promise<BaseDBError | undefined>;
 export default createChannel;

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mssql_1 = require("mssql");
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
+const enums_1 = require("../enums");
 const get_queue_1 = require("./get-queue");
 const _1 = require(".");
 function draftPlayer(con, playerId, guildId, queueId, trans) {
@@ -21,6 +22,9 @@ function draftPlayer(con, playerId, guildId, queueId, trans) {
         if (!playerId || !guildId || !queueId)
             return new errors_1.NullArgError(["PlayerId", "GuildId", "QueueId"], "DraftPlayer");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("PlayerId", playerId)
             .input("GuildId", guildId)
             .input("QueueId", queueId)
@@ -41,7 +45,7 @@ function draftPlayer(con, playerId, guildId, queueId, trans) {
             case 2:
                 return new errors_1.DoesNotExistError("DraftPlayer");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = draftPlayer;

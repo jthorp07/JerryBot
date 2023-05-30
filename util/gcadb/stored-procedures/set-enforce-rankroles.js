@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function setEnforceRankRoles(con, guildId, enforce, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function setEnforceRankRoles(con, guildId, enforce, trans) {
         if (!guildId || !enforce)
             return new errors_1.NullArgError(["GuildId", "Enforce"], "SetEnforceRankRoles");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("Enforce", enforce)
             .execute("SetEnforceRankRoles");
@@ -28,7 +32,7 @@ function setEnforceRankRoles(con, guildId, enforce, trans) {
             case 1:
                 return new errors_1.NullArgError(["GuildId", "Enforce"], "SetEnforceRankRoles");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = setEnforceRankRoles;

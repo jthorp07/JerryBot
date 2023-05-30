@@ -21,7 +21,7 @@ ALTER PROCEDURE LeaveTenmans(
     SELECT @QueuePool = dbo.GetEnumDescription('QUEUE_POOL', @Qp)
 
     DELETE FROM QueuedPlayers
-    WHERE QueueId=@QueueId AND Playerid=@UserId AND GuildId=@GuildId
+    WHERE QueueId=@QueueId AND PlayerId=@UserId AND GuildId=@GuildId
     PRINT 'Removed player from queue'
     RETURN 0
 

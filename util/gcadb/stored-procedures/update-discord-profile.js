@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisp
         if (!guildId || !userId || !username || !isOwner || !guildDisplayName)
             return new errors_1.NullArgError(["GuildId", "UserId", "Username", "IsOwner", "GuildDisplayName"], "UpdateDiscordProfile");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("UserId", userId)
             .input("Username", username)
@@ -37,7 +41,7 @@ function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisp
             case 3:
                 return new errors_1.DataConstraintError(["Username", "GuildDisplayName", "CurrentRank"], ["Must be a string between 3 and 32 characters", "Must be a string between 3 and 32 characters", "Must be of type 'ValorantRank' (see import ValorantRank)"], "UpdateDiscordProfile");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = updateDiscordProfile;

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initReq = void 0;
 const mssql_1 = require("mssql");
+const base_db_error_1 = require("../errors/base-db-error");
 const create_channel_1 = require("./create-channel");
 const create_guild_1 = require("./create-guild");
 const create_guild_member_1 = require("./create-guild-member");
@@ -63,7 +64,15 @@ exports.default = {
     updateValorantProfile: update_valorant_profile_1.default
 };
 function initReq(con, trans) {
-    return trans ? new mssql_1.Request(trans) : new mssql_1.Request(con);
+    try {
+        let req = trans ? new mssql_1.Request(trans) : new mssql_1.Request(con);
+        if (!req)
+            return new base_db_error_1.default("Failed to create request", -97);
+        return req;
+    }
+    catch (err) {
+        return new base_db_error_1.default("Error creating request", -97);
+    }
 }
 exports.initReq = initReq;
 ;

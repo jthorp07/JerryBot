@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mssql_1 = require("mssql");
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
+const enums_1 = require("../enums");
 const _1 = require(".");
 function getChannel(con, guildId, channelName, trans) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -20,6 +21,9 @@ function getChannel(con, guildId, channelName, trans) {
         if (!channelName || !guildId)
             return new errors_1.NullArgError(["GuildId", "ChannelName"], "GetChannel");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("ChannelName", channelName)
             .output("ChannelId", (0, mssql_1.VarChar)(22))
@@ -38,7 +42,7 @@ function getChannel(con, guildId, channelName, trans) {
             case 2:
                 return new errors_1.DoesNotExistError("GetChannel");
         }
-        return new base_db_error_1.default("An unknown error has occurred", -99);
+        return new base_db_error_1.default("An unknown error has occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = getChannel;

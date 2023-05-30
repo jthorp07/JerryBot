@@ -5,47 +5,7 @@ declare function draftPlayer(con: ConnectionPool, playerId: string, guildId: str
     queueStatus: QueueState;
     hostId: string;
     team: QueuePool;
-    records: {
-        allPlayers: {
-            playerId: string;
-            canBeCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        availablePlayers: {
-            playerId: string;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        teamOne: {
-            playerId: string;
-            isCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        teamTwo: {
-            playerId: string;
-            isCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-    };
+    records: import("./get-queue").TenmansClassicRecords;
 }>;
 export default draftPlayer;
 export type GetQueueRecords = {

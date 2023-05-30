@@ -6,46 +6,6 @@ declare function pickMap(con: ConnectionPool, queueId: number, trans?: Transacti
     playerCount: number;
     queueStatus: QueueState;
     hostId: string;
-    records: {
-        allPlayers: {
-            playerId: string;
-            canBeCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        availablePlayers: {
-            playerId: string;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        teamOne: {
-            playerId: string;
-            isCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-        teamTwo: {
-            playerId: string;
-            isCaptain: boolean;
-            guildId: string;
-            discordDisplayName: string;
-            valorantDisplayName: string;
-            roleName: string;
-            roleEmote: string;
-            roleIcon: string;
-        }[];
-    };
+    records: import("./get-queue").TenmansClassicRecords;
 }>;
 export default pickMap;

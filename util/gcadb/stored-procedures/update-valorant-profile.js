@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function updateValorantProfile(con, guildId, userId, valorantDisplayName, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function updateValorantProfile(con, guildId, userId, valorantDisplayName, trans)
         if (!guildId || !userId || !valorantDisplayName)
             return new errors_1.NullArgError(["GuildId", "UserId", "ValorantDisplayName"], "UpdateValorantProfile");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("UserId", userId)
             .input("ValorantDisplayName", valorantDisplayName)
@@ -31,7 +35,7 @@ function updateValorantProfile(con, guildId, userId, valorantDisplayName, trans)
             case 2:
                 return new errors_1.DoesNotExistError("UpdateValorantProfile");
         }
-        return new base_db_error_1.default("An unknown error has occurred", -99);
+        return new base_db_error_1.default("An unknown error has occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = updateValorantProfile;

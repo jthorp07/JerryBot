@@ -5,7 +5,9 @@ import { DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaff
 import env from "./env-vars.config";
 import { EventEmitter } from "events";
 import { GetQueueRecords } from "./stored-procedures/draft-player";
-import { GetProfileRecords } from "./stored-procedures/get-profile";
+import { GetProfileRecord } from "./stored-procedures/get-profile";
+import { TenmansClassicRecords } from "./stored-procedures/get-queue";
+import { ValorantRankedRolesRecord } from "./stored-procedures/get-rank-roles";
 export declare class GCADB extends EventEmitter {
     con: ConnectionPool;
     reconnecting: boolean;
@@ -34,7 +36,7 @@ export declare class GCADB extends EventEmitter {
             encrypt: boolean;
             trustServerCertificate: boolean;
         };
-    }): Promise<GCADB>;
+    }): Promise<GCADB | undefined>;
     /**
      * Begins a transaction against the database
      *
@@ -47,7 +49,7 @@ export declare class GCADB extends EventEmitter {
      *
      * @param transaction
      */
-    commitTransaction(transaction: Transaction): Promise<BaseDBError>;
+    commitTransaction(transaction: Transaction): Promise<BaseDBError | undefined>;
     /**
      * Closes the connection to the database for graceful exit
      */
@@ -71,7 +73,7 @@ export declare class GCADB extends EventEmitter {
      * @param triggerable Whether or not VoiceState changes on the channel should be reacted to
      * @param transaction A Transaction on the GCA Database, if this request should be part of one
      */
-    createChannel(guildId: string, channelId: string, channelName: string, channelType: DiscordChannelType, triggerable: boolean, transaction?: Transaction): Promise<BaseDBError>;
+    createChannel(guildId: string, channelId: string, channelName: string, channelType: DiscordChannelType, triggerable: boolean, transaction?: Transaction): Promise<BaseDBError | undefined>;
     /**
      * Writes a new guild to the GCA Database
      *
@@ -120,22 +122,16 @@ export declare class GCADB extends EventEmitter {
     }>;
     getProfile(userId: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
         currentRank: ValorantRank;
-        records: GetProfileRecords;
+        records: GetProfileRecord;
     }>;
     getQueue(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         captainCount: number;
         playerCount: number;
         queueStatus: QueueState;
         hostId: string;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
-    getRankRoles(guildId: string, transaction?: Transaction): Promise<BaseDBError | {
-        roleId: string;
-        roleName: ValorantRank;
-        orderBy: number;
-        roleIcon: string;
-        roleEmote: string;
-    }[]>;
+    getRankRoles(guildId: string, transaction?: Transaction): Promise<BaseDBError | ValorantRankedRolesRecord[]>;
     imManuallyStartingDraft(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         success: boolean;
         enforce: boolean;
@@ -149,9 +145,9 @@ export declare class GCADB extends EventEmitter {
         numCaptains: number;
         queueStatus: QueueState;
         hostId: string;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
-    leaveTenmans(queueId: number, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
+    leaveTenmans(queueId: number, guildId: string, userId: string, transaction?: Transaction): Promise<BaseDBError | {
         wasCaptain: boolean;
         queuePool: QueuePool;
     }>;
@@ -160,20 +156,20 @@ export declare class GCADB extends EventEmitter {
         playerCount: number;
         queueStatus: QueueState;
         hostId: string;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
     pickSide(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         numCaptains: number;
         playerCount: number;
         queueStatus: QueueState;
         hostId: string;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
     replaceCaptain(queueId: number, queuePool: number, transaction?: Transaction): Promise<BaseDBError>;
     setCanBeCaptain(userId: string, guildId: string, canBeCaptain: boolean, transaction?: Transaction): Promise<BaseDBError>;
     setCaptain(queueId: number, capOne: string, capTwo: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
         queueStatus: QueueState;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
     setEnforceRankRoles(guildId: string, enforce: boolean, transaction?: Transaction): Promise<BaseDBError>;
     setRole(guildId: string, roleId: string, roleName: ValorantRank | DiscordMemberRole | DiscordStaffRole, orderBy: number, roleIcon: string, roleEmote: string, transaction?: Transaction): Promise<BaseDBError>;

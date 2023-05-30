@@ -28,16 +28,18 @@ function createChannel(con, guildId, channelId, channelName, channelType, trigge
         if (!con.connected)
             return new errors_1.NotConnectedError("CreateChannel");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("ChannelId", channelId)
             .input("ChannelName", channelName)
             .input("ChannelType", channelType)
             .input("Triggerable", triggerable)
             .execute("CreateChannel");
-        let ret = result.returnValue;
-        let err;
-        err = null;
-        switch (ret) {
+        switch (result.returnValue) {
+            case 0:
+                return;
             case 1:
                 return new errors_1.NullArgError(["GuildId", "ChannelId", "ChannelName", "ChannelType"], "CreateChannel");
             case 2:

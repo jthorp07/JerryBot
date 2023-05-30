@@ -18,5 +18,5 @@ import { ValorantRank } from "../enums";
  * @param trans Database transaction to run this request against
  * @returns
  */
-declare function createGuildMember(con: ConnectionPool, guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: ValorantRank | null, trans?: Transaction): Promise<BaseDBError>;
+declare function createGuildMember(con: ConnectionPool, guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: ValorantRank | null, trans?: Transaction): Promise<BaseDBError | undefined>;
 export default createGuildMember;

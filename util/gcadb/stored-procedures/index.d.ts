@@ -1,4 +1,5 @@
 import { Transaction, ConnectionPool, Request } from "mssql";
+import BaseDBError from "../errors/base-db-error";
 import createChannel from "./create-channel";
 import createGuild from "./create-guild";
 import createGuildMember from "./create-guild-member";
@@ -60,4 +61,4 @@ declare const _default: {
     updateValorantProfile: typeof updateValorantProfile;
 };
 export default _default;
-export declare function initReq(con: ConnectionPool, trans?: Transaction): Request;
+export declare function initReq(con: ConnectionPool, trans?: Transaction): Request | BaseDBError;

@@ -13,6 +13,7 @@ const mssql_1 = require("mssql");
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function getEnforceRankRoles(con, guildId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -20,6 +21,9 @@ function getEnforceRankRoles(con, guildId, trans) {
         if (!guildId)
             return new errors_1.NullArgError(["GuildId"], "GetEnforceRankRoles");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .output("Enforce", mssql_1.Bit)
             .execute("GetEnforceRankRoles");
@@ -29,7 +33,7 @@ function getEnforceRankRoles(con, guildId, trans) {
             case 1:
                 return new errors_1.NullArgError(["GuildId"], "GetEnforceRankRoles");
         }
-        return new base_db_error_1.default("An unknown error has occurred", -99);
+        return new base_db_error_1.default("An unknown error has occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = getEnforceRankRoles;

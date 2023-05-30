@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 /**
  * Writes a new guild to the GCA Database
  *
@@ -28,11 +29,13 @@ function createGuild(con, guildId, guildName, trans) {
         if (!con.connected)
             return new errors_1.NotConnectedError("CreateGuild");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("GuildName", guildName)
             .execute("CreateGuild");
-        let ret = result.returnValue;
-        switch (ret) {
+        switch (result.returnValue) {
             case 0:
                 return;
             case 1:
@@ -42,7 +45,7 @@ function createGuild(con, guildId, guildName, trans) {
             case 3:
                 return new errors_1.AlreadyExistsError("CreateGuild");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = createGuild;

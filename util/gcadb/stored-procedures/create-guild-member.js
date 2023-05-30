@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 /**
  * Writes a Discord GuildMember's information on the GCA Database.
  * A GuildMember represents a Discord user and their unique profile
@@ -37,6 +38,9 @@ function createGuildMember(con, guildId, userId, isOwner, username, guildDisplay
         if (!con.connected)
             return new errors_1.NotConnectedError("CreateGuildMember");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input('GuildId', guildId)
             .input('UserId', userId)
             .input('Username', username)
@@ -44,8 +48,7 @@ function createGuildMember(con, guildId, userId, isOwner, username, guildDisplay
             .input('GuildDisplayName', guildDisplayName)
             .input('ValorantRankRoleName', valorantRankRoleName)
             .execute('CreateGuildMember');
-        let retVal = result.returnValue;
-        switch (retVal) {
+        switch (result.returnValue) {
             case 0:
                 return;
             case 1:
@@ -55,7 +58,7 @@ function createGuildMember(con, guildId, userId, isOwner, username, guildDisplay
             case 3:
                 return new errors_1.AlreadyExistsError('CreateGuildMember');
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = createGuildMember;

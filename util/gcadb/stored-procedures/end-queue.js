@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function endQueue(con, queueId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,10 +20,13 @@ function endQueue(con, queueId, trans) {
         if (!queueId)
             return new errors_1.NullArgError(["QueueId"], "EndQueue");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("QueueId", queueId)
             .execute("EndQueue");
         if (result.returnValue != 0)
-            return new base_db_error_1.default("An unknown error has occured", -99);
+            return new base_db_error_1.default("An unknown error has occured", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = endQueue;

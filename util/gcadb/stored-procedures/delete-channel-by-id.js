@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
+const enums_1 = require("../enums");
 function deleteChannelById(con, guildId, channelId, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
@@ -19,6 +20,9 @@ function deleteChannelById(con, guildId, channelId, trans) {
         if (guildId.length > 21 || guildId.length < 17)
             return new errors_1.DataConstraintError(["GuildId", "ChannelId"], ["Must be greater than 17 and less than 22 characters in length", "Must be greater than 17 and less than 22 characters in length"], "DeleteChannelById");
         let req = (0, _1.initReq)(con, trans);
+        if (req instanceof base_db_error_1.default) {
+            return req;
+        }
         let result = yield req.input("GuildId", guildId)
             .input("ChannelId", channelId)
             .execute("DeleteChannelById");
@@ -26,7 +30,7 @@ function deleteChannelById(con, guildId, channelId, trans) {
             case 0: return;
             case 1: return new errors_1.NullArgError(["GuildId", "ChannelId"], "DeleteChannelById");
         }
-        return new base_db_error_1.default("An unknown error occurred", -99);
+        return new base_db_error_1.default("An unknown error occurred", enums_1.GCADBErrorCode.UNKNOWN_ERROR);
     });
 }
 exports.default = deleteChannelById;

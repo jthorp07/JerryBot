@@ -27,6 +27,7 @@ const events_1 = require("events");
 class GCADB extends events_1.EventEmitter {
     constructor(conPool) {
         super();
+        this.reconnecting = false;
         this.con = conPool;
     }
     /**
@@ -276,9 +277,9 @@ class GCADB extends events_1.EventEmitter {
             return this.callProcedure(stored_procedures_1.default.joinQueue, [this.con, userId, guildId, queueId, transaction]);
         });
     }
-    leaveTenmans(queueId, guildId, transaction) {
+    leaveTenmans(queueId, guildId, userId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.callProcedure(stored_procedures_1.default.leaveTenmans, [this.con, queueId, guildId, transaction]);
+            return this.callProcedure(stored_procedures_1.default.leaveTenmans, [this.con, queueId, guildId, userId, transaction]);
         });
     }
     pickMap(queueId, transaction) {
