@@ -1,4 +1,4 @@
-CREATE PROCEDURE GetUserValRank(
+ALTER PROCEDURE GetUserValRank(
     @UserId DiscordSnowflake,
     @GuildId DiscordSnowflake,
     @RoleIcon VARCHAR(255) OUTPUT,
@@ -20,7 +20,7 @@ CREATE PROCEDURE GetUserValRank(
     SELECT @RoleIcon=RoleIcon, @RoleEmote=RoleEmote, @RoleName=RoleName
     FROM GuildRole
     JOIN GuildMember ON ValorantRankRoleName=RoleName
-    WHERE MemberId=@UserId AND GuildMember.GuildId=@GuildId
+    WHERE MemberId=@UserId AND GuildMember.GuildId=@GuildId AND GuildRole.GuildId=@GuildId
 
     RETURN 0
 
