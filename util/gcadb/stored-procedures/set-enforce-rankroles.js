@@ -17,7 +17,7 @@ function setEnforceRankRoles(con, guildId, enforce, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
             return new errors_1.NotConnectedError("SetEnforceRankRoles");
-        if (!guildId || !enforce)
+        if (!guildId || enforce == null)
             return new errors_1.NullArgError(["GuildId", "Enforce"], "SetEnforceRankRoles");
         let req = (0, _1.initReq)(con, trans);
         if (req instanceof base_db_error_1.default) {

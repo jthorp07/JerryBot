@@ -1,19 +1,14 @@
 const { ButtonInteraction, ChannelType } = require("discord.js");
 const {
-  IRecordSet,
-  ConnectionPool,
   Transaction,
-  NVarChar,
-  VarChar,
-  Bit,
 } = require("mssql");
-const { CHANNEL_TYPES, TENMANS_QUEUE_POOLS } = require("../database-enums");
 const {
   GCADB,
   DiscordChannelName,
   BaseDBError,
   DiscordChannelType,
 } = require("../gcadb");
+const { QueuePool } = require("../gcadb/enums");
 
 module.exports = {
   /**
@@ -22,8 +17,8 @@ module.exports = {
    * two captains for a ten mans draft
    *
    * @param {number} numCaps
-   * @param {IRecordSet<any>} potentialCaps
-   * @param {IRecordSet<any>} rankedRoles
+   * @param {import("../gcadb/stored-procedures/get-queue").TenmansClassicQueuedUserRecord[]} potentialCaps
+   * @param {import("../gcadb/stored-procedures/get-rank-roles").ValorantRankedRolesRecord[]} rankedRoles
    * @param {ButtonInteraction} interaction
    * @param {number} queueId
    * @param {GCADB} db
@@ -42,6 +37,7 @@ module.exports = {
     trans,
     enforce
   ) {
+
     // Establishing capPool type for intellisense
     let capPool = [
       {
@@ -53,11 +49,11 @@ module.exports = {
 
     // If not enough captains, the 2 lowest ranks will be picked regardless of prefs
     if (numCaps < 2 && enforce) {
-      potentialCaps.forEach(async (record) => {
+
+      for (let record of potentialCaps) {
         let userId = record.playerId;
         let user = await interaction.guild.members.fetch(userId);
         let role;
-
         for (let entry of rankedRoles) {
           for (let item of user.roles.cache) {
             let roleId = item[1].id;
@@ -72,7 +68,7 @@ module.exports = {
           }
           if (role) break;
         }
-      });
+      }
 
       // Sort capPool by rank
       capPool.sort((cap1, cap2) => {
@@ -113,9 +109,9 @@ module.exports = {
         }
       }
     }
-
-    let capOneIndex = Math.floor(Math.random() * capPool.length);
-    if (capOneIndex == capPool.length) capOneIndex -= 2;
+    
+    let capOneIndex = Math.floor(Math.random() * (capPool.length - 1));
+    if (capOneIndex == (capPool.length - 1)) capOneIndex -= 1;
 
     let capTwoIndex = capOneIndex + 1;
 
@@ -138,7 +134,7 @@ module.exports = {
     let done = await createCaptainVC(
       capOne.id,
       queueId,
-      TENMANS_QUEUE_POOLS.TEAM_ONE,
+      QueuePool.TEAM_ONE,
       interaction,
       db,
       trans
@@ -149,7 +145,7 @@ module.exports = {
     await createCaptainVC(
       capTwo.id,
       queueId,
-      TENMANS_QUEUE_POOLS.TEAM_TWO,
+      QueuePool.TEAM_TWO,
       interaction,
       db,
       trans

@@ -1,6 +1,7 @@
 const { tenMansStartEmbed, tenMansDraftEmbed, tenMansInGameEmbed } = require("../embeds");
 const { EmbedBuilder } = require("discord.js");
 const { QUEUE_STATES } = require("../database-enums");
+const { QueueState } = require("../gcadb/enums");
 
 
 
@@ -12,9 +13,9 @@ module.exports = {
    * a Classic Ten Mans queue
    * 
    * @param {string} queueStatus Current queue status
-   * @param playersAvailable Set of available players in queue
-   * @param teamOnePlayers Set of players in team one in queue
-   * @param teamTwoPlayers Set of players in team two in queue
+   * @param {import("../gcadb/stored-procedures/get-queue").TenmansClassicAvailablePlayerRecord[]} playersAvailable Set of available players in queue
+   * @param {import("../gcadb/stored-procedures/get-queue").TenmansClassicTeamPlayerRecord[]} teamOnePlayers Set of players in team one in queue
+   * @param {import("../gcadb/stored-procedures/get-queue").TenmansClassicTeamPlayerRecord[]} teamTwoPlayers Set of players in team two in queue
    * @param spectators Set of spectators in queue
    * @param {string} hostName Display name of the host
    * @param {string} hostPfp Discord PFP of the host
@@ -45,15 +46,14 @@ module.exports = {
       });
     }
 
-
     // Queue states of drafting or in-game: Make Draft embed 
-    if (queueStatus == QUEUE_STATES.TENMANS_WAITING) {
+    if (queueStatus == QueueState.WAITING_FOR_PLAYERS) {
       return tenMansStartEmbed(draftListString, specString, hostName, hostPfp);
     } else {
       // Team One
       let teamOneString = '';
-      for (player of teamOnePlayers) {
-        if (player.IsCaptain == 1) {
+      for (let player of teamOnePlayers) {
+        if (player.isCaptain) {
           continue;
         }
 
@@ -64,8 +64,8 @@ module.exports = {
 
       // Team One Captain
       let capOne = '';
-      for (player of teamOnePlayers) {
-        if (player.IsCaptain == 0) {
+      for (let player of teamOnePlayers) {
+        if (!player.isCaptain) {
           continue;
         }
 
@@ -76,8 +76,8 @@ module.exports = {
 
       // Team Two
       let teamTwoString = '';
-      for (player of teamTwoPlayers) {
-        if (player.IsCaptain == 1) {
+      for (let player of teamTwoPlayers) {
+        if (player.isCaptain) {
           continue;
         }
         let dispName = player.valorantDisplayName ? player.valorantDisplayName : player.discordDisplayName;
@@ -87,8 +87,8 @@ module.exports = {
 
       // Team Two Captain
       let capTwo = '';
-      for (player of teamTwoPlayers) {
-        if (player.IsCaptain == 0) {
+      for (let player of teamTwoPlayers) {
+        if (!player.isCaptain) {
           continue;
         }
 
@@ -97,7 +97,7 @@ module.exports = {
         capTwo = `${dispName} ${dispRole}`;
       };
 
-      if (queueStatus == QUEUE_STATES.TENMANS_SIDE_PICK || queueStatus == QUEUE_STATES.TENMANS_IN_GAME) {
+      if (queueStatus == QueueState.SIDE_PICK || queueStatus == QueueState.IN_GAME) {
         return tenMansInGameEmbed(capOne, capTwo, draftListString, teamOneString, teamTwoString, specString, hostName, hostPfp, map, teamTwoAttack);
       }
 

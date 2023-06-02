@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -24,7 +24,8 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
+      trans.log();
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
@@ -36,6 +37,7 @@ module.exports = {
 
     // Ensure valid database response
     if (result) {
+      result.log();
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });

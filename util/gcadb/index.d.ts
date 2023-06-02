@@ -4,7 +4,6 @@ import { BaseDBError } from "./errors/base-db-error";
 import { DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaffRole, QueuePool, QueueState, QueueType, ValorantRank } from "./enums";
 import env from "./env-vars.config";
 import { EventEmitter } from "events";
-import { GetQueueRecords } from "./stored-procedures/draft-player";
 import { GetProfileRecord } from "./stored-procedures/get-profile";
 import { TenmansClassicRecords } from "./stored-procedures/get-queue";
 import { ValorantRankedRolesRecord } from "./stored-procedures/get-rank-roles";
@@ -108,7 +107,7 @@ export declare class GCADB extends EventEmitter {
         queueStatus: QueueState;
         hostId: string;
         team: QueuePool;
-        records: GetQueueRecords;
+        records: TenmansClassicRecords;
     }>;
     endQueue(queueId: number, transaction?: Transaction): Promise<BaseDBError>;
     getChannel(guildId: string, channelName: DiscordChannelName, transaction?: Transaction): Promise<BaseDBError | {
@@ -194,6 +193,12 @@ export declare class GCADB extends EventEmitter {
      * @returns
      */
     deleteGuild(guildId: string, trans?: Transaction): Promise<import("mssql").IProcedureResult<any> | BaseDBError>;
+    getDraftPickId(userId: string, queueId: number, transaction?: Transaction): Promise<BaseDBError | {
+        yourTurn: boolean;
+    }>;
+    getMapSidePickId(userId: string, queueId: number, transaction?: Transaction): Promise<BaseDBError | {
+        yourTurn: boolean;
+    }>;
 }
 export { BaseDBError, env, DiscordChannelName, DiscordChannelType, DiscordMemberRole, DiscordStaffRole, ValorantRank };
 export declare const getConnection: typeof GCADB.GetConnection;

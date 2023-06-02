@@ -131,5 +131,7 @@ module.exports = {
       embeds: embeds,
       components: comps,
     });
+
+    await interaction.deleteReply();
   },
 };

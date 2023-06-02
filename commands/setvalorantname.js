@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -36,23 +36,25 @@ module.exports = {
     let tagline = interaction.options.getString("tagline");
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
+      trans.log();
       return;
     }
 
     const result = await db.setValName(
-      interaction.guildId,
+      `${valName}#${tagline}`,
       interaction.user.id,
-      `${valName}#${tagline}`
+      interaction.guildId,
     );
 
     if (result) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed",
       });
+      result.log();
       return;
     }
 

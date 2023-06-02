@@ -4,14 +4,13 @@ const {
   tenMansInGameComps,
 } = require("../components");
 const { ActionRowBuilder, AnyComponentBuilder } = require("discord.js");
-const { IRecordSet } = require("mssql");
-const { QUEUE_STATES } = require("../database-enums");
+const { QueueState } = require("../gcadb/enums");
 
 module.exports = {
   /**
    * @param {number} queueId Current queue ID
    * @param {string} queueStatus Current queue status
-   * @param {IRecordSet<any>} playersAvailable Set of available players in queue
+   * @param {import("../gcadb/stored-procedures/get-queue").TenmansClassicAvailablePlayerRecord[]} playersAvailable Set of available players in queue
    * @param {string} map Name of map, if selected
    * @param {string} host id of host for queue
    *
@@ -19,13 +18,13 @@ module.exports = {
    */
   tenMansClassicNextComps(queueId, queueStatus, playersAvailable, map, host) {
     if (
-      queueStatus == QUEUE_STATES.TENMANS_WAITING ||
-      queueStatus == QUEUE_STATES.TENMANS_STARTING_DRAFT
+      queueStatus == QueueState.WAITING_FOR_PLAYERS ||
+      queueStatus == QueueState.STARTING_DRAFT
     ) {
       return tenMansStartComps(queueId, host);
     }
 
-    if (queueStatus == QUEUE_STATES.TENMANS_DRAFTING) {
+    if (queueStatus == QueueState.DRAFTING) {
       // Just defining this object with a schema for intellisense - not necessary for prod
       let playerDraftOptions = [
         {
@@ -37,23 +36,23 @@ module.exports = {
 
       // Parse available players into valid StringSelectMenu options
       playersAvailable.forEach((player) => {
-        let name = player.ValorantDisplayName
-          ? player.ValorantDisplayName
-          : player.DiscordDisplayName;
+        let name = player.valorantDisplayName
+          ? player.valorantDisplayName
+          : player.discordDisplayName;
         playerDraftOptions.push({
           label: name,
-          value: player.PlayerId,
+          value: player.playerId,
         });
       });
 
       return tenMansDraftComps(queueId, playerDraftOptions, false, map, host);
     }
 
-    if (queueStatus == QUEUE_STATES.TENMANS_MAP_PICK) {
+    if (queueStatus == QueueState.MAP_PICK) {
       return tenMansDraftComps(queueId, null, true, map, host);
     }
 
-    if (queueStatus == QUEUE_STATES.TENMANS_IN_GAME) {
+    if (queueStatus == QueueState.IN_GAME) {
       return tenMansInGameComps(queueId, host);
     }
 

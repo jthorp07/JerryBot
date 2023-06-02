@@ -1,12 +1,5 @@
 const { SelectMenuInteraction } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
-const {
-  ConnectionPool,
-  PreparedStatement,
-  Int,
-  NVarChar,
-  VarChar,
-} = require("mssql");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const {
   tenMansClassicNextComps,
   tenMansClassicNextEmbed,
@@ -32,59 +25,38 @@ module.exports = {
     mapPick = firstUpper.concat(mapPick.substring(1));
 
     // Authorize map/side picker
-    let result;
-    try {
-      let stmt = new PreparedStatement(con)
-        .input("UserId", VarChar(21))
-        .input("QueueId", Int);
-      await stmt.prepare(
-        "SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId"
-      );
-      result = await stmt.execute({
-        UserId: interaction.user.id,
-        QueueId: queueId,
-      });
-      await stmt.unprepare();
-    } catch (err) {
-      console.log(` [DB]: ${err}`);
-      interaction.editReply({
-        content:
-          "Something went wrong and the command was unable to be processed",
-      });
+    const pickResult = await db.getMapSidePickId(interaction.user.id, queueId);
+    
+    if (pickResult instanceof BaseDBError) {
+      pickResult.log();
+      await interaction.editReply({content:"Something went wrong"});
       return;
     }
 
-    if (result.recordset.length == 0) {
+    if (!pickResult.yourTurn) {
       interaction.editReply({
         content: "It is not your turn to pick!",
       });
       return;
     }
 
-    const pickMapResult = await con
-      .request()
-      .input("QueueId", queueId)
-      .output("NumCaptains", Int)
-      .output("PlayerCount", Int)
-      .output("QueueStatus", NVarChar(100))
-      .output("HostId", VarChar(21))
-      .execute("PickMap");
+    const pickMapResult = await db.pickMap(queueId);
 
-    if (pickMapResult.returnValue != 0) {
+    if (pickMapResult instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed",
       });
-      console.log("Database failure");
+      pickMapResult.log();
       return;
     }
 
-    let queueStatus = pickMapResult.output.QueueStatus;
-    let playersAvailable = pickMapResult.recordsets[1];
-    let teamOnePlayers = pickMapResult.recordsets[2];
-    let teamTwoPlayers = pickMapResult.recordsets[3];
-    let spectators = pickMapResult.recordsets[4];
+    let queueStatus = pickMapResult.queueStatus;
+    let playersAvailable = pickMapResult.records.availablePlayers;
+    let teamOnePlayers = pickMapResult.records.teamOne;
+    let teamTwoPlayers = pickMapResult.records.teamTwo;
+    let spectators = null;
     let host = await interaction.guild.members.fetch(
-      pickMapResult.output.HostId
+      pickMapResult.hostId
     );
 
     let embeds = tenMansClassicNextEmbed(
@@ -112,6 +84,6 @@ module.exports = {
       components: comps,
     });
 
-    await interaction.editReply("You selected a map!", { ephemeral: true });
+    await interaction.editReply("You selected a map! Now pick a side and let the game begin!", { ephemeral: true });
   },
 };

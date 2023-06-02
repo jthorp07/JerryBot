@@ -1,11 +1,5 @@
 const { SelectMenuInteraction } = require("discord.js");
-const {
-  ConnectionPool,
-  Int,
-  NVarChar,
-  VarChar,
-  PreparedStatement,
-} = require("mssql");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const {
   tenMansClassicNextEmbed,
   tenMansClassicNextComps,
@@ -18,11 +12,11 @@ module.exports = {
   },
   /**
    * @param {SelectMenuInteraction} interaction
-   * @param {ConnectionPool} con
+   * @param {GCADB} db
    * @param {string[]} idArgs
    */
 
-  async execute(interaction, con, idArgs) {
+  async execute(interaction, db, idArgs) {
     //TODO: Implement button command
     await interaction.deferReply({ ephemeral: true });
 
@@ -35,60 +29,34 @@ module.exports = {
     let choice = interaction.values[0] == "atk" ? 1 : 2;
 
     // Authorize map/side picker
-    let stmt = new PreparedStatement(con)
-      .input("UserId", VarChar(21))
-      .input("QueueId", Int);
+    let pickResult = await db.getMapSidePickId(interaction.user.id, queueId);
 
-    let result;
-    try {
-      await stmt.prepare(
-        "SELECT MapSidePickId FROM Queues WHERE [Id]=@QueueId AND MapSidePickId=@UserId"
-      );
-      result = await stmt.execute({
-        UserId: interaction.user.id,
-        QueueId: queueId,
-      });
-      await stmt.unprepare();
-    } catch (err) {
-      console.log(` [DB]: ${err}`);
-      interaction.editReply({
-        content:
-          "Something went wrong and the command was unable to be processed",
-      });
+    if (pickResult instanceof BaseDBError) {
+      pickResult.log();
+      await interaction.editReply({content:"Something went wrong"});
+      return;
+    } else if (!pickResult.yourTurn) {
+      await interaction.editReply({content:"You are not allowed to pick the sides for this game"});
       return;
     }
 
-    if (result.recordset.length == 0) {
-      interaction.editReply({
-        content: "It is not your turn to pick!",
-      });
-      return;
-    }
+    const pickSideResult = await db.pickSide(queueId);
 
-    const pickSideResult = await con
-      .request()
-      .input("QueueId", queueId)
-      .output("NumCaptains", Int)
-      .output("PlayerCount", Int)
-      .output("QueueStatus", NVarChar(100))
-      .output("HostId", VarChar(21))
-      .execute("PickSide");
-
-    if (pickSideResult.returnValue != 0) {
+    if (pickSideResult instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed",
       });
-      console.log("Database error");
+      pickSideResult.log();
       return;
     }
 
-    let queueStatus = pickSideResult.output.QueueStatus;
-    let playersAvailable = pickSideResult.recordsets[1];
-    let teamOnePlayers = pickSideResult.recordsets[2];
-    let teamTwoPlayers = pickSideResult.recordsets[3];
-    let spectators = pickSideResult.recordsets[4];
+    let queueStatus = pickSideResult.queueStatus;
+    let playersAvailable = pickSideResult.records.availablePlayers;
+    let teamOnePlayers = pickSideResult.records.teamOne;
+    let teamTwoPlayers = pickSideResult.records.teamTwo;
+    let spectators = null;
     let host = await interaction.guild.members.fetch(
-      pickSideResult.output.HostId
+      pickSideResult.hostId
     );
 
     let embeds = tenMansClassicNextEmbed(
@@ -115,5 +83,7 @@ module.exports = {
       embeds: embeds,
       components: comps,
     });
+
+    await interaction.editReply({content:"You've picked your team's side! Now the game should be ready to go. Good luck!"});
   },
 };

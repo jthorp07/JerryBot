@@ -71,15 +71,15 @@ function parseGetQueueRecordsets(datum) {
     }
     // Index 1: Available players in queue AS { PlayerId, GuildId, DiscordDisplayName, ValorantDisplayName, RoleName, RoleEmote, RoleIcon }
     let availablePlayers = [];
-    for (let i = 0; i < datum[0].length; i++) {
+    for (let i = 0; i < datum[1].length; i++) {
         availablePlayers.push({
-            playerId: datum[0][i].PlayerId,
-            guildId: datum[0][i].GuildId,
-            discordDisplayName: datum[0][i].DiscordDisplayName,
-            valorantDisplayName: datum[0][i].ValorantDisplayName,
-            roleName: datum[0][i].RoleName,
-            roleEmote: datum[0][i].RoleEmote,
-            roleIcon: datum[0][i].RoleIcon,
+            playerId: datum[1][i].PlayerId,
+            guildId: datum[1][i].GuildId,
+            discordDisplayName: datum[1][i].DiscordDisplayName,
+            valorantDisplayName: datum[1][i].ValorantDisplayName,
+            roleName: datum[1][i].RoleName,
+            roleEmote: datum[1][i].RoleEmote,
+            roleIcon: datum[1][i].RoleIcon,
         });
     }
     // Index 2: Team One roster AS { PlayerId, GuildId, IsCaptain, DiscordDisplayName, ValorantDisplayName, RoleName, RoleEmote, RoleIcon }

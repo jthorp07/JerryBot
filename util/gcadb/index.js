@@ -372,6 +372,16 @@ class GCADB extends events_1.EventEmitter {
             return non_procedure_functions_1.default.deleteGuild(this.con, guildId, trans);
         });
     }
+    getDraftPickId(userId, queueId, transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return non_procedure_functions_1.default.getDraftPickId(this.con, userId, queueId, transaction);
+        });
+    }
+    getMapSidePickId(userId, queueId, transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return non_procedure_functions_1.default.getMapSidePickId(this.con, userId, queueId, transaction);
+        });
+    }
 }
 exports.GCADB = GCADB;
 function waitOneSecond() {
