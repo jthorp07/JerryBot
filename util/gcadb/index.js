@@ -272,6 +272,11 @@ class GCADB extends events_1.EventEmitter {
             return this.callProcedure(stored_procedures_1.default.getTriggerableChannels, [this.con, guildId, channelId, transaction]);
         });
     }
+    getUserValRank(userId, guildId, transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.callProcedure(stored_procedures_1.default.getUserValRank, [this.con, guildId, userId, transaction]);
+        });
+    }
     imManuallyStartingDraft(queueId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.callProcedure(stored_procedures_1.default.imManuallyStartingDraft, [this.con, queueId, transaction]);

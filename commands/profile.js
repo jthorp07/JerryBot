@@ -2,7 +2,7 @@ const {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const { profileEmbed } = require("../util/embeds");
 const { profileComps } = require("../util/components");
 
@@ -31,26 +31,24 @@ module.exports = {
       interaction.guildId
     );
 
-    if (result) {
+    if (result instanceof BaseDBError) {
+      result.log();
       trans.rollback();
       await interaction.editReply({ content: "Something went wrong" });
       return;
     }
 
-    const userObj = result.recordsets[0][0];
-
-    if (!userObj) {
-      await interaction.editReply({ content: "Something went wrong" });
-      return;
-    }
-
+    // TODO: This must change (Probably)
     const result2 = await db.getUserValRank(
       interaction.user.id,
-      interaction.guildId
+      interaction.guildId,
+      trans
     );
 
-    if (result2) {
+    if (result2 instanceof BaseDBError) {
+      result2.log();
       await interaction.editReply({ content: "Something went wrong" });
+      await trans.rollback();
       return;
     }
 
@@ -58,8 +56,7 @@ module.exports = {
 
     let comps = profileComps();
 
-    /**@type {string} */
-    let currentRank = result2.output.RoleName;
+    let currentRank = result2.roleName;
     if (currentRank) {
       let parts = currentRank.toLowerCase().split("_");
       for (let i = 0; i < parts.length; i++) {
@@ -71,14 +68,14 @@ module.exports = {
 
     const profile = profileEmbed(
       interaction.member.displayAvatarURL(),
-      userObj.GuildName,
-      userObj.DisplayName,
-      userObj.ValorantName,
-      result2.output.RoleIcon,
-      userObj.Ranked,
+      result.records.discordGuildName,
+      result.records.discordDisplayName,
+      result.records.valorantDisplayName,
+      result2.roleIcon || result2.roleEmote,
+      result.currentRank ? true : false,
       currentRank,
-      userObj.Username,
-      userObj.CanBeCaptain
+      result.records.discordUsername,
+      result.records.canBeCaptain
     );
     await interaction.editReply({
       embeds: profile,

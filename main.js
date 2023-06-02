@@ -121,7 +121,7 @@ client.on(Events.GuildCreate, async (guild) => {
 // Events to handle on users joining/moving channels
 client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
   try {
-    Handlers.onVoiceStateUpdate(oldState, newState, db.con);
+    Handlers.onVoiceStateUpdate(oldState, newState, db);
   } catch (err) {
     console.log(err);
     return;

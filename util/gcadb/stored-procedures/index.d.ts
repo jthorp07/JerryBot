@@ -15,6 +15,7 @@ import getProfile from "./get-profile";
 import getQueue from "./get-queue";
 import getRankRoles from "./get-rank-roles";
 import getTriggerableChannels from "./get-triggerable-channels";
+import getUserValRank from "./get-user-val-rank";
 import imManuallyStartingDraft from "./im-manually-starting-draft";
 import imStartingDraft from "./im-starting-draft copy";
 import joinQueue from "./join-queue";
@@ -46,6 +47,7 @@ declare const _default: {
     getQueue: typeof getQueue;
     getRankRoles: typeof getRankRoles;
     getTriggerableChannels: typeof getTriggerableChannels;
+    getUserValRank: typeof getUserValRank;
     imManuallyStartingDraft: typeof imManuallyStartingDraft;
     imStartingDraft: typeof imStartingDraft;
     joinQueue: typeof joinQueue;

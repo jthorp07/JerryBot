@@ -121,7 +121,7 @@ export declare class GCADB extends EventEmitter {
         canBeCaptain: boolean;
     }>;
     getProfile(userId: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
-        currentRank: ValorantRank;
+        currentRank: ValorantRank | null;
         records: GetProfileRecord;
     }>;
     getQueue(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
@@ -133,6 +133,11 @@ export declare class GCADB extends EventEmitter {
     }>;
     getRankRoles(guildId: string, transaction?: Transaction): Promise<BaseDBError | ValorantRankedRolesRecord[]>;
     getTriggerableChannels(guildId: string, channelId: string, transaction?: Transaction): Promise<boolean | BaseDBError>;
+    getUserValRank(userId: string, guildId: string, transaction?: Transaction): Promise<BaseDBError | {
+        roleEmote: string | null;
+        roleIcon: string | null;
+        roleName: ValorantRank | null;
+    }>;
     imManuallyStartingDraft(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         success: boolean;
         enforce: boolean;

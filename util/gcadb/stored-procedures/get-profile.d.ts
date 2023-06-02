@@ -2,7 +2,7 @@ import { ConnectionPool, Transaction } from "mssql";
 import BaseDBError from "../errors/base-db-error";
 import { ValorantRank } from "../enums";
 declare function getProfile(con: ConnectionPool, userId: string, guildId: string, trans?: Transaction): Promise<BaseDBError | {
-    currentRank: ValorantRank;
+    currentRank: ValorantRank | null;
     records: GetProfileRecord;
 }>;
 export default getProfile;

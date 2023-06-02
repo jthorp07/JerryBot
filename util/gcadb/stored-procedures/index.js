@@ -18,6 +18,7 @@ const get_profile_1 = require("./get-profile");
 const get_queue_1 = require("./get-queue");
 const get_rank_roles_1 = require("./get-rank-roles");
 const get_triggerable_channels_1 = require("./get-triggerable-channels");
+const get_user_val_rank_1 = require("./get-user-val-rank");
 const im_manually_starting_draft_1 = require("./im-manually-starting-draft");
 const im_starting_draft_copy_1 = require("./im-starting-draft copy");
 const join_queue_1 = require("./join-queue");
@@ -49,6 +50,7 @@ exports.default = {
     getQueue: get_queue_1.default,
     getRankRoles: get_rank_roles_1.default,
     getTriggerableChannels: get_triggerable_channels_1.default,
+    getUserValRank: get_user_val_rank_1.default,
     imManuallyStartingDraft: im_manually_starting_draft_1.default,
     imStartingDraft: im_starting_draft_copy_1.default,
     joinQueue: join_queue_1.default,

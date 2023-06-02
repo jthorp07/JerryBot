@@ -3,6 +3,7 @@ const {
   SlashCommandBuilder,
 } = require("discord.js");
 const { GCADB } = require("../util/gcadb");
+const { GCADBErrorCode } = require("../util/gcadb/enums");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -29,7 +30,8 @@ module.exports = {
       interaction.guild.name
     );
 
-    if (result) {
+    if (result && result.code !== GCADBErrorCode.ALREADY_EXIST_ERROR) { 
+      result.log();
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",
@@ -47,7 +49,7 @@ module.exports = {
       null
     );
 
-    if (result2.returnValue === 3) {
+    if (result2 && result2.code === GCADBErrorCode.ALREADY_EXIST_ERROR) {
       interaction.editReply({
         ephemeral: true,
         content: "You are already registered in this server!",
@@ -55,6 +57,7 @@ module.exports = {
       trans.rollback();
       return;
     } else if (result2) {
+      result2.log();
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong",
