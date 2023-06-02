@@ -32,10 +32,11 @@ module.exports = {
     }
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
+      trans.log();
       return;
     }
 
@@ -48,7 +49,7 @@ module.exports = {
     }
 
     if (!result.success) {
-      await interaction.editReply({content: "Another request is already starting this queue"});
+      await interaction.editReply({ content: "Another request is already starting this queue" });
       return;
     }
     // Grab queue data
@@ -56,7 +57,7 @@ module.exports = {
     const getQueueResult = await db.getQueue(queueId, trans);
 
     if (getQueueResult instanceof BaseDBError) {
-      result.log();
+      getQueueResult.log();
       trans.rollback();
       await interaction.editReply({ content: "Something went wrong" });
       return;
@@ -66,6 +67,7 @@ module.exports = {
       interaction.editReply({
         content: "There are not enough players to start a draft.",
       });
+      trans.rollback();
       return;
     }
 
@@ -79,42 +81,28 @@ module.exports = {
     let host = await interaction.guild.members.fetch(getQueueResult.hostId);
 
     // Grab rankedroles for guild
-
     const rankedRoles = await db.getRankRoles(interaction.guildId, trans);
     if (rankedRoles instanceof BaseDBError) {
-      rankRoleResult.log();
+      rankedRoles.log();
       trans.rollback();
       await interaction.editReply({ content: "Something went wrong" });
       return;
     }
 
-    if (rankedRoles) {
-      let enforce = result.enforce;
-
-      const newVals = await selectCaptains(
-        numCaptains,
-        playersAndCanBeCapt,
-        rankedRoles,
-        interaction,
-        queueId,
-        db,
-        trans,
-        enforce
-      );
-      playersAvailable = newVals.newAvailable;
-      teamOnePlayers = newVals.newTeamOne;
-      teamTwoPlayers = newVals.newTeamTwo;
-      queueStatus = newVals.newStatus;
-    } else if (result.returnValue !== -1) {
-      // Something bad happened
-      throw new Error("Database error");
-    } else {
-      await interaction.editReply({
-        content: "Another interaction is already trying to start this queue!",
-      });
-      await trans.rollback();
-      return;
-    }
+    const newVals = await selectCaptains(
+      numCaptains,
+      playersAndCanBeCapt,
+      rankedRoles,
+      interaction,
+      queueId,
+      db,
+      trans,
+      result.enforce
+    );
+    playersAvailable = newVals.newAvailable;
+    teamOnePlayers = newVals.newTeamOne;
+    teamTwoPlayers = newVals.newTeamTwo;
+    queueStatus = newVals.newStatus;
 
     // Commit transaction and respond on Discord
     await db.commitTransaction(trans);
@@ -143,10 +131,5 @@ module.exports = {
       embeds: embeds,
       components: comps,
     });
-
-    setTimeout(() => {
-      interaction.deleteReply();
-    }, 5000);
-    return;
   },
 };

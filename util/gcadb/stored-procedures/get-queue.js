@@ -37,7 +37,7 @@ function getQueue(con, queueId, trans) {
                     captainCount: result.output.NumCaptains,
                     playerCount: result.output.PlayerCount,
                     queueStatus: result.output.QueueStatus,
-                    hostId: result.output.hostId,
+                    hostId: result.output.HostId,
                     records: parseGetQueueRecordsets(result.recordsets)
                 };
             case 1:

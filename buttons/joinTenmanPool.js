@@ -8,7 +8,7 @@ const {
   beginOnErrMaker,
   commitOnErrMaker,
 } = require("../util/helpers");
-const { QueueState } = require("../util/gcadb/enums");
+const { QueueState, GCADBErrorCode } = require("../util/gcadb/enums");
 module.exports = {
   data: {
     customId: "join-tenman", // customId of buttons that will execute this command
@@ -38,7 +38,7 @@ module.exports = {
     }
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });

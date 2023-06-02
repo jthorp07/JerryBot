@@ -1,7 +1,8 @@
 const { ButtonInteraction, VoiceChannel } = require("discord.js");
-const { GCADB, BaseDBError } = require("../util/gcadb");
+const { GCADB, BaseDBError, DiscordChannelName } = require("../util/gcadb");
 const { TENMANS_QUEUE_POOLS } = require("../util");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
+const { GCADBErrorCode } = require("../util/gcadb/enums");
 
 module.exports = {
   data: {
@@ -36,7 +37,7 @@ module.exports = {
       return;
     }
 
-    const result = await db.endQueue(queueId);
+    const result = await db.endQueue(queueId, trans);
     if (result) {
       result.log();
       await interaction.editReply({content:"Something went wrong"});
@@ -44,10 +45,10 @@ module.exports = {
       return;
     }
 
-    const result2 = await db.getChannel(interaction.guildId, "TENMANLOBBY");
+    const result2 = await db.getChannel(interaction.guildId, DiscordChannelName.TENMANS_WAITING_AREA, trans);
     if (result2 instanceof BaseDBError) {
       result2.log();
-      if (result2.code != 2) {
+      if (result2.code != GCADBErrorCode.DOES_NOT_EXIST_ERROR) {
         await interaction.editReply({content:"Something went wrong"});
         await trans.rollback();
         return;

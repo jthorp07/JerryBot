@@ -50,7 +50,7 @@ class GCADB extends events_1.EventEmitter {
                     yield newCon.connect();
                     db.con = newCon;
                     db.reconnecting = false;
-                    console.log("Reconnected");
+                    console.log("  [GCADB]: Reconnected");
                 }));
                 return db;
             }
@@ -72,8 +72,13 @@ class GCADB extends events_1.EventEmitter {
      */
     beginTransaction(onError) {
         return __awaiter(this, void 0, void 0, function* () {
-            let trans = yield this.con.transaction().begin().catch((err) => __awaiter(this, void 0, void 0, function* () { return yield onError(err); }));
-            if (trans) {
+            let trans = yield this.con.transaction().begin().catch((err) => __awaiter(this, void 0, void 0, function* () {
+                if (onError) {
+                    yield onError(err);
+                }
+                return new base_db_error_1.BaseDBError("An error occurred creating a transaction", enums_1.GCADBErrorCode.TRANSACTION_ERROR);
+            }));
+            if (trans instanceof mssql_1.Transaction) {
                 // DBMS error handling
                 let rolledBack = false;
                 trans.on("rollback", (aborted) => {
@@ -111,7 +116,8 @@ class GCADB extends events_1.EventEmitter {
         });
     }
     /**
-     * Wraps a stored procedure call
+     * Wraps a stored procedure call and handles retries in the event
+     * of connectivity errors
      *
      * @param proc Procedure to be called
      * @param args Arguments to give the procedure
@@ -122,20 +128,20 @@ class GCADB extends events_1.EventEmitter {
             let attempt = 0;
             while (this.reconnecting && attempt <= 10) {
                 if (attempt > 0)
-                    console.log("retrying...");
+                    console.log("  [GCADB]: Retrying...");
                 yield waitOneSecond();
                 attempt++;
             }
             while (attempt <= 10) {
                 if (attempt > 0)
-                    console.log("retrying...");
+                    console.log("  [GCADB]: Retrying...");
                 try {
                     return yield proc.apply(this, args);
                 }
                 catch (err) {
                     console.log(err);
                     if (!this.reconnecting) {
-                        console.log("Reconnect triggered");
+                        console.log("  [GCADB]: Reconnecting...");
                         this.reconnecting = true;
                         this.emit("reconnect");
                         yield waitOneSecond();
@@ -192,14 +198,13 @@ class GCADB extends events_1.EventEmitter {
      *
      * Returns void on success; BaseDBError on failure
      *
-     * @param con ConnectionPool connected to the GCA Database
      * @param guildId Discord ID of target guild
      * @param userId Discord ID of target Discord user
      * @param isOwner True if target Discord user is the owner of the target Guild
      * @param username Username of target Discord user
      * @param guildDisplayName Display name of target Discord user in target guild
      * @param valorantRankRoleName Likely to be deprecated
-     * @param trans Database transaction to run this request against
+     * @param transaction Database transaction to run this request against
      * @returns Void if successful, BaseDBError if failed
      */
     createGuildMember(guildId, userId, isOwner, username, guildDisplayName, valorantRankRoleName, transaction) {
@@ -260,6 +265,11 @@ class GCADB extends events_1.EventEmitter {
     getRankRoles(guildId, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.callProcedure(stored_procedures_1.default.getRankRoles, [this.con, guildId, transaction]);
+        });
+    }
+    getTriggerableChannels(guildId, channelId, transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.callProcedure(stored_procedures_1.default.getTriggerableChannels, [this.con, guildId, channelId, transaction]);
         });
     }
     imManuallyStartingDraft(queueId, transaction) {

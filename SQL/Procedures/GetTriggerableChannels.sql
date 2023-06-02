@@ -1,6 +1,7 @@
-CREATE OR ALTER PROCEDURE GetTriggerableChannels(
+ALTER PROCEDURE GetTriggerableChannels(
     @GuildId DiscordSnowflake,
-    @ChannelId DiscordSnowflake
+    @ChannelId DiscordSnowflake,
+    @IsTriggerable BIT OUTPUT
 ) AS BEGIN
 
     -- Validate Arg --
@@ -10,7 +11,12 @@ CREATE OR ALTER PROCEDURE GetTriggerableChannels(
     END
 
     -- Do it --
-    SELECT [Id] FROM Channel WHERE GuildId=@GuildId AND [Id]=@ChannelId AND Triggerable=1
+    SELECT @IsTriggerable=0
+    IF EXISTS 
+    (SELECT [Id] FROM Channel WHERE GuildId=@GuildId AND [Id]=@ChannelId AND Triggerable=1)
+    BEGIN
+        SELECT @IsTriggerable=1
+    END
     RETURN 0
 
 END

@@ -43,7 +43,7 @@ export declare class GCADB extends EventEmitter {
      * @param onError Error handler in case of an error when beginning the transaction
      * @returns
      */
-    beginTransaction(onError: (error: Error) => Promise<void>): Promise<void | Transaction>;
+    beginTransaction(onError?: (error: Error) => Promise<void>): Promise<Transaction | BaseDBError>;
     /**
      * Commits a transaction to the database
      *
@@ -55,7 +55,8 @@ export declare class GCADB extends EventEmitter {
      */
     closeConnection(): Promise<void>;
     /**
-     * Wraps a stored procedure call
+     * Wraps a stored procedure call and handles retries in the event
+     * of connectivity errors
      *
      * @param proc Procedure to be called
      * @param args Arguments to give the procedure
@@ -90,14 +91,13 @@ export declare class GCADB extends EventEmitter {
      *
      * Returns void on success; BaseDBError on failure
      *
-     * @param con ConnectionPool connected to the GCA Database
      * @param guildId Discord ID of target guild
      * @param userId Discord ID of target Discord user
      * @param isOwner True if target Discord user is the owner of the target Guild
      * @param username Username of target Discord user
      * @param guildDisplayName Display name of target Discord user in target guild
      * @param valorantRankRoleName Likely to be deprecated
-     * @param trans Database transaction to run this request against
+     * @param transaction Database transaction to run this request against
      * @returns Void if successful, BaseDBError if failed
      */
     createGuildMember(guildId: string, userId: string, isOwner: boolean, username: string, guildDisplayName: string, valorantRankRoleName: ValorantRank | null, transaction?: Transaction): Promise<BaseDBError>;
@@ -132,6 +132,7 @@ export declare class GCADB extends EventEmitter {
         records: TenmansClassicRecords;
     }>;
     getRankRoles(guildId: string, transaction?: Transaction): Promise<BaseDBError | ValorantRankedRolesRecord[]>;
+    getTriggerableChannels(guildId: string, channelId: string, transaction?: Transaction): Promise<boolean | BaseDBError>;
     imManuallyStartingDraft(queueId: number, transaction?: Transaction): Promise<BaseDBError | {
         success: boolean;
         enforce: boolean;

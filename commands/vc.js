@@ -4,7 +4,7 @@ const {
   ChannelType,
   VoiceChannel,
 } = require("discord.js");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError, DiscordChannelName, DiscordChannelType } = require("../util/gcadb");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,16 +46,16 @@ module.exports = {
 
     // Begin a database transaction to store newly made channel's information
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
       return;
     }
 
-    const result = await db.getChannel(interaction.guildId, "VCCAT");
+    const result = await db.getChannel(interaction.guildId, DiscordChannelName.PRIVATE_VC_CATEGORY);
 
-    let parentId = result.output.ChannelId;
+    let parentId = result.channelId;
     try {
       channel.edit(
         (await channel.setUserLimit(cap ? cap : 99)).setParent(parentId)
@@ -76,14 +76,16 @@ module.exports = {
       interaction.guildId,
       channel.id,
       channel.name,
-      "voice",
-      1
+      DiscordChannelType.VOICE,
+      true,
+      trans
     );
 
     if (result2) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
+      result2.log();
       trans.rollback();
       return;
     }

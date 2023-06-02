@@ -10,6 +10,7 @@ var GCADBErrorCode;
     GCADBErrorCode[GCADBErrorCode["DATA_CONSTRAINT_ERROR"] = 4] = "DATA_CONSTRAINT_ERROR";
     GCADBErrorCode[GCADBErrorCode["NULL_ARG_CONDITIONAL_ERROR"] = 5] = "NULL_ARG_CONDITIONAL_ERROR";
     // Driver or database error codes
+    GCADBErrorCode[GCADBErrorCode["TRANSACTION_ERROR"] = -95] = "TRANSACTION_ERROR";
     GCADBErrorCode[GCADBErrorCode["NOT_CONENCTED_ERROR"] = -96] = "NOT_CONENCTED_ERROR";
     GCADBErrorCode[GCADBErrorCode["UNKNOWN_ERROR"] = -99] = "UNKNOWN_ERROR";
 })(GCADBErrorCode = exports.GCADBErrorCode || (exports.GCADBErrorCode = {}));

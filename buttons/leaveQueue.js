@@ -24,7 +24,11 @@ module.exports = {
 
     let queueId = parseInt(idArgs[1]);
 
-    let trans = await db.beginTransaction();
+    let trans = await db.beginTransaction(async () => {
+      console.log("wtf")
+      await interaction.editReply({content:"Something went wrong creating a transaction"});
+      return;
+    });
     if (!trans) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
@@ -34,13 +38,15 @@ module.exports = {
 
     const result = await db.leaveTenmans(
       queueId,
-      interaction.user.id,
       interaction.guildId,
+      interaction.user.id,
       trans
     );
 
+    console.log('  [DEBUG]: End leaveTenmans()')
+
     if (result instanceof BaseDBError) {
-      trans.rollback();
+      await trans.rollback();
       interaction.editReply({
         ephemeral: true,
         content: "Something went wrong o-o",
@@ -49,10 +55,14 @@ module.exports = {
     }
 
     if (result.wasCaptain) {
+
       const replaceCaptainResult = await db.replaceCaptain(
         queueId,
-        result.queuePool
+        result.queuePool,
+        trans
       );
+
+      console.log('  [DEBUG]: End replaceCaptain()')
 
       if (replaceCaptainResult) {
         trans.rollback();
@@ -64,7 +74,10 @@ module.exports = {
       }
     }
 
-    const queueResult = await db.getQueue(queueId);
+    console.log(`  [DEBUG]: QueueId: ${queueId}`)
+
+    const queueResult = await db.getQueue(queueId, trans);
+    console.log('  [DEBUG]: End getQueue()')
     if (queueResult instanceof BaseDBError) {
       trans.rollback();
       interaction.editReply({
@@ -75,10 +88,9 @@ module.exports = {
       return;
     }
     // Grab queue data
-
-    trans.commit(commitOnErrMaker(interaction));
-
     await db.commitTransaction(trans);
+
+    console.log('  [DEBUG]: End transaction')
 
     const queueStatus = queueResult.queueStatus;
 
@@ -86,13 +98,11 @@ module.exports = {
     let teamOnePlayers = queueResult.records.teamOne;
     let teamTwoPlayers = queueResult.records.teamTwo;
     let host = await interaction.guild.members.fetch(queueResult.hostId);
-
     if (!host) {
       await interaction.editReply({
         content:
-          "Something went wrong and the interaction could not be completed",
+          "The queue has been deleted on the database, but the embed could not be updated",
       });
-      await trans.rollback();
       return;
     }
 

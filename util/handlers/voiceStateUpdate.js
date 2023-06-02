@@ -1,83 +1,44 @@
 const { VoiceState } = require('discord.js');
 const { ConnectionPool } = require('mssql');
-const { beginOnErrMaker, commitOnErrMaker } = require("../helpers");
+const { GCADB, BaseDBError } = require('../gcadb');
 
 /**
  * 
  * @param {VoiceState} oldState 
- * @param {VoiceState} newState 
- * @param {ConnectionPool} con 
+ * @param {GCADB} db
  */
-async function tenMans(oldState, newState, con) {
-
-    /**
-     * 10 MANS
-     * 
-     * 
-     * 
-     */
-
-}
-
-/**
- * 
- * @param {VoiceState} oldState 
- * @param {ConnectionPool} con 
- */
-async function checkForDeletion(oldState, con) {
+async function checkForDeletion(oldState, db) {
 
     let guildId = oldState.guild.id;
     let channelId = oldState.channelId;
 
-    let trans = con.transaction();
-    await trans.begin(async (err) => {
+    let trans = await db.beginTransaction();
 
-        if (err) {
-            console.log(err);
-            return;
-        }
-
-        let rolledBack = false;
-        trans.on("rollback", (aborted) => {
-            if (aborted) {
-                console.log("This rollback was triggered by SQL server");
-            }
-            rolledBack = true;
-        });
-
-    });
-
-    let result = await con.request(trans)
-        .input('GuildId', guildId)
-        .input('ChannelId', channelId)
-        .execute('GetTriggerableChannels');
+    let triggerable = await db.getTriggerableChannels(guildId, channelId, trans);
+    
+    if (triggerable instanceof BaseDBError) {
+        triggerable.log();
+        await trans.rollback();
+        console.log('  [Bot]: Failed to check channel for triggerability');
+        return;
+    }
 
     // Channel is triggerable and empty - delete
-    if (result.recordset.length && oldState.channel.members.size === 0) {
+    if (triggerable && oldState.channel.members.size === 0) {
 
         // QUERY: Delete channel in DB
-        result = await con.request(trans)
-            .input('GuildId', guildId)
-            .input('ChannelId', channelId)
-            .execute('DeleteChannelById');
-
-        // ERROR Handling
-        if (result.returnValue != 0) {
-            console.log('Database issue on query \'DeleteChannelById\' in voiceStateUpdate.js');
-            trans.rollback();
+        let deleteChannelResult = await db.deleteChannelById(guildId, channelId, trans);
+        if (deleteChannelById) {
+            deleteChannelResult.log();
+            await trans.rollback();
+            console.log('  [Bot]: Failed to delete channel on trigger');
             return;
         }
+
         oldState.channel.delete();
     }
 
-    // TODO: Unidentified non-critical bug causing error callback to trigger
-    trans.commit(async (err) => {
-        if (err) {
-            console.log(err.message);
-            return;
-        }
-    });
-
+    await db.commitTransaction(trans);
 }
 
 
@@ -90,16 +51,16 @@ module.exports = {
      * 
      * @param {VoiceState} oldState 
      * @param {VoiceState} newState 
-     * @param {ConnectionPool} con 
+     * @param {GCADB} db 
      */
-    async onVoiceStateUpdate(oldState, newState, con) {
+    async onVoiceStateUpdate(oldState, newState, db) {
 
         let oldChannelId = oldState.channelId;
         let newChannelId = newState.channelId;
 
         // Check if oldState channel triggers a delete
         if (oldChannelId !== null) {
-            await checkForDeletion(oldState, con);
+            await checkForDeletion(oldState, db);
         }
 
         // Check if newState chanel is 10 mans queue
