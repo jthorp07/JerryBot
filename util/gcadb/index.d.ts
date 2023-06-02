@@ -181,7 +181,7 @@ export declare class GCADB extends EventEmitter {
     setRole(guildId: string, roleId: string, roleName: ValorantRank | DiscordMemberRole | DiscordStaffRole, orderBy: number, roleIcon: string, roleEmote: string, transaction?: Transaction): Promise<BaseDBError>;
     setValName(valName: string, userId: string, guildId: string, transaction?: Transaction): Promise<BaseDBError>;
     setValorantRank(guildId: string, userId: string, rank: ValorantRank, transaction?: Transaction): Promise<BaseDBError>;
-    updateDiscordProfile(guildId: string, userId: string, username: string, isOwner: boolean, guildDisplayName: string, currentRank: ValorantRank, hasRank: boolean, transaction: Transaction): Promise<BaseDBError>;
+    updateDiscordProfile(guildId: string, userId: string, username: string, isOwner: boolean, guildDisplayName: string, currentRank: ValorantRank | null, transaction: Transaction): Promise<BaseDBError>;
     updateValorantProfile(guildId: string, userId: string, valorantDisplayName: string, transaction?: Transaction): Promise<BaseDBError>;
     /**
      * Deletes a guild from the GCA Database. A guild represents

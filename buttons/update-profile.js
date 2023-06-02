@@ -1,10 +1,8 @@
 const { ButtonInteraction } = require("discord.js");
 const {
   getRoleIcon,
-  beginOnErrMaker,
-  commitOnErrMaker,
 } = require("../util/helpers");
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 
 module.exports = {
   data: {
@@ -13,25 +11,26 @@ module.exports = {
   },
   /**
    *
-   * @param {ButtonInteraction} interaction
-   * @param {GCADB} db
-   * @param {string[]} idArgs
+   * @param {ButtonInteraction} interaction Interaction received by the bot
+   * @param {GCADB} db Database connection provided by the GCADB package
+   * @param {string[]} idArgs If applicable, extra arguments that would be provided through the unique ID of the interaction's source
    */
   async execute(interaction, db, idArgs) {
     //TODO: Implement button command
     await interaction.deferReply({ ephemeral: true });
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (!trans || trans instanceof BaseDBError) {
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
       return;
     }
 
-    const result = await db.getRankRoles(interaction.guildId);
+    const rankedRoles = await db.getRankRoles(interaction.guildId, trans);
 
-    if (result) {
+    if (rankedRoles instanceof BaseDBError) {
+      rankedRoles.log();
       trans.rollback();
       await interaction.editReply({
         content: "There was an error fetching your profile",
@@ -39,20 +38,20 @@ module.exports = {
       return;
     }
 
-    let rankedRoles = result.recordset;
     let roleIcon = getRoleIcon(rankedRoles, interaction.member);
 
     const result2 = await db.updateDiscordProfile(
-      interaction.user.id,
       interaction.guildId,
+      interaction.user.id,
       interaction.user.username,
-      interaction.member.displayName,
       interaction.guild.ownerId == interaction.member.id,
+      interaction.member.displayName,
       roleIcon ? roleIcon.rank : null,
-      roleIcon ? true : false
+      trans
     );
 
     if (result2) {
+      result2.log();
       trans.rollback();
       await interaction.editReply({
         content: "There was an error fetching your profile",

@@ -13,11 +13,11 @@ const errors_1 = require("../errors");
 const base_db_error_1 = require("../errors/base-db-error");
 const _1 = require(".");
 const enums_1 = require("../enums");
-function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, trans) {
+function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisplayName, currentRank, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
             return new errors_1.NotConnectedError("UpdateDiscordProfile");
-        if (!guildId || !userId || !username || !isOwner || !guildDisplayName)
+        if (!guildId || !userId || !username || isOwner == null || !guildDisplayName)
             return new errors_1.NullArgError(["GuildId", "UserId", "Username", "IsOwner", "GuildDisplayName"], "UpdateDiscordProfile");
         let req = (0, _1.initReq)(con, trans);
         if (req instanceof base_db_error_1.default) {
@@ -28,7 +28,7 @@ function updateDiscordProfile(con, guildId, userId, username, isOwner, guildDisp
             .input("Username", username)
             .input("IsOwner", isOwner)
             .input("GuildDisplayName", guildDisplayName)
-            .input("CurrentRank", currentRank || null)
+            .input("CurrentRank", currentRank)
             .input("HasRank", currentRank ? true : false)
             .execute("UpdateDiscordProfile");
         switch (result.returnValue) {

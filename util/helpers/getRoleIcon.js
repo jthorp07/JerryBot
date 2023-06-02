@@ -1,5 +1,4 @@
 const { GuildMember } = require("discord.js");
-const { IRecordSet } = require("mssql");
 
 module.exports = {
   /**
@@ -10,22 +9,22 @@ module.exports = {
    * Returns the icon of the user's rank role
    * in string format, or the role's name if no icon exists
    *
-   * @param {IRecordSet} rankedRoles
+   * @param {import("../gcadb/stored-procedures/get-rank-roles").ValorantRankedRolesRecord[]} rankedRoles
    * @param {GuildMember} user
    */
   getRoleIcon(rankedRoles, user) {
+
+
     for (let entry of rankedRoles) {
       for (let item of user.roles.cache) {
         let roleId = item[1].id;
-        if (roleId == entry.RoleId) {
+        if (roleId == entry.roleId) {
           return { 
             icon: item[1].iconURL()
               ? item[1].iconURL()
-              : null,
-            /** @type {string} */
-            rank: entry.RoleName,
-            emote: entry.RoleEmote,
-            icon: entry.RoleIcon
+              : entry.roleIcon,
+            rank: entry.roleName,
+            emote: entry.roleEmote,
           };
         }
       }

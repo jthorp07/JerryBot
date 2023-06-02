@@ -17,7 +17,7 @@ function setCanBeCaptain(con, userId, guildId, canBeCaptain, trans) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!con.connected)
             return new errors_1.NotConnectedError("SetCanBeCaptain");
-        if (!userId || !guildId || !canBeCaptain)
+        if (!userId || !guildId || canBeCaptain == null)
             return new errors_1.NullArgError(["UserId", "GuildId", "CanBeCaptain"], "SetCanBeCaptain");
         let req = (0, _1.initReq)(con, trans);
         if (req instanceof base_db_error_1.default) {

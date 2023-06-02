@@ -342,9 +342,9 @@ class GCADB extends events_1.EventEmitter {
             return this.callProcedure(stored_procedures_1.default.setValorantRank, [this.con, guildId, userId, rank, transaction]);
         });
     }
-    updateDiscordProfile(guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, transaction) {
+    updateDiscordProfile(guildId, userId, username, isOwner, guildDisplayName, currentRank, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.callProcedure(stored_procedures_1.default.updateDiscordProfile, [this.con, guildId, userId, username, isOwner, guildDisplayName, currentRank, hasRank, transaction]);
+            return this.callProcedure(stored_procedures_1.default.updateDiscordProfile, [this.con, guildId, userId, username, isOwner, guildDisplayName, currentRank, transaction]);
         });
     }
     updateValorantProfile(guildId, userId, valorantDisplayName, transaction) {

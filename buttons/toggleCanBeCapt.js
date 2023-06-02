@@ -1,4 +1,4 @@
-const { GCADB } = require("../util/gcadb");
+const { GCADB, BaseDBError } = require("../util/gcadb");
 const { ButtonInteraction } = require("discord.js");
 const { beginOnErrMaker, commitOnErrMaker } = require("../util/helpers");
 const { prefsEmbed } = require("../util/embeds");
@@ -20,7 +20,8 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     let trans = await db.beginTransaction();
-    if (!trans) {
+    if (trans instanceof BaseDBError) {
+      trans.log();
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
@@ -30,11 +31,12 @@ module.exports = {
     const result = await db.setCanBeCaptain(
       interaction.user.id,
       interaction.guildId,
-      !canBeCapt
+      !canBeCapt,
+      trans
     );
 
     if (result) {
-      console.log("Invalid proc");
+      result.log();
       await interaction.editReply({
         content:
           "Something went wrong and the interaction could not be completed",
