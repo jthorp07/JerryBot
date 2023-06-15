@@ -1,5 +1,6 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, GuildMember } = require('discord.js');
-const { ConnectionPool, pool } = require('mssql');
+const { ConnectionPool } = require('mssql');
+const { GCADB } = require('../util/gcadb');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,9 +16,9 @@ module.exports = {
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
-     * @param {ConnectionPool} con 
+     * @param {GCADB} db 
      */
-    async execute(interaction, con) {
+    async execute(interaction, db) {
 
         await interaction.deferReply();
         let raffleType = interaction.options.getString('type');
@@ -95,20 +96,12 @@ async function freeCoachingRaffle(interaction) {
         let found = 0b0000;
         for (let role of myRoles) {
             if (role[1].id == raffleRoles.t1) {
-                console.log("T1");
                 found = found | 0b0001;
-                console.log(found)
             } else if (role[1].id == raffleRoles.t2) {
-                console.log("T2");
                 found = found | 0b0010;
-                console.log(found)
             } else if (role[1].id == raffleRoles.t3) {
-                console.log("T3");
                 found = found | 0b0100;
-                console.log(found)
             } else if (role[1].id == raffleRoles.coach) {
-                console.log("coach");
-                console.log(found)
                 found = found | 0b1000;
             }
             // User has all roles
@@ -118,33 +111,25 @@ async function freeCoachingRaffle(interaction) {
         // This is the most fucked up bitwise arithmetic I've ever laid my eyes on
         if ((found & 0b1000) === 0b1000) {
             coaches.push(member);
-            console.log("User is coach");
-            console.log(found)
             continue;
         }
         if ((found & 0b0100) === 0b0100) {
 
             t3s.push(member);
-            console.log("User is T3");
-            console.log(found)
             continue;
         }
         if ((found & 0b0010) === 0b0010) {
             t2s.push(member);
-            console.log("User is T2");
-            console.log(found)
             continue;
         }
         if ((found & 0b0001) === 0b0001) {
             t1s.push(member);
-            console.log("User is T1");
-            console.log(found)
             continue;
         }
         serverMembers.push(member);
     }
 
-    console.log(`Coaches: ${coaches.length}\nT3s: ${t3s.length}\nT2s: ${t2s.length}\nT1s: ${t1s.length}\n`);
+    console.log(`  [Bot]: Raffle Info\n    Coaches: ${coaches.length}\n    T3s: ${t3s.length}\n    T2s: ${t2s.length}\n    T1s: ${t1s.length}`);
 
     // Build raffle pool and assign weightings with multiple entries
     /** @type {number[]} */
@@ -172,19 +157,19 @@ async function freeCoachingRaffle(interaction) {
         switch (rafflePool[index]) {
             case 0:
                 winnerPool = serverMembers;
-                console.log("Regular member win");
+                console.log("  [Raffle]: Regular member win");
                 break;
             case 1:
                 winnerPool = t1s;
-                console.log("T1 member win");
+                console.log("  [Raffle]: T1 member win");
                 break;
             case 2:
                 winnerPool = t2s;
-                console.log("T2 member win");
+                console.log("  [Raffle]: T2 member win");
                 break;
             case 3:
                 winnerPool = t3s;
-                console.log("T3 member win");
+                console.log("  [Raffle]: T3 member win");
                 break;
         }
         let poolSize = winnerPool.length;
