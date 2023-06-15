@@ -1,14 +1,11 @@
 const { ButtonInteraction, GuildMember } = require("discord.js");
 const { GCADB, BaseDBError } = require("../util/gcadb");
-const { QUEUE_STATES } = require("../util/");
 const {
   tenMansClassicNextEmbed,
   tenMansClassicNextComps,
   selectCaptains,
-  beginOnErrMaker,
-  commitOnErrMaker,
 } = require("../util/helpers");
-const { QueueState, GCADBErrorCode } = require("../util/gcadb/enums");
+const { QueueState } = require("../util/gcadb/enums");
 module.exports = {
   data: {
     customId: "join-tenman", // customId of buttons that will execute this command
@@ -39,6 +36,7 @@ module.exports = {
 
     let trans = await db.beginTransaction();
     if (trans instanceof BaseDBError) {
+      trans.log();
       await interaction.editReply({
         content: "Something went wrong and the command could not be completed.",
       });
