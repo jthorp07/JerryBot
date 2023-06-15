@@ -8,11 +8,10 @@ const {
 } = require("./util");
 const { fork } = require("child_process");
 const process = require("process");
-const { ConnectionPool } = require("mssql");
 const { getConnection, GCADB } = require("./util/gcadb");
 
 require("dotenv").config();
-const TOKEN = process.env.TOKEN;
+const TOKEN = process.env.PROD_TOKEN;
 // const SQL = {
 //   user: process.env.MSSQL_USER,
 //   password: process.env.MSSQL_PASSWORD,
@@ -106,26 +105,6 @@ const knownInteractions = {
 client.on(Events.ClientReady, () => {
   client.user.setActivity('over Gamer\'s Coaching Academy', {type: ActivityType.Watching});
   console.log("Bot Ready.");
-});
-
-// On joining a new Discord server
-client.on(Events.GuildCreate, async (guild) => {
-  try {
-    Handlers.onGuildCreate(guild, db.con);
-  } catch (err) {
-    console.log(err);
-    return;
-  }
-});
-
-// Events to handle on users joining/moving channels
-client.on(Events.VoiceStateUpdate, async (oldState, newState) => {
-  try {
-    Handlers.onVoiceStateUpdate(oldState, newState, db);
-  } catch (err) {
-    console.log(err);
-    return;
-  }
 });
 
 // Command Handling

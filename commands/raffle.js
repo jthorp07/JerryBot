@@ -1,5 +1,4 @@
 const { ChatInputCommandInteraction, SlashCommandBuilder, GuildMember } = require('discord.js');
-const { ConnectionPool } = require('mssql');
 const { GCADB } = require('../util/gcadb');
 
 module.exports = {
