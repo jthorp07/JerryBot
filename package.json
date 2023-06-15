@@ -6,5 +6,8 @@
     "dotenv": "^16.0.3",
     "mssql": "^9.0.1",
     "mysql2": "^2.3.3"
+  },
+  "scripts": {
+    "start": "node main.js"
   }
 }

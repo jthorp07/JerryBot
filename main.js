@@ -88,15 +88,13 @@ getConnection(SQL).then(newDb => {
 
 // Read commands and interactable components into the bot's main memory
 client = readCommands(client);
-const btnCommands = readButtons();
-const smCommands = readStringSelectMenus();
-const modalInteractions = readModals();
+
 
 const knownInteractions = {
   commands: client.commands,
-  stringSelects: smCommands,
-  buttons: btnCommands,
-  modals: modalInteractions,
+  stringSelects: null,
+  buttons: null,
+  modals: null,
 };
 
 /**
