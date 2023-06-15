@@ -28,6 +28,10 @@ module.exports = {
                 admins.push(process.env.JACK);
                 admins.push(process.env.UNI);
                 admins.push(process.env.ANIMUZ);
+                admins.push(process.env.WENDLER);
+                admins.push(process.env.WORTHY);
+                admins.push(process.env.MANUAL);
+                admins.push(process.env.PEPPA);
                 
                 for (let admin of admins) {
                     if (user.id == admin) {
