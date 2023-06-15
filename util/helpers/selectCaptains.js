@@ -1,7 +1,5 @@
 const { ButtonInteraction, ChannelType } = require("discord.js");
-const {
-  Transaction,
-} = require("mssql");
+const { Transaction } = require("mssql");
 const {
   GCADB,
   DiscordChannelName,
