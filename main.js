@@ -73,17 +73,8 @@ var client = new Client({ intents: intent_flags });
 */
 console.log("[Startup]: Connecting to database");
 /**@type {GCADB} */
-let db;
-getConnection(SQL).then(newDb => {
+let db = null
 
-  if (!newDb) {
-    console.log("[Startup]: FATAL: Database connection failed");
-    return;
-  }
-
-  db = newDb;
-  console.log("[Startup]: Connection established");
-});
 
 
 // Read commands and interactable components into the bot's main memory
