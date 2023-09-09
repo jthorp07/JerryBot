@@ -93,7 +93,7 @@ const knownInteractions = {
  */
 client.on(Events.ClientReady, () => {
   client.user.setActivity('over Gamer\'s Coaching Academy', {type: ActivityType.Watching});
-  console.log("Bot Ready.");
+  console.log("  [Bot]: Ready.");
 });
 
 // Command Handling
