@@ -12,37 +12,22 @@ const { getConnection, GCADB } = require("./util/gcadb");
 
 require("dotenv").config();
 const TOKEN = process.env.PROD_TOKEN;
+
 // const SQL = {
-//   user: process.env.MSSQL_USER,
-//   password: process.env.MSSQL_PASSWORD,
-//   database: process.env.MSSQL_DATABASE,
-//   server: process.env.MSSQL_SERVER,
+//   user: process.env.PROD_MSSQL_USER,
+//   password: process.env.PROD_MSSQL_PASSWORD,
+//   database: process.env.PROD_MSSQL_DATABASE,
+//   server: process.env.PROD_MSSQL_SERVER,
 //   pool: {
 //     max: 10,
-//     min: 0,
-//     idleTimeoutMillis: 30000,
+//     min: 2,
+//     idleTimeoutMillis: Number.MAX_SAFE_INTEGER,
 //   },
 //   options: {
 //     encrypt: true,
 //     trustServerCertificate: true,
 //   },
 // };
-
-const SQL = {
-  user: process.env.PROD_MSSQL_USER,
-  password: process.env.PROD_MSSQL_PASSWORD,
-  database: process.env.PROD_MSSQL_DATABASE,
-  server: process.env.PROD_MSSQL_SERVER,
-  pool: {
-    max: 10,
-    min: 2,
-    idleTimeoutMillis: Number.MAX_SAFE_INTEGER,
-  },
-  options: {
-    encrypt: true,
-    trustServerCertificate: true,
-  },
-};
 
 /*
  *	Launch a second process executing deploy-commands.js to ensure all
