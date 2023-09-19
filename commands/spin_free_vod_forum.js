@@ -19,6 +19,21 @@ const freeVodReviewSpin = async (interaction) => {
     if (!channel || !channel.type === ChannelType.GuildForum) return;
     let allThreads = await channel.threads.fetch();
 
+    let approvedTagId;
+    let deniedTagId;
+    let reviewedTagId;
+
+    channel.availableTags.forEach(tag => {
+        if (tag.name.toLowerCase() == "approved") approvedTagId = tag.id;
+        if (tag.name.toLowerCase() == "denied") deniedTagId = tag.id;
+        if (tag.name.toLowerCase() == "reviewed") reviewedTagId = tag.id;
+    });
+
+    if (!approvedTagId || !reviewedTagId || !deniedTagId) {
+        await interaction.editReply({content:"This forum is missing one or multiple of the required tags:\n  \"approved\"\n  \"denied\"\n  \"reviewed\""});
+        return;
+    }
+
     let buf = [];
 
     for (let i = 0; i < allThreads.threads.size; i++) {
@@ -26,7 +41,7 @@ const freeVodReviewSpin = async (interaction) => {
         let thread = allThreads.threads.at(i);
         if (!thread) return;
 
-        if (thread.appliedTags.includes("1148805307871535205") && !thread.appliedTags.includes("1150214828670070834")) {
+        if (thread.appliedTags.includes(approvedTagId) && !thread.appliedTags.includes(reviewedTagId)) {
             let owner = (await thread.fetchOwner())?.guildMember;
             if (!owner) continue;
 
@@ -68,7 +83,6 @@ const freeVodReviewSpin = async (interaction) => {
     let winningMessage = buf[winner].clip;
     let newContent = `The winner is: <@${buf[winner].ownerId}>`;
 
-    console.log(JSON.stringify(winningMessage));
     let coachChannel = await interaction.guild.channels.fetch("1108357928655781888");
     if (!coachChannel || !coachChannel.isTextBased()) {
 
@@ -86,15 +100,27 @@ const freeVodReviewSpin = async (interaction) => {
 const tierThreeVodSpin = async (interaction) => {
 
 
-    await interaction.editReply({content:'Tier 3 Vod Forum is Not Yet Implemented'});
-    return;
+    // await interaction.editReply({content:'Tier 3 Vod Forum is Not Yet Implemented'});
+    // return;
     /** @type {ForumChannel} */
     let channel = await interaction.client.channels.fetch(TIER_3_REVIEW_FORUM.channelId);
     if (!channel || !channel.type === ChannelType.GuildForum) return;
     let allThreads = await channel.threads.fetch();
 
-    console.log(JSON.stringify(channel.availableTags));
-    console.log(channel.name);
+    let approvedTagId;
+    let deniedTagId;
+    let reviewedTagId;
+
+    channel.availableTags.forEach(tag => {
+        if (tag.name.toLowerCase() == "approved") approvedTagId = tag.id;
+        if (tag.name.toLowerCase() == "denied") deniedTagId = tag.id;
+        if (tag.name.toLowerCase() == "reviewed") reviewedTagId = tag.id;
+    });
+
+    if (!approvedTagId || !reviewedTagId || !deniedTagId) {
+        await interaction.editReply({content:"This forum is missing one or multiple of the required tags:\n  \"approved\"\n  \"denied\"\n  \"reviewed\""});
+        return;
+    }
 
     let buf = [];
 
@@ -103,7 +129,7 @@ const tierThreeVodSpin = async (interaction) => {
         let thread = allThreads.threads.at(i);
         if (!thread) return;
 
-        if (thread.appliedTags.includes("1148805307871535205") && !thread.appliedTags.includes("1150214828670070834")) {
+        if (thread.appliedTags.includes(approvedTagId) && !thread.appliedTags.includes(reviewedTagId)) {
             let owner = (await thread.fetchOwner())?.guildMember;
             if (!owner) continue;
 
