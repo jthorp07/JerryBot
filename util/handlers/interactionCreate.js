@@ -2,8 +2,6 @@ const { checkPermissions } = require('../permission');
 const { Interaction, ChatInputCommandInteraction, ButtonInteraction, StringSelectMenuInteraction } = require('discord.js');
 const { ConnectionPool } = require('mssql');
 
-
-
 /**
  * Runs a command interaction execution
  * 

@@ -6,7 +6,6 @@ const {
   readButtons,
   readModals,
 } = require("./util");
-const { fork } = require("child_process");
 const process = require("process");
 const { getConnection, GCADB } = require("./util/gcadb");
 
@@ -29,12 +28,7 @@ const TOKEN = process.env.PROD_TOKEN;
 //   },
 // };
 
-/*
- *	Launch a second process executing deploy-commands.js to ensure all
- *	commands are up to date on Discord's end
- */
-fork("./deploy-commands.js");
-fork("./deploy-gca.js");
+
 
 // Holy crap that's a lot of intention :flushed:
 const intent_flags = [
