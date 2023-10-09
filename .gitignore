@@ -3,6 +3,12 @@
 config.json
 /node_modules
 .env
+src/buttons/hello_button.ts
+src/commands/hello_button.ts
+src/commands/hello_selectmenu.ts
+src/commands/hello.ts
+src/modals/test_modal.ts
+src/selectmenus/hello_selectmenu.ts
 
 # Jack's Ignores
 test.js

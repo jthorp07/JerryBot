@@ -1,13 +1,23 @@
 {
-  "dependencies": {
-    "@discordjs/rest": "^0.1.0-canary.0",
-    "discord-api-types": "^0.23.1",
-    "discord.js": "^14.13.0",
-    "dotenv": "^16.0.3",
-    "mssql": "^9.0.1",
-    "mysql2": "^2.3.3"
-  },
+  "name": "jerry-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "start": "node main.js"
+    "bot": "node lib/main.js",
+    "deploy-dev": "node lib/deploy_dev_commands.js",
+    "deploy-global": "node lib/deploy_commands_global.js",
+    "build": "rm -rf ./lib/ && tsc"
+  },
+  "keywords": ["TypeScript", "Discord.js", "Discord Bot"],
+  "author": "Jack Thorp",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.6.4",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1"
   }
 }
