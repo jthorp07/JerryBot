@@ -3,6 +3,7 @@
 config.json
 /node_modules
 .env
+/legacy
 
 # Jack's Ignores
 test.js
