@@ -176,7 +176,7 @@ const command: ICommand = {
                 .addChoices(
                     { name: 'Free Vod Review Forum', value: VOD_REVIEW_FORUM.key },
                     { name: 'Tier 3 Vod Review Forum', value: TIER_3_REVIEW_FORUM.key }
-                )) as SlashCommandBuilder, // Adding an option changes the builder type to an option builder. It is safe to caste it back to SlashCommandBuilder.
+                )) as SlashCommandBuilder,
     execute: async (interaction) => {
         await interaction.deferReply();
         let raffleType = interaction.options.getString('type');
@@ -184,7 +184,7 @@ const command: ICommand = {
         if (!spinFunc) return; // Should never happen
         await spinFunc(interaction);
     },
-    permissions: ICommandPermission.ALL
+    permissions: ICommandPermission.BOT_ADMIN,
 }
 
 export default command;

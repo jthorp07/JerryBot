@@ -2,7 +2,8 @@ import { AnySelectMenuInteraction, ButtonBuilder, ButtonInteraction, ChannelSele
 
 export enum ICommandPermission {
     ALL,
-    SERVER_OWNER
+    SERVER_OWNER,
+    BOT_ADMIN
 }
 
 export type ICommandExecute = (interaction: ChatInputCommandInteraction) => Promise<void>
