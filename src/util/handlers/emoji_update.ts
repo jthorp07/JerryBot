@@ -1,10 +1,10 @@
-import { Client, Events, VoiceState } from "discord.js";
+import { Events, GuildEmoji } from "discord.js";
 import { IEventHandler } from "../../types/event_handler";
 
 const eventHandler: IEventHandler = {
-    event: Events.Warn,
+    event: Events.GuildEmojiUpdate,
     handlerFactory(client, checkPerms) {
-        return async (oldState: VoiceState, newState: VoiceState) => {
+        return async (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => {
             // TODO: Implement
             return;
         }

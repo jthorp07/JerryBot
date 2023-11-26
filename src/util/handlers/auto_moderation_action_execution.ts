@@ -1,10 +1,10 @@
-import { Client, Events, VoiceState } from "discord.js";
+import { AutoModerationActionExecution, Events } from "discord.js";
 import { IEventHandler } from "../../types/event_handler";
 
 const eventHandler: IEventHandler = {
-    event: Events.Warn,
+    event: Events.AutoModerationActionExecution,
     handlerFactory(client, checkPerms) {
-        return async (oldState: VoiceState, newState: VoiceState) => {
+        return async (actionExecution: AutoModerationActionExecution) => {
             // TODO: Implement
             return;
         }

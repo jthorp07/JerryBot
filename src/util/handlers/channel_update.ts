@@ -1,10 +1,10 @@
-import { Client, Events, VoiceState } from "discord.js";
+import { DMChannel, Events, GuildChannel } from "discord.js";
 import { IEventHandler } from "../../types/event_handler";
 
 const eventHandler: IEventHandler = {
-    event: Events.Warn,
+    event: Events.ChannelUpdate,
     handlerFactory(client, checkPerms) {
-        return async (oldState: VoiceState, newState: VoiceState) => {
+        return async (oldChannel: GuildChannel | DMChannel, newChannel: GuildChannel | DMChannel) => {
             // TODO: Implement
             return;
         }

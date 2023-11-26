@@ -4,6 +4,7 @@ config.json
 /node_modules
 .env
 /legacy
+/bot
 
 # Jack's Ignores
 test.js

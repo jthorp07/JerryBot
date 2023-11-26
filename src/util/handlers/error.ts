@@ -1,15 +1,16 @@
-import { Client, Events, VoiceState } from "discord.js";
+import { Events } from "discord.js";
 import { IEventHandler } from "../../types/event_handler";
 
 const eventHandler: IEventHandler = {
-    event: Events.Warn,
+    event: Events.Error,
     handlerFactory(client, checkPerms) {
-        return async (oldState: VoiceState, newState: VoiceState) => {
+        return async (error: Error) => {
             // TODO: Implement
+            console.error(`[Error]: ${error.name}  -  ${error.message}`)
             return;
         }
     },
-    useHandler: false
+    useHandler: true
 }
 
 export default eventHandler;

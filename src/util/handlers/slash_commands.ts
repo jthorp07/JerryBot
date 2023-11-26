@@ -4,7 +4,7 @@ import { ChatInputCommandInteraction, Collection, Events, Interaction } from "di
 import { ICommand } from "../../types/discord_interactions";
 import { IEventHandler } from "../../types/event_handler";
 
-const slashCommandEventHandler: IEventHandler = {
+const eventHandler: IEventHandler = {
     event: Events.InteractionCreate,
     handlerFactory: (client, permCheck) => {
         const slashCommands = new Collection<String, ICommand>();
@@ -18,24 +18,29 @@ const slashCommandEventHandler: IEventHandler = {
                 slashCommands.set(cmd.data.name, cmd)
             } catch (error) {
                 console.log(`[Slash Commands]: Error in file ${file}`);
+                console.log(`  Details: ${error}`);
                 continue;
             }
         };
         return async (interaction: Interaction) => {
             if (!interaction.isChatInputCommand()) return
             let cmdInteraction: ChatInputCommandInteraction = interaction;
-            let cmd: ICommand | undefined = slashCommands?.get(cmdInteraction.commandName);
-            if (cmd === undefined) return;
+            let cmd = slashCommands?.get(cmdInteraction.commandName);
+            if (cmd === undefined) {
+                await interaction.reply({content: "Unknown command - If this is a mistake, report it to a staff member!"});
+                return;
+            }
             if (permCheck) {
                 let authenticated = await permCheck(cmd.permissions, interaction);
                 if (!authenticated) {
-                    await interaction.editReply({ content: "You do not have the right permissions to use this selectmenu!" });
+                    await interaction.editReply({ content: "You do not have the right permissions to use this command!" });
                     return;
                 }
             }
             await cmd.execute(cmdInteraction);
         }
-    }
+    },
+    useHandler: true,
 }
 
-export default slashCommandEventHandler;
+export default eventHandler;

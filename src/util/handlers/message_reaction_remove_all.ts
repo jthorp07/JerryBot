@@ -1,10 +1,10 @@
-import { Client, Events, VoiceState } from "discord.js";
+import { Collection, Events, Message, MessageReaction, Snowflake } from "discord.js";
 import { IEventHandler } from "../../types/event_handler";
 
 const eventHandler: IEventHandler = {
-    event: Events.Warn,
+    event: Events.MessageReactionRemoveAll,
     handlerFactory(client, checkPerms) {
-        return async (oldState: VoiceState, newState: VoiceState) => {
+        return async (message: Message, reactions: Collection<string|Snowflake, MessageReaction>) => {
             // TODO: Implement
             return;
         }

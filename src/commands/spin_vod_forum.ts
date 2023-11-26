@@ -259,6 +259,8 @@ const command: ICommand = {
     permissions: ICommandPermission.BOT_ADMIN,
 }
 
+export default command;
+
 
 // TypeScript doesn't like this guy
 
