@@ -4,24 +4,25 @@ import { AnySelectMenuInteraction, Collection, Events, Interaction } from "disco
 import { ISelectMenu } from "../../types/discord_interactions";
 import { IEventHandler } from "../../types/event_handler";
 
-
+const path = join(__dirname, '../../selectmenus')
 const eventHandler: IEventHandler = {
     event: Events.InteractionCreate,
     handlerFactory: (ignored, permCheck) => {
         const selectMenus = new Collection<String, ISelectMenu>();
+        const files = (() => {
+            try {
+                return readdirSync(path).filter(file => file.endsWith(".js"));
+            } catch (err) {
+                return [];
 
-        let commandFiles;
-        try {
-            commandFiles = readdirSync(join(__dirname, "../../selectmenus")).filter(file => file.endsWith(".js"));
-        } catch (err) {
-            return async (interaction: Interaction) => {
-                if (!interaction.isAnySelectMenu()) return;
-                await interaction.reply({content: `Something went wrong, and buttons cannot be handled at the moment. Please report this to a staff member.`});
             }
+        }).call(this);
+        if (files.length == 0) return async (interaction: Interaction) => {
+            if (!interaction.isAnySelectMenu()) return;
+            await interaction.reply({ content: `Something went wrong, and select menus cannot be handled at the moment. Please report this to a staff member.` });
         }
 
-
-        for (const file of commandFiles) {
+        for (const file of files) {
 
             const cmd = require(join(__dirname, `../../selectmenus/${file}`)) as { default: ISelectMenu };
             try {
@@ -58,7 +59,7 @@ const eventHandler: IEventHandler = {
             await cmd.execute(cmdInteraction, []);
         }
     },
-    useHandler: false,
+    useHandler: true,
 }
 
 export default eventHandler;
