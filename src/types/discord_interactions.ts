@@ -13,25 +13,25 @@ export type ICommand = {
     permissions: ICommandPermission
 }
 
-export type ISelectMenuExecute = (interaction: AnySelectMenuInteraction, idArgs: String[]) => Promise<void>;
+export type ISelectMenuExecute = (interaction: AnySelectMenuInteraction, idArgs: string[]) => Promise<void>;
 export type ISelectMenu = {
-    customId: String,
+    customId: string,
     execute: ISelectMenuExecute,
     permissions: ICommandPermission,
     selectMenu: (... args: any[]) => RoleSelectMenuBuilder | UserSelectMenuBuilder | StringSelectMenuBuilder | ChannelSelectMenuBuilder
 }
 
-export type IButtonExecute = (interaction: ButtonInteraction, idArgs: String[]) => Promise<void>;
+export type IButtonExecute = (interaction: ButtonInteraction, idArgs: string[]) => Promise<void>;
 export type IButton = {
-    customId: String,
+    customId: string,
     execute: IButtonExecute,
     permissions: ICommandPermission,
     button: (... args: any[]) => ButtonBuilder
 }
 
-export type IModalExecute = (interaction: ModalSubmitInteraction, idArgs: String[]) => Promise<void>;
+export type IModalExecute = (interaction: ModalSubmitInteraction, idArgs: string[]) => Promise<void>;
 export type IModal = {
-    customId: String,
+    customId: string,
     execute: IModalExecute,
     modal: (... args: any[]) => ModalBuilder
 }
