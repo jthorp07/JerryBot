@@ -69,22 +69,4 @@ const modal: IModal = {
 
     }
 }
-
-
-module.exports = {
-    
-    /**
-     * 
-     * @param {ModalSubmitInteraction} interaction 
-     * @param {string[]} idArgs 
-     */
-    
-    /**
-     * 
-     * @param {number} numStars 
-     * @param {string} type
-     * @param {boolean} anon
-     * @returns {ModalBuilder} 
-     */
-    
-}
+export default modal; 

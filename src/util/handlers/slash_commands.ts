@@ -29,7 +29,7 @@ const eventHandler: IEventHandler = {
                 console.log(`[Slash Commands]: Reading command ${cmd.data.name}`);
                 slashCommands.set(cmd.data.name, cmd)
             } catch (error) {
-                console.log(`[Slash Commands]: Error in file ${file}`);
+                console.log(`[Slash Commands]: Error in file ${file}\n  Error: ${error}`);
                 continue;
             }
         };

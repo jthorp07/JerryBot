@@ -20,14 +20,14 @@ const eventHandler: IEventHandler = {
         }).call(this);
         if (files.length == 0) return async (interaction: Interaction) => {
             if (!interaction.isModalSubmit()) return;
-            await interaction.reply({ content: `Something went wrong, and buttons cannot be handled at the moment. Please report this to a staff member.` });
+            await interaction.reply({ content: `Something went wrong, and modals cannot be handled at the moment. Please report this to a staff member.` });
         }
 
         for (const file of files) {
 
             const cmd = require(join(__dirname, `../../modals/${file}`)) as { default: IModal };
             try {
-                console.log(`[Modals]: Reading button ${cmd.default.customId}`);
+                console.log(`[Modals]: Reading modal ${cmd.default.customId}`);
                 modals.set(cmd.default.customId, cmd.default)
             } catch (error) {
                 console.log(`[Modals]: Error in file ${file}`);
@@ -38,7 +38,7 @@ const eventHandler: IEventHandler = {
             if (!interaction.isModalSubmit()) return
             let idArgs = interaction.customId.split(':');
             if (!idArgs || idArgs.length === 0) {
-                console.error(`[Error]: Button idArgs parsing error for ID ${interaction.customId}`);
+                console.error(`[Error]: Modal idArgs parsing error for ID ${interaction.customId}`);
                 return;
             }
             let cmd: IModal | undefined = modals?.get(idArgs[0]);
