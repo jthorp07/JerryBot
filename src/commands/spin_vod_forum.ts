@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember, MediaChannel } from "discord.js";
 import { ICommand, ICommandExecute, ICommandPermission } from "../types/discord_interactions";
 // import { stdTempData, ptrTempData, addSpinData } from '../data/standard_submissions';
 
@@ -14,7 +14,7 @@ const TIER_3_REVIEW_FORUM = {
 }
 
 
-async function fetchThreadsFromForum(channel: ForumChannel): Promise<AnyThreadChannel<boolean>[]> {
+async function fetchThreadsFromForum(channel: ForumChannel | MediaChannel): Promise<AnyThreadChannel<boolean>[]> {
 
     const activeThreads = await channel.threads.fetch();
     const archivedThreads = await channel.threads.fetch({
@@ -39,7 +39,7 @@ async function fetchThreadsFromForum(channel: ForumChannel): Promise<AnyThreadCh
 
 const freeVodReviewSpin: ICommandExecute = async (interaction) => {
     const channel = await interaction.guild?.channels.fetch(VOD_REVIEW_FORUM.channelId);
-    if (!channel || !(channel.type === ChannelType.GuildForum)) return;
+    if (!channel || !(channel.isThreadOnly())) return;
     const allThreadsPromise = fetchThreadsFromForum(channel);
 
     let approvedTagId;
@@ -140,7 +140,7 @@ const freeVodReviewSpin: ICommandExecute = async (interaction) => {
 const tierThreeVodSpin: ICommandExecute = async (interaction) => {
 
     const channel = await interaction.guild?.channels.fetch(TIER_3_REVIEW_FORUM.channelId);
-    if (!channel || !(channel.type === ChannelType.GuildForum)) return;
+    if (!channel || !(channel.isThreadOnly())) return;
     const allThreadsPromise = fetchThreadsFromForum(channel);
 
     let approvedTagId;
