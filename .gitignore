@@ -5,6 +5,7 @@ config.json
 .env
 /legacy
 /bot
+/src/util/database_options/firestore
 
 # Jack's Ignores
 test.js
