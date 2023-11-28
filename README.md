@@ -1,5 +1,3 @@
 # JerryBot
- 
- Custom Discord bot & database being developed for Gamers Coaching Academy
 
- B)
+Just a nice little Discord dude (bot) to help a content creator I like =D
