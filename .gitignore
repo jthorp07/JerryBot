@@ -5,6 +5,7 @@ config.json
 .env
 /legacy
 /bot
+bot.zip
 
 # Jack's Ignores
 test.js
