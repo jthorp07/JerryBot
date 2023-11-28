@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember, MediaChannel } from "discord.js";
 import { ICommand, ICommandExecute, ICommandPermission } from "../types/discord_interactions";
-// import { stdTempData, ptrTempData, addSpinData } from '../data/standard_submissions';
+import { stdTempData, ptrTempData, addSpinData } from '../util/database_options/standard_submissions';
 
 // TODO: Uncomment data related items when /data/* gets ported to Typescript branch
 
@@ -93,7 +93,7 @@ const freeVodReviewSpin: ICommandExecute = async (interaction) => {
                 console.log("No message fetch");
                 continue;
             }
-            // stdTempData.addPostAge(currentDate.getTime() - thread.createdAt.getTime());
+            stdTempData.addPostAge(currentDate.getTime() - thread.createdAt.getTime());
             numEntries += entries;
             numPosts++;
             for (let j = 0; j < entries; j++) {
