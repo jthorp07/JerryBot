@@ -52,8 +52,8 @@ class TempData {
     }
 }
 
-const stdTempData = new TempData();
-const ptrTempData = new TempData();
+export const stdTempData = new TempData();
+export const ptrTempData = new TempData();
 
 export function addSpinData(numPosts: number, numEntries: number, type: String) {
     console.log(`[Data]: Logging Standard Submission Spin`);
@@ -66,7 +66,7 @@ export function addSpinData(numPosts: number, numEntries: number, type: String) 
             numPosts: numPosts,
             numEntries: numEntries
         });
-        writeFile('./data/standard_submissions.json', mapToJSON(stdSubData), (err) => { if (err) console.error(err); });
+        writeFile('./bot/util/database_options/standard_submissions.json', mapToJSON(stdSubData), (err) => { if (err) console.error(err); });
     } else if (type === 'ptr_vod') {
         ptrnSubData.set(`${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`, {
             currentDateMillis: Date.now(),
@@ -75,7 +75,7 @@ export function addSpinData(numPosts: number, numEntries: number, type: String) 
             numPosts: numPosts,
             numEntries: numEntries
         });
-        writeFile('./data/patreon_submissions.json', mapToJSON(ptrnSubData), (err) => { if (err) console.error(err); });
+        writeFile('./bot/util/database_options/patreon_submissions.json', mapToJSON(ptrnSubData), (err) => { if (err) console.error(err); });
     }
 
 }

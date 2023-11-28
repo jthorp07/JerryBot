@@ -46,7 +46,7 @@ const freeVodReviewSpin: ICommandExecute = async (interaction) => {
     let deniedTagId;
     let reviewedTagId;
 
-    // stdTempData.reset();
+    stdTempData.reset();
     let numEntries = 0;
     let numPosts = 0;
 
@@ -107,7 +107,7 @@ const freeVodReviewSpin: ICommandExecute = async (interaction) => {
         }
     }
 
-    // addSpinData(numPosts, numEntries, 'std_vod');
+    addSpinData(numPosts, numEntries, 'std_vod');
 
     // __testWinRateDistributionForBuffer(buf); // Simulates 10,000 roles and logs win rates to determine fairness
 
@@ -147,7 +147,7 @@ const tierThreeVodSpin: ICommandExecute = async (interaction) => {
     let deniedTagId;
     let reviewedTagId;
 
-    // ptrTempData.reset();
+    ptrTempData.reset();
     let numEntries = 0;
     let numPosts = 0;
 
@@ -185,7 +185,7 @@ const tierThreeVodSpin: ICommandExecute = async (interaction) => {
             const wholeWeeks = Math.floor(differenceInMillis / (1000 * 60 * 60 * 24 * 7));
             const entries = 1 + Math.floor(wholeWeeks / 2);
 
-            // ptrTempData.addPostAge(currentDate.getTime() - thread.createdAt.getTime());
+            ptrTempData.addPostAge(currentDate.getTime() - thread.createdAt.getTime());
             numEntries += entries;
             numPosts++;
 
@@ -199,7 +199,7 @@ const tierThreeVodSpin: ICommandExecute = async (interaction) => {
         }
     }
 
-    // addSpinData(numPosts, numEntries, 'ptr_vod');
+    addSpinData(numPosts, numEntries, 'ptr_vod');
 
     if (buf.length == 0) {
         await interaction.editReply({ content: 'There are no tier three patreon submissions!' });
