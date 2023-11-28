@@ -10,7 +10,7 @@
   },
   "include": [
     "src"
-, "legacy/migrateToMap.js", "legacy/firestore"  ],
+  ],
   "exclude": [
     "node_modules",
     "legacy",
