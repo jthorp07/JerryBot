@@ -24,7 +24,7 @@ export const setEventHandlers = (client: Client, checkPerms?: (permissionLevel: 
                 client.on(handler.event.toString(), onEvent);
             }
         } catch (error) {
-            console.log(`[Handlers]: Error in file ${file}`);
+            console.log(`[Handlers]: Error in file ${file}\n  Error: ${error}`);
             continue;
         }
     };

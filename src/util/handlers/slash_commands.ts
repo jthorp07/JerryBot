@@ -8,13 +8,13 @@ const path = join(__dirname, '../../commands');
 const eventHandler: IEventHandler = {
     event: Events.InteractionCreate,
     handlerFactory: (client, permCheck) => {
-        const slashCommands = new Collection<String, ICommand>();
+        const slashCommands = new Collection<string, ICommand>();
         const files = (() => {
             try {
                 return readdirSync(path).filter(file => file.endsWith(".js"));
             } catch (err) {
+                console.log(`[Slash Commands]: Error reading command directory\n  Error: ${err}`);
                 return [];
-
             }
         }).call(this);
         if (files.length == 0) return async (interaction: Interaction) => {
@@ -36,12 +36,12 @@ const eventHandler: IEventHandler = {
         return async (interaction: Interaction) => {
             if (!interaction.isChatInputCommand()) return
             let cmdInteraction: ChatInputCommandInteraction = interaction;
-            let cmd: ICommand | undefined = slashCommands?.get(cmdInteraction.commandName);
+            let cmd: ICommand | undefined = slashCommands.get(cmdInteraction.commandName);
             if (cmd === undefined) return;
             if (permCheck) {
                 let authenticated = await permCheck(cmd.permissions, interaction);
                 if (!authenticated) {
-                    await interaction.editReply({ content: "You do not have the right permissions to use this selectmenu!" });
+                    await interaction.editReply({ content: "You do not have the right permissions to use this command!" });
                     return;
                 }
             }
