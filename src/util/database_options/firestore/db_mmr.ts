@@ -1,19 +1,22 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, updateDoc, query, where } from 'firebase/firestore';
 import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
 config();
 
-type FirebaseUserMMR = {
+export type FirebaseUserMMR = {
     documentId: string | null,
     decoupled: boolean,
     initialMMR: number,
-    discordId: Snowflake
+    discordId: Snowflake,
+    gamesPlayed: number,
+    seasonsPlayed: number
 }
 
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
-    MetaData = 'meta'
+    MetaData = 'meta',
+    TenmansLeaderboard = 'tens_leaderboard'
 }
 
 const firebaseConfig = {
@@ -52,7 +55,6 @@ export async function addMmrUser(user: FirebaseUserMMR) {
         const existingData = await getDoc(existingDoc);
         if (existingData.exists()) throw new Error(`User ${user.documentId} already exists - use updateMmrUser instead`);
     }
-
     return addDoc(userMMRCollection, user);
 }
 
@@ -65,5 +67,11 @@ export async function updateMmrUser(user: FirebaseUserMMR) {
         .catch(err => {if (err) console.error(err); return null;});
     if (existingDoc == null) return;
     updateDoc(ref, user);
-    
+}
+
+export async function getUserByDiscordId(discordId: Snowflake) {
+    const q = query(userMMRCollection, where('discordId', '==', discordId));
+    const snap = (await getDocs(q)).docs;
+    if (snap.length == 0) return null;
+    return snap[0].data()
 }
