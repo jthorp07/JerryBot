@@ -1,9 +1,10 @@
-import { ButtonBuilder, ButtonStyle, GuildMemberRoleManager, Snowflake } from "discord.js";
+import { ButtonBuilder, ButtonStyle, GuildMember, GuildMemberRoleManager, Snowflake } from "discord.js";
 import { IButton, ICommandPermission } from "../types/discord_interactions";
 import { addMmrUser, getMmrForAllUsers, getUserByDiscordId } from "../util/database_options/firestore/db_mmr";
 import { setPlayerMmr } from "../util/neatqueue/neatqueue";
 
-const queueChannel = '';
+const queueRole = '1180001507828043798';
+const queueChannel = '1161809001923747971';
 enum RankRole {
     IRON = 500,
     BRONZE = 550,
@@ -81,13 +82,16 @@ const button: IButton = {
         setPlayerMmr(user.discordId, '', user.initialMMR);
 
         // Unlock queue channel for user
-        
+        const member = interaction.member as GuildMember;
+        member.roles.add(queueRole)
     },
     permissions: ICommandPermission.ALL,
     button: () => {
         return new ButtonBuilder()
             .setCustomId(customId)
-            .setLabel('Register for Customs')
+            .setLabel('Register')
             .setStyle(ButtonStyle.Primary);
     }
 }
+
+export default button;
