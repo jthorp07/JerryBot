@@ -6,8 +6,8 @@ import { join } from "path";
 import { ICommand } from "./types/discord_interactions";
 
 config();
-const CLIENT = process.env.CLIENT;
-const TOKEN = process.env.TOKEN;
+const CLIENT = process.env.CLIENT_DEV;
+const TOKEN = process.env.TOKEN_DEV;
 
 if (!TOKEN) {
 	console.log('[Deploy]: Missing environment variable TOKEN');
