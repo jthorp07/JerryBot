@@ -70,3 +70,5 @@ const command: ICommand = {
     },
     permissions: ICommandPermission.BOT_ADMIN
 }
+
+export default command;

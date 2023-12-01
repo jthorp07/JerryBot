@@ -34,6 +34,10 @@ const customId = 'queuereg'
 const button: IButton = {
     customId: customId,
     execute: async (interaction) => {
+
+        console.log('button exe');
+        const member = interaction.member as GuildMember;
+
         // pull user
         let user = await getUserByDiscordId(interaction.user.id);
         // if not exist get rank role
@@ -76,13 +80,14 @@ const button: IButton = {
                 seasonsPlayed: 0
             }
             addMmrUser(user);
+            await interaction.editReply({content: 'You can now queue for ten mans!'});
         }
 
         //set neatqueue mmr
         setPlayerMmr(user.discordId, '', user.initialMMR);
 
         // Unlock queue channel for user
-        const member = interaction.member as GuildMember;
+        
         member.roles.add(queueRole)
     },
     permissions: ICommandPermission.ALL,
