@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "bot": "node bot/main.js",
-    "deploy-dev": "node lib/deploy_dev_commands.js",
-    "deploy-global": "node lib/deploy_commands_global.js",
+    "deploy-dev": "node bot/deploy_dev_commands.js",
+    "deploy-global": "node bot/deploy_commands_global.js",
     "build": "rm -rf ./bot/ && tsc"
   },
   "keywords": [

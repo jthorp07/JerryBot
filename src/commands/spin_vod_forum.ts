@@ -1,14 +1,14 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember, MediaChannel } from "discord.js";
+import { SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember, MediaChannel } from "discord.js";
 import { ICommand, ICommandExecute, ICommandPermission } from "../types/discord_interactions";
 import { stdTempData, ptrTempData, addSpinData } from '../util/database_options/standard_submissions';
 
 // TODO: Uncomment data related items when /data/* gets ported to Typescript branch
 
-const VOD_REVIEW_FORUM = {
+export const VOD_REVIEW_FORUM = {
     key: 'vodforum',
     channelId: '1148751451506622527'
 }
-const TIER_3_REVIEW_FORUM = {
+export const TIER_3_REVIEW_FORUM = {
     key: 'tierthree',
     channelId: '1150160654485954590'
 }
@@ -62,7 +62,7 @@ const freeVodReviewSpin: ICommandExecute = async (interaction) => {
     }
 
     let buf = [];
-    let ownerless = [];
+    let ownerless: string[] = [];
     const allThreads = await allThreadsPromise;
 
     console.log(`There are ${allThreads.length} threads`);
