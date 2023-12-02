@@ -9,13 +9,13 @@ enum RankRole {
     IRON = 500,
     BRONZE = 550,
     SILVER = 600,
-    GOLD = 650,
-    PLATINUM = 900,
-    DIAMOND = 950,
-    ASCENDANT = 1000,
-    IMMORTAL = 1250,
-    RADIANT = 1300,
-    UNRANKED = 900,
+    GOLD = 700,
+    PLATINUM = 750,
+    DIAMOND = 850,
+    ASCENDANT = 900,
+    IMMORTAL = 1000,
+    RADIANT = 1100,
+    UNRANKED = 750,
 }
 
 const rankRoles = new Map<Snowflake, RankRole>();
