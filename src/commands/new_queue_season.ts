@@ -39,7 +39,7 @@ const command: ICommand = {
             const oldMmr = prevMmr.initialMMR;
             const finalMmr = user.data.mmr;
             const delta = finalMmr - oldMmr;
-            const newMmr = (oldMmr + (delta / Math.max(2, Math.log2(delta))));
+            const newMmr = (oldMmr + (delta / Math.max(2, Math.log2(Math.abs(delta)))));
             const leaderboardScore = delta * (1 + (oldMmr / 10000));
 
             console.log(`Old Initial MMR: ${oldMmr}\nFinal MMR: ${finalMmr}\nDelta MMR: ${delta}\nLeaderboard Score: ${leaderboardScore}\nNew Initial MMR: ${newMmr}\n\n`);

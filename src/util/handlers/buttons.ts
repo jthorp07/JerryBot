@@ -36,7 +36,6 @@ const eventHandler: IEventHandler = {
         };
         return async (interaction: Interaction) => {
             if (!interaction.isButton()) return
-            console.log('button');
             let idArgs = interaction.customId.split(':');
             if (!idArgs || idArgs.length === 0) {
                 console.error(`[Error]: Button idArgs parsing error for ID ${interaction.customId}`);

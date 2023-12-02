@@ -35,8 +35,12 @@ const button: IButton = {
     customId: customId,
     execute: async (interaction) => {
 
-        console.log('button exe');
+        await interaction.deferReply({ephemeral: true})
         const member = interaction.member as GuildMember;
+        if (member.roles.cache.has(queueRole)) {
+            await interaction.editReply({content: 'You are already registered for this season of ten mans!'});
+            return;
+        }
 
         // pull user
         let user = await getUserByDiscordId(interaction.user.id);
@@ -80,15 +84,15 @@ const button: IButton = {
                 seasonsPlayed: 0
             }
             addMmrUser(user);
-            await interaction.editReply({content: 'You can now queue for ten mans!'});
+            
         }
 
         //set neatqueue mmr
-        setPlayerMmr(user.discordId, '', user.initialMMR);
+        setPlayerMmr(user.discordId, queueChannel, user.initialMMR);
 
         // Unlock queue channel for user
-        
-        member.roles.add(queueRole)
+        member.roles.add(queueRole);
+        await interaction.editReply({content: 'You can now queue for ten mans!'});
     },
     permissions: ICommandPermission.ALL,
     button: () => {
