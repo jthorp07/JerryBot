@@ -1,9 +1,17 @@
-import { ChannelType, SlashCommandBuilder, Snowflake } from "discord.js";
+import { ChannelType, ChatInputCommandInteraction, SlashCommandBuilder, Snowflake } from "discord.js";
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
 import { getMmrForAllUsers, addMmrUser, updateMmrUser, FirebaseUserMMR } from "../util/database_options/firestore/db_mmr";
 import { getLastSeason } from "../util/neatqueue/neatqueue";
 import { LeaderboardUser, addUserToLeaderboard, resetLeaderboard } from "../util/database_options/firestore/db_leaderboard";
 
+async function removeRoleFromEveryone(interaction: ChatInputCommandInteraction) {
+    const guild = interaction.guild;
+    if (!guild) return;
+    const allMembers = await guild.members.fetch();
+    for (const member of allMembers) {
+        member[1].roles.remove('1180001507828043798');
+    }
+}
 
 const command: ICommand = {
     data: new SlashCommandBuilder()
@@ -16,7 +24,14 @@ const command: ICommand = {
                 .setRequired(true)) as SlashCommandBuilder,
     execute: async (interaction) => {
 
-        await interaction.reply({content: 'Starting end of season calculations... I will update this message once calculations are complete!'})
+        await interaction.reply({content: 'Starting end of season calculations... I will update this message once calculations are complete!'});
+        removeRoleFromEveryone(interaction);
+        const resetResult = await resetLeaderboard();
+        if (!resetResult) {
+            await interaction.editReply({content: 'The leaderboard could not be reset... aborting'});
+            return;
+        }
+
         const channelId = interaction.options.getChannel('queuechannel', true, [ChannelType.GuildText]).id;
         const initialMmrMap = new Map<Snowflake, FirebaseUserMMR>();
         const leaderboard = await getLastSeason(channelId, interaction.guildId || '');
