@@ -85,10 +85,10 @@ const button: IButton = {
             }
             addMmrUser(user);
             
+        } else {
+            //set neatqueue mmr
+            setPlayerMmr(user.discordId, queueChannel, user.initialMMR);
         }
-
-        //set neatqueue mmr
-        setPlayerMmr(user.discordId, queueChannel, user.initialMMR);
 
         // Unlock queue channel for user
         member.roles.add(queueRole);

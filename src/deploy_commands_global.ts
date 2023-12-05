@@ -30,7 +30,7 @@ for (const file of commandFiles) {
 		commands.push(command.default.data.toJSON());
 		console.log(`[Deploy]: Read command from file ${file}`);
 	} catch (err) {
-		console.log(`[Deploy]: Failed to read command from file ${file}`);
+		console.log(`[Deploy]: Failed to read command from file ${file}\n  ${err}`);
 	}
 }
 

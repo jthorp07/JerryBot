@@ -34,13 +34,14 @@ const command: ICommand = {
 
         const channelId = interaction.options.getChannel('queuechannel', true, [ChannelType.GuildText]).id;
         const initialMmrMap = new Map<Snowflake, FirebaseUserMMR>();
-        const leaderboard = await getLastSeason(channelId, interaction.guildId || '');
+        const leaderboardPromise = getLastSeason(channelId, interaction.guildId || '');
         const previousInitialMmrPromise = getMmrForAllUsers().then(arr => {
             arr.forEach(user => {
                 initialMmrMap.set(user.discordId, user);
             });
         });
         await previousInitialMmrPromise;
+        const leaderboard = await leaderboardPromise;
 
         const promises: Promise<any>[] = [];
 

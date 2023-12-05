@@ -16,7 +16,10 @@ export type FirebaseUserMMR = {
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
     MetaData = 'meta',
-    TenmansLeaderboard = 'tens_leaderboard'
+    FinalTenmansLeaderboard = 'tens_leaderboard_static',
+    DynamicTenmansLederboard = 'tens_leaderboard_dynamic',
+    DiscordChannel = 'discord_channel',
+    DiscordRole = 'discord_role'
 }
 
 const firebaseConfig = {

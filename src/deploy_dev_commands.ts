@@ -8,7 +8,7 @@ import { ICommand } from "./types/discord_interactions";
 config();
 const CLIENT = process.env.CLIENT;
 const TOKEN = process.env.TOKEN;
-const DEV_SERVER = process.env.DEV_SERVER;
+const DEV_SERVER = process.env.WORTHY_SERVER;
 
 if (!TOKEN) {
 	console.log('[Deploy-Dev]: Missing environment variable TOKEN');
