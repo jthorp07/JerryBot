@@ -7,6 +7,7 @@
     "bot": "node bot/main.js",
     "deploy-dev": "node bot/deploy_dev_commands.js",
     "deploy-global": "node bot/deploy_commands_global.js",
+    "clear-dev": "node bot/clear_local_guild_commands.js",
     "build": "rm -rf ./bot/ && tsc"
   },
   "keywords": [
