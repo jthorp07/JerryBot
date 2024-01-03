@@ -7,7 +7,8 @@ export type LeaderboardUser = {
     discordId: Snowflake,
     decoupled: boolean,
     score: number,
-    documentId?: string | undefined
+    documentId?: string,
+    gamesPlayed?: number
 }
 
 const leaderboardCollection = collection(firestore, FirebaseCollection.FinalTenmansLeaderboard).withConverter({
@@ -80,13 +81,14 @@ export async function updateDynamicLeaderboard(channelId: Snowflake, guildId: Sn
         const oldMmr = prevMmr.initialMMR;
         const finalMmr = user.data.mmr;
         const delta = finalMmr - oldMmr;
-        const leaderboardScore = (delta * (1 + (oldMmr / 10000))).toFixed(2) as unknown as number;
+        const leaderboardScore = (delta * (delta < 0 ? 1 - (oldMmr / 10000) : 1 + (oldMmr / 10000))).toFixed(2) as unknown as number;
 
         console.log(`Old Initial MMR: ${oldMmr}\nFinal MMR: ${finalMmr}\nDelta MMR: ${delta}\nLeaderboard Score: ${leaderboardScore}\n\n`);
         const finalLeaderboardScore: LeaderboardUser = {
             discordId: user.id,
             decoupled: prevMmr.decoupled,
             score: leaderboardScore,
+            gamesPlayed: (user.data.totalgames | 0) + prevMmr.gamesPlayed
         }
         promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
     }
