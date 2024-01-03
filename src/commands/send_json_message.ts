@@ -10,7 +10,12 @@ const command: ICommand = {
                 .setDescription('The JSON string representing the message')
                 .setRequired(true)) as SlashCommandBuilder,
     execute: async (interaction) => {
-        await interaction.reply(JSON.parse(interaction.options.getString('json', true)));
+        try {
+            const content = JSON.parse(interaction.options.getString('json', true));
+            await interaction.reply(content);
+        } catch (err) {
+            console.error(err);
+        } 
     },
     permissions: ICommandPermission.BOT_ADMIN
 }
