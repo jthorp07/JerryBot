@@ -1,4 +1,4 @@
-import { QueryDocumentSnapshot, collection, getDocs, addDoc, doc, getDoc, deleteDoc } from "@firebase/firestore";
+import { QueryDocumentSnapshot, collection, getDocs, addDoc, doc, getDoc, deleteDoc, where, query, updateDoc } from "@firebase/firestore";
 import { firestore, FirebaseCollection, getMmrForAllUsers, FirebaseUserMMR } from "./db_mmr";
 import { Snowflake } from "discord.js";
 import { getLastSeason } from "../../neatqueue/neatqueue";
@@ -19,7 +19,6 @@ const leaderboardCollection = collection(firestore, FirebaseCollection.FinalTenm
         return partial;
     }
 });
-
 const dynamicLeaderboardCollection = collection(firestore, FirebaseCollection.DynamicTenmansLederboard).withConverter({
     toFirestore: (data: LeaderboardUser) => data,
     fromFirestore: (snapshot: QueryDocumentSnapshot) => {
@@ -94,4 +93,26 @@ export async function updateDynamicLeaderboard(channelId: Snowflake, guildId: Sn
     }
     await Promise.all(promises);
 
+}
+
+export async function __getLeaderboardUser(discordId: Snowflake, dynamic?: boolean) {
+    const col = dynamic ? dynamicLeaderboardCollection : leaderboardCollection;
+    const q = query(col, where('discordId', '==', discordId));
+    const snap = (await getDocs(q)).docs;
+    if (snap.length == 0) return null;
+    return snap[0].data();
+}
+
+export async function __updateUserOnLeaderboard(discordId: Snowflake, gamesPlayed: number, dynamic?: boolean) {
+    const col = dynamic ? dynamicLeaderboardCollection : leaderboardCollection;
+    const q = query(col, where('discordId', '==', discordId));
+    const snap = (await getDocs(q)).docs;
+    if (snap.length == 0) return false;
+    const ref = doc(firestore, `${FirebaseCollection.FinalTenmansLeaderboard}/${snap[0].id}`);
+    const existingDoc = await getDoc(ref)
+        .then(snap => {if (!snap.exists()) return null; return snap})
+        .catch(err => {if (err) console.error(err); return null;});
+    if (existingDoc == null) return false;
+    updateDoc(ref, {gamesPlayed: gamesPlayed});
+    return true;
 }

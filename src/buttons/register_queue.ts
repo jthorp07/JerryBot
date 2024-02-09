@@ -7,15 +7,15 @@ const queueRole = '1180001507828043798';
 const queueChannel = '1161809001923747971';
 enum RankRole {
     IRON = 500,
-    BRONZE = 550,
-    SILVER = 600,
-    GOLD = 700,
-    PLATINUM = 750,
-    DIAMOND = 850,
-    ASCENDANT = 900,
-    IMMORTAL = 1000,
-    RADIANT = 1100,
-    UNRANKED = 750,
+    BRONZE = 650,
+    SILVER = 800,
+    GOLD = 950,
+    PLATINUM = 1100,
+    DIAMOND = 1250,
+    ASCENDANT = 1400,
+    IMMORTAL = 1750,
+    RADIANT = 2000,
+    UNRANKED = 1100,
 }
 
 const rankRoles = new Map<Snowflake, RankRole>();
@@ -42,7 +42,6 @@ const button: IButton = {
             return;
         }
 
-        // pull user
         let user = await getUserByDiscordId(interaction.user.id);
         // if not exist get rank role
         if (!user) {

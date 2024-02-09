@@ -64,7 +64,7 @@ export async function addMmrUser(user: FirebaseUserMMR) {
 export async function updateMmrUser(user: FirebaseUserMMR) {
 
     if (user.documentId == null) throw new Error(`Provided user does not have a document ID`);
-    const ref = doc(firestore, `${FirebaseCollection.UserMMR}/${user.documentId}`)
+    const ref = doc(firestore, `${FirebaseCollection.UserMMR}/${user.documentId}`);
     const existingDoc = await getDoc(ref)
         .then(snap => {if (!snap.exists()) return null; return snap})
         .catch(err => {if (err) console.error(err); return null;});
