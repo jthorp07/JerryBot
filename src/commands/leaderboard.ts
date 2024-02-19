@@ -18,15 +18,11 @@ const command: ICommand = {
                 .setDescription('The type of leaderboard to display')
                 .setRequired(true)
                 .setChoices(
-                    { name: 'Competition Leaderboard', value: 'comp' },
+                    // { name: 'Competition Leaderboard', value: 'comp' },
                     { name: 'Complete Leaderboard', value: 'all' },
-                    { name: 'Last Season Final Leaderboard', value: 'last'},
+                    // { name: 'Last Season Final Leaderboard', value: 'last'},
                     // { name: 'Last Season Final Leaderboard', value: 'lastcomp'}
-                ))
-        .addChannelOption(option =>
-            option.setName('channel')
-                .setDescription('The channel of the queue')
-                .setRequired(true)) as SlashCommandBuilder,
+                )) as SlashCommandBuilder,
     execute: async (interaction) => {
         await interaction.deferReply();
         const method = modes.get(interaction.options.getString('mode', true));
@@ -34,8 +30,8 @@ const command: ICommand = {
             await interaction.editReply({ content: 'Invalid mode selected' });
             return;
         } else if (method.dynamic) {
-            const channel = interaction.options.getChannel('channel', true);
-            await updateDynamicLeaderboard(channel.id, interaction.guildId!);
+            const channel = "1180382139712286791";
+            await updateDynamicLeaderboard(channel, interaction.guildId!);
         }
         const leaderboard = (await getLeaderboard(method.dynamic)).sort((a, b) => b.score - a.score);
         const messages = method.func(leaderboard);
