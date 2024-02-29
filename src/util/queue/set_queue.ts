@@ -1,20 +1,28 @@
 import { Snowflake } from "discord.js";
+import { EventEmitter } from "events";
 
+type SetQueueEvent = "match_full" | "empty" | "full" | "subscribe" | "unsubscribe";
+type QueueResult = "at_capacity" | "duplicate" | "success"
 
 /**
  * An array-based FIFO queue in which all enqueued items are unique
  */
-class SetQueue {
-    queue: Snowflake[];
-    length: number;
-    capacity: number;
-    subscribers: unknown[];
+export class SetQueue {
+
+    private queue: Snowflake[];
+    private length: number;
+    private capacity: number;
+    private subscribers: unknown[];
+    private eventEmitter: EventEmitter;
+    private lock: boolean;
 
     constructor(capacity?: number) {
         this.queue = [];
         this.length = 0;
         this.capacity = capacity || -1;
         this.subscribers = [];
+        this.eventEmitter = new EventEmitter();
+        this.lock = false;
     }
 
     /**
@@ -24,10 +32,14 @@ class SetQueue {
      */
     enqueue(user: Snowflake) {
         for (const queuedUser of this.queue) {
-            if (user == queuedUser) return false;
+            if (user == queuedUser) return "duplicate" as QueueResult;
+        }
+        if (++this.length > this.capacity) {
+            this.length--;
+            return "at_capacity" as QueueResult;
         }
         this.length = this.queue.push(user);
-        return true;
+        return 0;
     }
 
     /**
@@ -40,7 +52,7 @@ class SetQueue {
             if (this.queue[i] == user) {
                 this.queue.splice(i, 1);
                 this.length--;
-                return true;
+                return 0;
             }
         }
         return false;
@@ -60,6 +72,10 @@ class SetQueue {
         }
     }
 
+    on(event: SetQueueEvent, callback: ((...args: any[]) => void | Promise<void>)) {
+        this.eventEmitter.on(event, callback);
+    }
+
     subscribe(subscriber: unknown) {
 
     }
@@ -67,18 +83,5 @@ class SetQueue {
     unsubscribe(subscriber: unknown) {
 
     }
-}
-
-const queue = new SetQueue();
-
-export function enqueue(user: Snowflake) {
-    return queue.enqueue(user);
-}
-
-export function dequeue(user: Snowflake) {
-    return queue.dequeue(user);
-}
-
-export function pop() {
-    return queue.pop();
+    
 }
