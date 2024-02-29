@@ -75,7 +75,6 @@ const button: IButton = {
             }
 
             user = {
-                documentId: null,
                 discordId: interaction.user.id,
                 decoupled: false,
                 initialMMR: roleMmr,

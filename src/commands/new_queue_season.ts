@@ -65,12 +65,12 @@ const command: ICommand = {
                 discordId: user.id,
                 decoupled: prevMmr.decoupled,
                 score: leaderboardScore,
+                type: "classic",
             }
 
             const updatedUserMmr: FirebaseUserMMR = {
                 discordId: prevMmr.discordId,
                 decoupled: (prevMmr.gamesPlayed + user.data.losses + user.data.wins) >= 10,
-                documentId: prevMmr.documentId,
                 gamesPlayed: prevMmr.gamesPlayed + user.data.losses + user.data.wins,
                 seasonsPlayed: prevMmr.seasonsPlayed + 1,
                 initialMMR: newMmr
