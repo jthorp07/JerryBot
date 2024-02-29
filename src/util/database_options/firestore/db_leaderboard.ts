@@ -1,5 +1,6 @@
 import { QueryDocumentSnapshot, collection, getDocs, addDoc, doc, getDoc, deleteDoc, where, query, updateDoc } from "@firebase/firestore";
-import { firestore, FirebaseCollection, getMmrForAllUsers, FirebaseUserMMR } from "./db_mmr";
+import { getMmrForAllUsers, FirebaseUserMMR } from "./db_mmr";
+import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
 import { getLastSeason } from "../../neatqueue/neatqueue";
 
@@ -8,7 +9,28 @@ export type LeaderboardUser = {
     decoupled: boolean,
     score: number,
     documentId?: string,
-    gamesPlayed?: number
+    gamesPlayed?: number,
+    type: Leaderboard,
+}
+
+export type Leaderboard = "classic";
+
+class LeaderboardManager {
+    private lastRefreshed: Date;
+    private cachedLeaderboard: LeaderboardUser[];
+
+    constructor() {
+        this.lastRefreshed = new Date(Date.now() - (1000 * 60 * 60));
+        this.cachedLeaderboard = []; // Retrieve on
+    }
+
+    async getLeaderboard() {
+        if ((this.lastRefreshed.getTime() - (Date.now() - (1000 * 60 * 60))) < 0) {
+            return this.cachedLeaderboard;
+        } else {
+
+        }
+    }
 }
 
 const leaderboardCollection = collection(firestore, FirebaseCollection.FinalTenmansLeaderboard).withConverter({
@@ -87,7 +109,8 @@ export async function updateDynamicLeaderboard(channelId: Snowflake, guildId: Sn
             discordId: user.id,
             decoupled: prevMmr.decoupled,
             score: leaderboardScore,
-            gamesPlayed: (user.data.totalgames | 0) + prevMmr.gamesPlayed
+            gamesPlayed: (user.data.totalgames | 0) + prevMmr.gamesPlayed,
+            type: "classic",
         }
         promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
     }
