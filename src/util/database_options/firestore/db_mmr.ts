@@ -4,55 +4,59 @@ import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
 config();
 
-export type FirebaseUserMMR = {
+export type FirebaseUserMmr = {
     decoupled: boolean,
     initialMMR: number,
     discordId: Snowflake,
     gamesPlayed: number,
-    seasonsPlayed: number
+    seasonsPlayed: number,
+    mmr: number,
+    active: boolean,
 }
 
-const _collection = collection(firestore, FirebaseCollection.UserMMR).withConverter({
-    toFirestore: (data: FirebaseUserMMR) => data,
-    fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMMR 
-});
-
-export async function getMmrForAllUsers() {
-    return getDocs(_collection).then(snap => {
-        if (snap.empty) return [];
-        return snap.docs.map(doc => doc.data())
-    });
+export type FirebaseUserMmrOptions = {
+    decoupled?: boolean,
+    initialMMR?: number,
+    discordId: Snowflake,
+    gamesPlayed?: number,
+    seasonsPlayed?: number,
+    mmr?: number,
+    active?: boolean,
 }
 
-export async function getAllReferences() {
-    return getDocs(_collection).then(snap => {
-        return snap.docs;
-    });
+class MmrManager {
+
+    private _collection;
+
+    constructor() {
+        this._collection = collection(firestore, FirebaseCollection.UserMMR).withConverter({
+            toFirestore: (data: FirebaseUserMmr) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmr 
+        });
+    }
+
+    async getAll() {
+        const docSnaps = await getDocs(this._collection);
+        return docSnaps.docs.map(doc => doc.data());
+    }
+
+    async setUser(user: FirebaseUserMmr) {
+        const docRef = doc(this._collection, user.discordId);
+        await setDoc(docRef, user);
+    }
+
+    async updateUser(options: FirebaseUserMmrOptions) {
+        const docRef = doc(this._collection, options.discordId);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+            throw new Error(`User does not exist: id=${options.discordId}`);
+        }
+        await updateDoc(docRef, options);
+    }
+
 }
 
-export async function addMmrUser(user: FirebaseUserMMR) {
-    const docRef = doc(_collection, user.discordId);
-    const document = (await getDoc(docRef)).data();
-    if (document) throw new Error(`User ${user.discordId} already exists - use updateMmrUser instead`);
-    return addDoc(_collection, user);
-}
-
-export async function updateMmrUser(user: FirebaseUserMMR) {
-
-    const docRef = doc(_collection, user.discordId);
-    const document = (await getDoc(docRef)).data();
-    if (!document) throw new Error(`User ${user.discordId} does not exist - use addMmrUser instead`);
-    updateDoc(docRef, user);
-    return true;
-}
-
-export async function getUserByDiscordId(discordId: Snowflake) {
-    const docRef = doc(_collection, discordId);
-    const user = (await getDoc(docRef)).data();
-    if (!user) return null;
-    return user;
-}
-
+export const mmrManager = new MmrManager();
 // Example of using query
 
 // export async function getUserByDiscordId(discordId: Snowflake) {

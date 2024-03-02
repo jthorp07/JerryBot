@@ -1,5 +1,5 @@
 import { QueryDocumentSnapshot, collection, deleteDoc, doc, getDocs, setDoc } from "firebase/firestore";
-import { FirebaseUserMMR } from "../db_mmr";
+import { FirebaseUserMmr } from "../db_mmr";
 import { firestore, FirebaseCollection } from "../db_root";
 import { writeFile } from "fs";
 import { join } from "path";
@@ -10,8 +10,8 @@ async function migrate() {
 
     console.log("Fetching User MMR Collection");
     const userCollection = collection(firestore, FirebaseCollection.UserMMR).withConverter({
-        toFirestore: (data: FirebaseUserMMR) => data,
-        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMMR 
+        toFirestore: (data: FirebaseUserMmr) => data,
+        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmr 
     });
 
     console.log("Fetching Documents From User MMR Collection");

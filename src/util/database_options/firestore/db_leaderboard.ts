@@ -1,141 +1,112 @@
-import { QueryDocumentSnapshot, collection, getDocs, addDoc, doc, getDoc, deleteDoc, where, query, updateDoc } from "@firebase/firestore";
-import { getMmrForAllUsers, FirebaseUserMMR } from "./db_mmr";
+import { QueryDocumentSnapshot, collection, getDocs, setDoc, doc, getDoc, deleteDoc, where, query } from "@firebase/firestore";
+import { mmrManager } from "./db_mmr";
 import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
-import { getLastSeason } from "../../neatqueue/neatqueue";
 
 export type LeaderboardUser = {
     discordId: Snowflake,
     decoupled: boolean,
     score: number,
-    documentId?: string,
-    gamesPlayed?: number,
-    type: Leaderboard,
+    gamesPlayed: number,
+    queue: Leaderboard,
+    position: number
+}
+
+type LeaderboardUserPartial = {
+    discordId: Snowflake,
+    decoupled: boolean,
+    score: number,
+    gamesPlayed: number,
+    queue: Leaderboard,
 }
 
 export type Leaderboard = "classic";
 
 class LeaderboardManager {
-    private lastRefreshed: Date;
-    private cachedLeaderboard: LeaderboardUser[];
+
+    private lastRefreshed;
+    private cachedLeaderboard: LeaderboardUser[] = [];
+    private _collection;
 
     constructor() {
         this.lastRefreshed = new Date(Date.now() - (1000 * 60 * 60));
-        this.cachedLeaderboard = []; // Retrieve on
+        this._collection = collection(firestore, FirebaseCollection.FinalTenmansLeaderboard).withConverter({
+            toFirestore: (data: LeaderboardUser) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as LeaderboardUser
+        });
     }
 
-    async getLeaderboard() {
+    async getLeaderboard(leaderboard: Leaderboard) {
         if ((this.lastRefreshed.getTime() - (Date.now() - (1000 * 60 * 60))) < 0) {
             return this.cachedLeaderboard;
         } else {
-
+            this.lastRefreshed = new Date(Date.now());
+            await this.clearLeaderboard(leaderboard);
+            await this.makeLeaderboard(leaderboard);
+            return this.cachedLeaderboard;
         }
     }
-}
 
-const leaderboardCollection = collection(firestore, FirebaseCollection.FinalTenmansLeaderboard).withConverter({
-    toFirestore: (data: LeaderboardUser) => data,
-    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
-        let partial = snapshot.data() as LeaderboardUser
-        partial.documentId = snapshot.id;
-        return partial;
+    private async setUser(user: LeaderboardUser) {
+        const docRef = doc(this._collection, user.discordId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            throw new Error(`User Already Exists: id=${user.discordId}`);
+        }
+        await setDoc(docRef, user);
     }
-});
-const dynamicLeaderboardCollection = collection(firestore, FirebaseCollection.DynamicTenmansLederboard).withConverter({
-    toFirestore: (data: LeaderboardUser) => data,
-    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
-        let partial = snapshot.data() as LeaderboardUser
-        partial.documentId = snapshot.id;
-        return partial;
-    }
-});
 
-export async function addUserToLeaderboard(user: LeaderboardUser, dynamic?: boolean) {
-
-    if (user.documentId != null) {
-        const existingDoc = doc(firestore, `${dynamic ? FirebaseCollection.DynamicTenmansLederboard : FirebaseCollection.FinalTenmansLeaderboard}/${user.documentId}`);
-        const existingData = await getDoc(existingDoc);
-        if (existingData.exists()) throw new Error(`User ${user.documentId} already exists - use updateUserOnLeaderboard instead`);
-    }
-    addDoc(dynamic ? dynamicLeaderboardCollection : leaderboardCollection, user);
-}
-
-export async function getLeaderboard(dynamic?: boolean) {
-    return getDocs(dynamic ? dynamicLeaderboardCollection : leaderboardCollection).then(snap => {
-        return snap.docs.map(doc => doc.data())
-    });
-}
-
-export async function resetLeaderboard(dynamic?: boolean) {
-    return getDocs(dynamic ? dynamicLeaderboardCollection : leaderboardCollection).then(snap => {
-        snap.docs.forEach(doc => {
+    private async clearLeaderboard(leaderboard: Leaderboard) {
+        const _query = query(this._collection, where("type", "==", leaderboard));
+        const docSnaps = await getDocs(_query);
+        docSnaps.docs.forEach(doc => {
             deleteDoc(doc.ref);
         });
-        return true;
-    }).catch(err => {
-        console.log(err);
-        return false;
-    });
-}
-
-export async function updateDynamicLeaderboard(channelId: Snowflake, guildId: Snowflake) {
-
-    await resetLeaderboard(true);
-    const initialMmrMap = new Map<Snowflake, FirebaseUserMMR>();
-    const leaderboardPromise = getLastSeason(channelId, guildId);
-    const previousInitialMmrPromise = getMmrForAllUsers().then(arr => {
-        arr.forEach(user => {
-            initialMmrMap.set(user.discordId, user);
-        });
-    });
-    const leaderboard = await leaderboardPromise;
-    await previousInitialMmrPromise;
-
-    const promises: Promise<any>[] = [];
-    for (const user of leaderboard.alltime) {
-        const prevMmr = initialMmrMap.get(user.id);
-        if (!prevMmr) {
-            console.log('User does not exist');
-            continue;
-        }
-
-        const oldMmr = prevMmr.initialMMR;
-        const finalMmr = user.data.mmr;
-        const delta = finalMmr - oldMmr;
-        const leaderboardScore = (delta * (delta < 0 ? 1 - (oldMmr / 10000) : 1 + (oldMmr / 10000))).toFixed(2) as unknown as number;
-
-        console.log(`Old Initial MMR: ${oldMmr}\nFinal MMR: ${finalMmr}\nDelta MMR: ${delta}\nLeaderboard Score: ${leaderboardScore}\n\n`);
-        const finalLeaderboardScore: LeaderboardUser = {
-            discordId: user.id,
-            decoupled: prevMmr.decoupled,
-            score: leaderboardScore,
-            gamesPlayed: (user.data.totalgames | 0) + prevMmr.gamesPlayed,
-            type: "classic",
-        }
-        promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
     }
-    await Promise.all(promises);
 
+    private async makeLeaderboard(leaderboard: Leaderboard) {
+        const newLbPartial: LeaderboardUserPartial[] = [];
+        const allUsers = await mmrManager.getAll();
+        for (const user of allUsers) {
+            if (!user.active) {
+                console.log(`User not active: id=${user.discordId}`);
+                continue;
+            }
+            newLbPartial.push({
+                discordId: user.discordId,
+                gamesPlayed: user.gamesPlayed,
+                score: this.calculateLeaderboardScore(user.initialMMR, user.mmr),
+                queue: "classic",
+                decoupled: user.decoupled
+            });
+        }
+        newLbPartial.sort((a, b) => {
+            return a.score - b.score;
+        });
+        const promises: Promise<void>[] = [];
+        newLbPartial.forEach((partial, i) => {
+            const final = this.leaderboardUserFromPartial(partial, i + 1);
+            promises.push(this.setUser(final));
+            this.cachedLeaderboard.push(final);
+        });
+        await Promise.all(promises);
+    }
+
+    private calculateLeaderboardScore(initialMmr: number, finalMmr: number) {
+        const deltaMmr = finalMmr - initialMmr;
+        return (deltaMmr * (deltaMmr < 0 ? 1 - (initialMmr / 10000) : 1 + (initialMmr / 10000))).toFixed(2) as unknown as number;
+    }
+
+    private leaderboardUserFromPartial(user: LeaderboardUserPartial, position: number): LeaderboardUser {
+        return {
+            discordId: user.discordId,
+            position: position,
+            decoupled: user.decoupled,
+            score: user.score,
+            gamesPlayed: user.gamesPlayed,
+            queue: user.queue
+        }
+    }
 }
 
-export async function __getLeaderboardUser(discordId: Snowflake, dynamic?: boolean) {
-    const col = dynamic ? dynamicLeaderboardCollection : leaderboardCollection;
-    const q = query(col, where('discordId', '==', discordId));
-    const snap = (await getDocs(q)).docs;
-    if (snap.length == 0) return null;
-    return snap[0].data();
-}
-
-export async function __updateUserOnLeaderboard(discordId: Snowflake, gamesPlayed: number, dynamic?: boolean) {
-    const col = dynamic ? dynamicLeaderboardCollection : leaderboardCollection;
-    const q = query(col, where('discordId', '==', discordId));
-    const snap = (await getDocs(q)).docs;
-    if (snap.length == 0) return false;
-    const ref = doc(firestore, `${FirebaseCollection.FinalTenmansLeaderboard}/${snap[0].id}`);
-    const existingDoc = await getDoc(ref)
-        .then(snap => {if (!snap.exists()) return null; return snap})
-        .catch(err => {if (err) console.error(err); return null;});
-    if (existingDoc == null) return false;
-    updateDoc(ref, {gamesPlayed: gamesPlayed});
-    return true;
-}
+export const leaderboardManager = new LeaderboardManager();
