@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
-import { logAllCollectedData } from '../util/database_options/standard_submissions';
+import { logAllCollectedData } from '../util/database_options/json_data/raffle_logging/standard_submissions';
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
 
 const command: ICommand = {

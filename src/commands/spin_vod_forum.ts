@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, Collection, ChannelType, ForumChannel, AnyThreadChannel, GuildMember, MediaChannel } from "discord.js";
 import { ICommand, ICommandExecute, ICommandPermission } from "../types/discord_interactions";
-import { stdTempData, ptrTempData, addSpinData } from '../util/database_options/standard_submissions';
+import { stdTempData, ptrTempData, addSpinData } from '../util/database_options/json_data/raffle_logging/standard_submissions';
 
 // TODO: Uncomment data related items when /data/* gets ported to Typescript branch
 
