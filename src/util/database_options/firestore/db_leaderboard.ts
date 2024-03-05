@@ -30,16 +30,18 @@ class LeaderboardManager {
 
     constructor() {
         this.lastRefreshed = new Date(Date.now() - (1000 * 60 * 60));
-        this._collection = collection(firestore, FirebaseCollection.FinalTenmansLeaderboard).withConverter({
+        this._collection = collection(firestore, FirebaseCollection.TenmansLeaderboard).withConverter({
             toFirestore: (data: LeaderboardUser) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as LeaderboardUser
         });
     }
 
     async getLeaderboard(leaderboard: Leaderboard) {
-        if ((this.lastRefreshed.getTime() - (Date.now() - (1000 * 60 * 60))) < 0) {
+        if ((this.lastRefreshed.getTime() - (Date.now() - (1000 * 60 * 60))) > 0) {
+            console.log("cached lb");
             return this.cachedLeaderboard;
         } else {
+            console.log("make lb")
             this.lastRefreshed = new Date(Date.now());
             await this.clearLeaderboard(leaderboard);
             await this.makeLeaderboard(leaderboard);
@@ -57,14 +59,19 @@ class LeaderboardManager {
     }
 
     private async clearLeaderboard(leaderboard: Leaderboard) {
+        console.log("lb clearing");
         const _query = query(this._collection, where("type", "==", leaderboard));
         const docSnaps = await getDocs(_query);
+        const promises: Promise<any>[] = [];
         docSnaps.docs.forEach(doc => {
-            deleteDoc(doc.ref);
+            promises.push(deleteDoc(doc.ref));
         });
+        await Promise.all(promises);
+        console.log("lb cleared");
     }
 
     private async makeLeaderboard(leaderboard: Leaderboard) {
+        console.log("lb making")
         const newLbPartial: LeaderboardUserPartial[] = [];
         const allUsers = await mmrManager.getAll();
         for (const user of allUsers) {
@@ -86,10 +93,11 @@ class LeaderboardManager {
         const promises: Promise<void>[] = [];
         newLbPartial.forEach((partial, i) => {
             const final = this.leaderboardUserFromPartial(partial, i + 1);
-            promises.push(this.setUser(final));
+            promises.push(this.setUser(final).then(() => console.log("lb user add")));
             this.cachedLeaderboard.push(final);
         });
         await Promise.all(promises);
+        console.log("lb made");
     }
 
     private calculateLeaderboardScore(initialMmr: number, finalMmr: number) {

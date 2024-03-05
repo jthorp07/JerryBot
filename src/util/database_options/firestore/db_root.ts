@@ -4,8 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
     MetaData = 'meta',
-    FinalTenmansLeaderboard = 'tens_leaderboard_static',
-    DynamicTenmansLederboard = 'tens_leaderboard_dynamic',
+    TenmansLeaderboard = 'tens_leaderboard',
     DiscordChannel = 'discord_channel',
     DiscordRole = 'discord_role'
 }
