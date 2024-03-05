@@ -32,11 +32,7 @@ __getMetaData().then(data => {
 
 const metaCollection = collection(firestore, FirebaseCollection.MetaData).withConverter({
     toFirestore: (data: FirestoreMetaData) => data,
-    fromFirestore: (snapshot: QueryDocumentSnapshot) => {
-        let partial = snapshot.data() as FirestoreMetaData
-        partial.documentId = snapshot.id;
-        return partial;
-    }
+    fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreMetaData
 });
 
 const roleCollection = collection(firestore, FirebaseCollection.DiscordRole).withConverter({
@@ -79,3 +75,16 @@ export async function updateMetaData(datum: FirestoreMetaData) {
 export async function setDiscordRole(role: ServerRole, discordId: Snowflake) {
 
 }
+
+class MetaDataManager {
+
+    private _collection = collection(firestore, FirebaseCollection.MetaData).withConverter({
+        toFirestore: (data: FirestoreMetaData) => data,
+        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreMetaData
+    });
+    private cached: FirestoreMetaData | undefined;
+
+    
+}
+
+export const metaDataManager = new MetaDataManager();

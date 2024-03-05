@@ -81,13 +81,14 @@ const button: IButton = {
                 gamesPlayed: 0,
                 seasonsPlayed: 0,
                 mmr: roleMmr,
-                active: false,
+                active: true,
             }
             await mmrManager.setUser(user);
             
         } else {
             //set neatqueue mmr
-            setPlayerMmr(user.discordId, queueChannel, user.initialMMR);
+            user.active = true;
+            await mmrManager.setUser(user);
         }
 
         // Unlock queue channel for user
