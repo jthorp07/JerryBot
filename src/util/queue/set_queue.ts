@@ -1,9 +1,6 @@
 import { Snowflake } from "discord.js";
 import { EventEmitter } from "events";
 
-type SetQueueEvent = "match_full" | "empty" | "full" | "subscribe" | "unsubscribe";
-type QueueResult = "at_capacity" | "duplicate" | "success"
-
 /**
  * An array-based FIFO queue in which all enqueued items are unique
  */
@@ -12,34 +9,28 @@ export class SetQueue {
     private queue: Snowflake[];
     private length: number;
     private capacity: number;
-    private subscribers: unknown[];
-    private eventEmitter: EventEmitter;
-    private lock: boolean;
 
     constructor(capacity?: number) {
         this.queue = [];
         this.length = 0;
         this.capacity = capacity || -1;
-        this.subscribers = [];
-        this.eventEmitter = new EventEmitter();
-        this.lock = false;
     }
 
     /**
-     * Adds user to the end of the queue if they are not already in it. Returns true upon success, false upon failure.
+     * Adds user to the end of the queue if they are not already in it. Returns new queue size
      * 
      * @param user Snowflake (Discord ID) of user to add
      */
     enqueue(user: Snowflake) {
         for (const queuedUser of this.queue) {
-            if (user == queuedUser) return "duplicate" as QueueResult;
+            if (user == queuedUser) throw new Error("duplicate");
         }
-        if (++this.length > this.capacity) {
+        if (++this.length > this.capacity || this.capacity == -1) {
             this.length--;
-            return "at_capacity" as QueueResult;
+            throw new Error("capacity");
         }
         this.length = this.queue.push(user);
-        return 0;
+        return this.length;
     }
 
     /**
@@ -52,7 +43,7 @@ export class SetQueue {
             if (this.queue[i] == user) {
                 this.queue.splice(i, 1);
                 this.length--;
-                return 0;
+                return true;
             }
         }
         return false;
@@ -72,16 +63,7 @@ export class SetQueue {
         }
     }
 
-    on(event: SetQueueEvent, callback: ((...args: any[]) => void | Promise<void>)) {
-        this.eventEmitter.on(event, callback);
+    getQueue() {
+        return this.queue as Snowflake[];
     }
-
-    subscribe(subscriber: unknown) {
-
-    }
-
-    unsubscribe(subscriber: unknown) {
-
-    }
-    
 }
