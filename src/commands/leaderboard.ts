@@ -1,13 +1,13 @@
 import { SlashCommandBuilder } from "discord.js";
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
-import { LeaderboardUser, getLeaderboard, updateDynamicLeaderboard } from "../util/database_options/firestore/db_leaderboard";
+import { LeaderboardUser, leaderboardManager } from "../util/database_options/firestore/db_leaderboard";
 
 
-const modes = new Map<string, { dynamic: boolean, func: (lb: LeaderboardUser[]) => string[]}>();
-modes.set('comp', { dynamic: true, func: competitionLeaderboard });
-modes.set('all', { dynamic: true, func: completeLeaderboard });
-modes.set('lastcomp', { dynamic: false, func: competitionLeaderboard});
-modes.set('last', { dynamic: false, func: completeLeaderboard})
+const modes = new Map<string, (lb: LeaderboardUser[]) => string[]>();
+modes.set('comp',  competitionLeaderboard);
+modes.set('all', completeLeaderboard);
+modes.set('lastcomp', competitionLeaderboard);
+modes.set('last', completeLeaderboard);
 
 const command: ICommand = {
     data: new SlashCommandBuilder()
@@ -18,10 +18,7 @@ const command: ICommand = {
                 .setDescription('The type of leaderboard to display')
                 .setRequired(true)
                 .setChoices(
-                    // { name: 'Competition Leaderboard', value: 'comp' },
                     { name: 'Complete Leaderboard', value: 'all' },
-                    // { name: 'Last Season Final Leaderboard', value: 'last'},
-                    // { name: 'Last Season Final Leaderboard', value: 'lastcomp'}
                 )) as SlashCommandBuilder,
     execute: async (interaction) => {
         await interaction.deferReply();
@@ -29,12 +26,9 @@ const command: ICommand = {
         if (!method) {
             await interaction.editReply({ content: 'Invalid mode selected' });
             return;
-        } else if (method.dynamic) {
-            const channel = "1180382139712286791";
-            await updateDynamicLeaderboard(channel, interaction.guildId!);
         }
-        const leaderboard = (await getLeaderboard(method.dynamic)).sort((a, b) => b.score - a.score);
-        const messages = method.func(leaderboard);
+        const leaderboard = await leaderboardManager.getLeaderboard("classic");
+        const messages = method(leaderboard);
         for (const message of messages) {
             if (!message || message.length == 0) continue;
             interaction.channel?.send({content: message});

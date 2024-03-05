@@ -1,5 +1,5 @@
 import { QueryDocumentSnapshot, collection, getDocs, addDoc } from "@firebase/firestore";
-import { firestore, FirebaseCollection } from "./db_mmr";
+import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
 
 type FirestoreMetaData = {
@@ -7,6 +7,10 @@ type FirestoreMetaData = {
     documentId?: string,
     roles? : FirestoreDiscordRole[]
 }
+
+type ServerRole = 
+    'queue_reg' | 'iron' | 'bronze' | 'silver' | 'gold' | 
+    'platinum' | 'diamond' | 'ascendant' | 'immortal' | 'radiant' | 'unranked';
 
 type FirestoreDiscordRole = {
     name: ServerRole,
@@ -24,19 +28,7 @@ __getMetaData().then(data => {
     metaReady = true;
 });
 
-enum ServerRole {
-    QueueRegistered = 'queue_reg',
-    IronRank = 'iron',
-    BronzeRank = 'bronze',
-    SilverRank = 'silver',
-    GoldRank = 'gold',
-    PlatinumRank = 'platinum',
-    DiamondRank = 'diamond',
-    AscendantRank = 'ascendant',
-    ImmortalRank = 'immortal',
-    RadiantRank = 'radiant',
-    UnrankedRank = 'unranked',
-}
+
 
 const metaCollection = collection(firestore, FirebaseCollection.MetaData).withConverter({
     toFirestore: (data: FirestoreMetaData) => data,
