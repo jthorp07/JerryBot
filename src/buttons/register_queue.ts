@@ -1,6 +1,6 @@
 import { ButtonBuilder, ButtonStyle, GuildMember, GuildMemberRoleManager, Snowflake } from "discord.js";
 import { IButton, ICommandPermission } from "../types/discord_interactions";
-import { addMmrUser, getMmrForAllUsers, getUserByDiscordId } from "../util/database_options/firestore/db_mmr";
+import { mmrManager } from "../util/database_options/firestore/db_mmr";
 import { setPlayerMmr } from "../util/neatqueue/neatqueue";
 
 const queueRole = '1180001507828043798';
@@ -42,7 +42,7 @@ const button: IButton = {
             return;
         }
 
-        let user = await getUserByDiscordId(interaction.user.id);
+        let user = await mmrManager.getUser(interaction.user.id);
         // if not exist get rank role
         if (!user) {
 
@@ -79,9 +79,11 @@ const button: IButton = {
                 decoupled: false,
                 initialMMR: roleMmr,
                 gamesPlayed: 0,
-                seasonsPlayed: 0
+                seasonsPlayed: 0,
+                mmr: roleMmr,
+                active: false,
             }
-            addMmrUser(user);
+            await mmrManager.setUser(user);
             
         } else {
             //set neatqueue mmr
