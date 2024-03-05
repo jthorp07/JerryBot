@@ -54,6 +54,12 @@ class MmrManager {
         await updateDoc(docRef, options);
     }
 
+    async getUser(userId: Snowflake) {
+        const docRef = doc(this._collection, userId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? docSnap.data() : undefined;
+    }
+
 }
 
 export const mmrManager = new MmrManager();
