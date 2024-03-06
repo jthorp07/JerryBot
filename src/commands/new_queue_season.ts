@@ -25,6 +25,7 @@ const command: ICommand = {
     execute: async (interaction) => {
 
         await interaction.reply({content: 'Starting end of season calculations... I will update this message once calculations are complete!'});
+        console.log("getting started");
         removeRoleFromEveryone(interaction);
         const resetResult = await resetLeaderboard();
         if (!resetResult) {
@@ -65,6 +66,7 @@ const command: ICommand = {
                 discordId: user.id,
                 decoupled: prevMmr.decoupled,
                 score: leaderboardScore,
+                gamesPlayed: user.data.losses + user.data.wins
             }
 
             const updatedUserMmr: FirebaseUserMMR = {
