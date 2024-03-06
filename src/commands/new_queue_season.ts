@@ -56,7 +56,7 @@ const command: ICommand = {
             const finalMmr = user.data.mmr;
             const delta = finalMmr - oldMmr;
             const newMmr = (oldMmr + (delta / Math.max(2, Math.log2(Math.abs(delta)))));
-            const leaderboardScore = delta * (1 + (oldMmr / 10000));
+            const leaderboardScore = (delta * (delta < 0 ? 1 - (oldMmr / 10000) : 1 + (oldMmr / 10000))).toFixed(2) as unknown as number;
 
             console.log(`Old Initial MMR: ${oldMmr}\nFinal MMR: ${finalMmr}\nDelta MMR: ${delta}\nLeaderboard Score: ${leaderboardScore}\nNew Initial MMR: ${newMmr}\n\n`);
 
@@ -77,11 +77,12 @@ const command: ICommand = {
             }
 
             promises.push(updateMmrUser(updatedUserMmr));
-            promises.push(addUserToLeaderboard(finalLeaderboardScore));
+            promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
         } // End Loop
         await Promise.all(promises);
         if ((await interaction.fetchReply()).deletable) {
             interaction.editReply({content: 'All done! At this point, you can wipe and reset the NeatQueue queue!'});
+            console.log("done");
         }
     },
     permissions: ICommandPermission.BOT_ADMIN
