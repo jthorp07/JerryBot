@@ -29,6 +29,7 @@ const command: ICommand = {
         removeRoleFromEveryone(interaction);
         const resetResult = await resetLeaderboard();
         if (!resetResult) {
+            console.log("crash")
             await interaction.editReply({content: 'The leaderboard could not be reset... aborting'});
             return;
         }
@@ -38,6 +39,7 @@ const command: ICommand = {
         const leaderboardPromise = getLastSeason(channelId, interaction.guildId || '');
         const previousInitialMmrPromise = getMmrForAllUsers().then(arr => {
             arr.forEach(user => {
+                console.log("lol")
                 initialMmrMap.set(user.discordId, user);
             });
         });
@@ -59,8 +61,6 @@ const command: ICommand = {
             const newMmr = (oldMmr + (delta / Math.max(2, Math.log2(Math.abs(delta)))));
             const leaderboardScore = (delta * (delta < 0 ? 1 - (oldMmr / 10000) : 1 + (oldMmr / 10000))).toFixed(2) as unknown as number;
 
-            console.log(`Old Initial MMR: ${oldMmr}\nFinal MMR: ${finalMmr}\nDelta MMR: ${delta}\nLeaderboard Score: ${leaderboardScore}\nNew Initial MMR: ${newMmr}\n\n`);
-
             prevMmr.initialMMR = newMmr;
             const finalLeaderboardScore: LeaderboardUser = {
                 discordId: user.id,
@@ -78,6 +78,7 @@ const command: ICommand = {
                 initialMMR: newMmr
             }
 
+            console.log("loop")
             promises.push(updateMmrUser(updatedUserMmr));
             promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
         } // End Loop
