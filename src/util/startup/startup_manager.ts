@@ -5,7 +5,7 @@ export enum StartupEvent {
     LeaderboardReady = "leaderboard_ready",
 }
 
-export class StartupEvents {
+export class StartupService {
 
     private flags: Map<string, boolean> = new Map();
     private eventManager: EventEmitter = new EventEmitter();

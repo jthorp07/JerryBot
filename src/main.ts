@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import { exit } from "process";
 import { setEventHandlers } from "./util";
 import { initPerms } from "./util/permissions/permissions";
-import { StartupEvents, StartupEvent } from "./util/startup/startup_manager";
+import { StartupService, StartupEvent } from "./util/startup/startup_manager";
 
 config();
 const TOKEN = process.env.TOKEN;
@@ -34,9 +34,11 @@ let checkPerms;
 if (USE_CUSTOM_PERMS) checkPerms = initPerms();
 setEventHandlers(client, checkPerms);
 
-new StartupEvents(
+console.log("[Startup]: Startup service listening");
+new StartupService(
   () => {
     client.login(TOKEN);
+
   }, 
   [StartupEvent.LeaderboardReady, StartupEvent.MetaDataReady]
 );
