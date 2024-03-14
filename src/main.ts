@@ -24,7 +24,7 @@ const intent_flags = [
   GatewayIntentBits.GuildVoiceStates,
 ];
 
-var client = new Client({ intents: intent_flags });
+export const client = new Client({ intents: intent_flags });
 if (!client) {
   console.log("[Startup]: Failed to instantiate client");
   exit(1);

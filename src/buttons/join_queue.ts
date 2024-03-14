@@ -14,7 +14,7 @@ const button: IButton = {
         }
         try {
             const queueName = idArgs[1] as WCAQueue;
-            queueManager.enqueue(interaction.user.id, queueName);
+            queueManager.enqueue(interaction.user.id, queueName, interaction);
         } catch (err) {
             console.log(err);
             return;

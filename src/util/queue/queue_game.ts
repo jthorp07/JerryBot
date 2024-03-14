@@ -1,7 +1,7 @@
 import { Snowflake } from "discord.js";
-import { EventEmitter } from "node:events";
 import { QueueEvent } from "./queue";
 import { FirebaseUserMmr, mmrManager } from "../database_options/firestore/db_mmr";
+import { emitToQueue } from "./queue_manager";
 
 type QueuePlayer = {
     discordId: Snowflake;
@@ -11,14 +11,22 @@ type QueuePlayer = {
 export class QueueGame {
 
     private id: number;
+    private players: Snowflake[];
     private teamOne: QueuePlayer[] = [];
     private teamTwo: QueuePlayer[] = [];
-    private cancelVotes: boolean[] = [];
-    private events: EventEmitter = new EventEmitter();
+    private cancelVotes: Snowflake[] = [];
+    private winVotes: Snowflake[] = [];
+    private teamOneVotes: number = 0;
+    private queueName: string;
 
-    constructor(players: Snowflake[], id: number) {
+    constructor(players: Snowflake[], id: number, queueName: string) {
         this.id = id;
-        this.makeTeams(players);
+        this.players = players;
+        this.queueName = queueName;
+    }
+
+    async init() {
+        await this.makeTeams(this.players);
     }
 
     private async makeTeams(members: Snowflake[]) {
@@ -40,22 +48,32 @@ export class QueueGame {
         players.sort((a, b) => {
             return a.mmr - b.mmr;
         });
-        
-
-
     }
 
     private async cancel() {
-        this.events.emit(QueueEvent.GameOver, this.id);
+        emitToQueue(QueueEvent.GameOver, this.id);
     }
 
-    async endGame(winningTeam: 1 | 2) {
-        this.events.emit(QueueEvent.GameOver, this.id, winningTeam);
+    async emitEndGame(winningTeam: 1 | 2) {
+        emitToQueue(QueueEvent.GameOver, this.id, this.queueName, winningTeam);
     }
 
     getId() {
         return this.id;
     }
 
+    voteWin(id: Snowflake, team: 1 | 2) {
+        if (!this.winVotes.includes(id)) {
+            this.winVotes.push(id);
+            team === 1 ? this.teamOneVotes++ : null;
+        }
+        if (this.winVotes.length > 5) {
+            this.emitEndGame(this.teamOneVotes > 5 ? 1 : 2)
+        }
+    } 
 
+    voteCancel(id: Snowflake) {
+        if (!this.cancelVotes.includes(id)) this.cancelVotes.push(id);
+        if (this.cancelVotes.length >= 5) this.cancel();
+    }
 }
