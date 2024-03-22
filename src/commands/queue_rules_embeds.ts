@@ -4,8 +4,8 @@ import { ICommand, ICommandPermission } from "../types/discord_interactions";
 
 const command: ICommand = {
     data: new SlashCommandBuilder()
-        .setName('ffff')
-        .setDescription('ffff'),
+        .setName('sendruleembeds')
+        .setDescription('Sends the embeds for the queue rules'),
     execute: async (interaction) => {
         await interaction.deferReply({ephemeral: true});
         const channel = interaction.channel;
