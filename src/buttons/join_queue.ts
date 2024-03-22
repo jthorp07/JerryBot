@@ -15,8 +15,10 @@ const button: IButton = {
         try {
             const queueName = idArgs[1] as WCAQueue;
             queueManager.enqueue(interaction.user.id, queueName, interaction);
+            
         } catch (err) {
             console.log(err);
+            await interaction.editReply({ content: "Something went wrong and the command could not be completed"});
             return;
         }
         
@@ -25,7 +27,7 @@ const button: IButton = {
         return new ButtonBuilder()
             .setCustomId(`${customId}:${queue}`)
             .setLabel("Join Queue")
-            .setStyle(ButtonStyle.Primary);
+            .setStyle(ButtonStyle.Success);
     },
     permissions: ICommandPermission.ALL
 }

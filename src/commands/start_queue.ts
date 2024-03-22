@@ -24,7 +24,12 @@ const command: ICommand = {
         await interaction.deferReply({ ephemeral: true });
         const queue = interaction.options.getString("queue", true) as WCAQueue;
         const channelId = interaction.channelId;
-        queueManager.startQueue(queue, channelId);
+        const message = await (interaction.channel?.send({ content:"Preparing the queue..." }));
+        if (!message || !message.id) {
+            throw new Error(`Failed to reserve a message for queue ${queue} in channel ${channelId}`)
+        }
+        queueManager.startQueue(queue, channelId, message.id);
+        await interaction.editReply({ content: "The queue is starting. Once it is fully prepared, the queue message will be updated." })
 
     },
     permissions: ICommandPermission.BOT_ADMIN,

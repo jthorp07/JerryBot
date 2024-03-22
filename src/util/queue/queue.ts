@@ -1,4 +1,4 @@
-import { ButtonInteraction, Snowflake } from "discord.js";
+import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Interaction, Snowflake } from "discord.js";
 import { QueueGame } from "./queue_game";
 import { SetQueue } from "./set_queue";
 import { WCAQueue, addQueueListener } from "./queue_manager";
@@ -17,12 +17,14 @@ export class Queue {
     private locked: boolean = false;
     private nextGameId: number = 0;
     private channelId: Snowflake;
+    private messageId: Snowflake;
 
 
-    constructor(queueName: string, channelId: Snowflake, gameSize?: number) {
+    constructor(queueName: string, channelId: Snowflake, messageId: Snowflake, gameSize?: number) {
         this.queueName = queueName;
         this.gameSize = gameSize || 10;
         this.channelId = channelId;
+        this.messageId = messageId;
     }
 
     enqueue(id: Snowflake, interaction: ButtonInteraction) {
@@ -41,6 +43,7 @@ export class Queue {
             this.nextGameId++;
             this.locked = false;
         }
+        this.updateMessage(interaction);
     }
 
     dequeue(id: Snowflake) {
@@ -52,7 +55,36 @@ export class Queue {
         return this.queue.getQueue() as Snowflake[];
     }
 
+    getGame(id: number) {
+        const target = this.games.get(id);
+        if (!target) throw new Error(`Queue ${this.queueName} does not have a game with ID ${id}.`);
+        return target;
+    }
+
     async close() {
         
+    }
+
+    async updateMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
+        const channel = (await (interaction.guild?.channels.fetch(this.channelId)));
+        if (!channel?.isTextBased()) {
+            throw new Error(`Failed to fetch a text-based channel in queue ${this.queueName}.\nFetched:\n${JSON.stringify(channel)}`);
+        }
+        const message = await channel.messages.fetch(this.messageId);
+        if (!message.editable) {
+            throw new Error(`Message not editable for queue ${this.queueName}.\nMessage:\n${JSON.stringify(message)}`);
+        }
+    }
+
+    cancelGame(gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {
+        const target = this.games.get(gameId);
+        if (!target) throw new Error(`Queue ${this.queueName} does not have an active game with ID ${gameId}.`);
+        target.forceCancel(interaction);
+    }
+
+    voteCancel(gameId: number, interaction: ButtonInteraction) {
+        const target = this.games.get(gameId);
+        if (!target) throw new Error(`Queue ${this.queueName} does not have an active game with ID ${gameId}`);
+        target.voteCancel(interaction.user.id, interaction);
     }
 }
