@@ -1,80 +1,87 @@
-import { QueryDocumentSnapshot, collection, getDocs, getDoc, doc, query, where, setDoc } from "@firebase/firestore";
+import { QueryDocumentSnapshot, collection, getDocs, getDoc, doc, query, where, setDoc, DocumentReference, CollectionReference } from "@firebase/firestore";
 import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
 import { EventEmitter } from "events";
+
+type FirestoreMetaDataBase = {
+    currentSeason: number,
+    guildId: string,
+    mapPool: ValorantMap[],
+}
 
 type FirestoreMetaData = {
     currentSeason: number,
     guildId: string,
     roles: Map<ServerRole, FirestoreDiscordRole>,
-    channels: Map<ServerChannel, FirestoreDiscordChannel>
+    channels: Map<ServerChannel, FirestoreDiscordChannel>,
+    mapPool: Set<ValorantMap>,
 }
 
-type ServerRole = 
-    'queue_reg' | 'iron' | 'bronze' | 'silver' | 'gold' | 
+type ValorantMap = "Bind" | "Ascent" | "Split" | "Pearl" | "Fracture" | "Breeze" | "Lotus" | "Icebox"
+
+type ServerRole =
+    'queue_reg' | 'iron' | 'bronze' | 'silver' | 'gold' |
     'platinum' | 'diamond' | 'ascendant' | 'immortal' | 'radiant' | 'unranked';
 
 type FirestoreDiscordRole = {
     name: ServerRole,
     discordId: Snowflake,
-    guildId: Snowflake,
 }
 
-type ServerChannel = 
+type ServerChannel =
     "queue" | "queue_stats" | "queue_leaderboard";
 
 type FirestoreDiscordChannel = {
     name: ServerChannel,
     discordId: Snowflake,
-    guildId: Snowflake
 }
 
 class MetaDataManager {
 
-    private metaCollection = collection(firestore, FirebaseCollection.MetaData).withConverter({
-        toFirestore: (data: FirestoreMetaData) => data,
-        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreMetaData
-    });
-    private roleCollection = collection(firestore, FirebaseCollection.DiscordRole).withConverter({
-        toFirestore: (data: FirestoreDiscordRole) => data,
-        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordRole
-    });
-    private channelCollection = collection(firestore, FirebaseCollection.DiscordChannel).withConverter({
-        toFirestore: (data: FirestoreDiscordChannel) => data,
-        fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordChannel
-    });
-
     private cached: FirestoreMetaData | undefined;
     private guildId: Snowflake;
+    private rootRef: DocumentReference<FirestoreMetaDataBase, FirestoreMetaDataBase>;
+    private roleCollection: CollectionReference<FirestoreDiscordRole, FirestoreDiscordRole>;
+    private channelCollection: CollectionReference<FirestoreDiscordChannel, FirestoreDiscordChannel>;
 
     constructor(guildId: Snowflake) {
         this.guildId = guildId;
+        const metaCollection = collection(firestore, FirebaseCollection.MetaData).withConverter({
+            toFirestore: (data: FirestoreMetaDataBase) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreMetaDataBase
+        });
+        this.rootRef = doc(metaCollection, guildId);
+        this.roleCollection = collection(this.rootRef, FirebaseCollection.DiscordRole).withConverter({
+            toFirestore: (data: FirestoreDiscordRole) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordRole
+        });
+        this.channelCollection = collection(this.rootRef, FirebaseCollection.DiscordChannel).withConverter({
+            toFirestore: (data: FirestoreDiscordChannel) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordChannel
+        });
         this.getAllMetaData().then(() => {
-            new EventEmitter().emit("meta_ready");
+            // When merged with startup, emit to startup
         });
     }
 
     private async getAllMetaData() {
-        const roleQuery = query(this.roleCollection, where("guildId", "==", this.guildId));
-        const roleSnap = await getDocs(roleQuery);
+        const roleSnap = await getDocs(this.roleCollection);
         const roleMap = new Map<ServerRole, FirestoreDiscordRole>();
         roleSnap.docs.forEach(doc => {
             const role = doc.data();
             roleMap.set(role.name, role);
         });
 
-        const channelQuery = query(this.channelCollection, where("guildId", "==", this.guildId));
-        const channelSnap = await getDocs(channelQuery);
+        const channelSnap = await getDocs(this.channelCollection);
         const channelMap = new Map<ServerChannel, FirestoreDiscordChannel>();
         channelSnap.docs.forEach(doc => {
             const channel = doc.data();
             channelMap.set(channel.name, channel);
         });
 
-        const metaDocRef = doc(this.metaCollection, this.guildId);
-        const metaSnap = await getDoc(metaDocRef);
+        const metaSnap = await getDoc(this.rootRef);
         if (metaSnap.exists()) {
-            
+
         }
 
     }
@@ -85,7 +92,7 @@ class MetaDataManager {
     }
 
     async setRole(role: ServerRole, roleId: Snowflake) {
-        const docRef = doc(this.roleCollection, `${this.guildId}:${role}`);
+        const docRef = doc(this.roleCollection, role);
         const data = { guildId: this.guildId, name: role, discordId: roleId };
         return await setDoc(docRef, data).then(() => {
             this.cached?.roles.set(role, data);

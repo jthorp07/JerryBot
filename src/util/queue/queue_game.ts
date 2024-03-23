@@ -3,7 +3,7 @@ import { QueueEvent } from "./queue";
 import { FirebaseUserMmr, mmrManager } from "../database_options/firestore/db_mmr";
 import { emitToQueue } from "./queue_manager";
 
-type QueuePlayer = {
+export type QueuePlayer = {
     discordId: Snowflake;
     mmr: number;
 }

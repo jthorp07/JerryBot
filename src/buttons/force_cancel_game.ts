@@ -24,7 +24,7 @@ const button: IButton = {
     button: (queue: WCAQueue, gameId: number) => {
         return new ButtonBuilder()
             .setCustomId(`${customId}:${queue}:${gameId}`)
-            .setLabel("Force Cancel")
+            .setLabel("Force Cancel (Admin Only)")
             .setStyle(ButtonStyle.Danger);
     },
     permissions: ICommandPermission.BOT_ADMIN

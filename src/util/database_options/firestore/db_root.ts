@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { config } from "dotenv";
+config();
 
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
