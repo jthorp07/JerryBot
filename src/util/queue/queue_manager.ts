@@ -45,10 +45,10 @@ class QueueManager extends EventEmitter {
         this.queues.set(queue, new Queue(queue, channelId, messageId));
     }
 
-    stopQueue(queue: WCAQueue) {
+    stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
         const target = this.queues.get(queue);
         if (!target) return;
-        return target.close().then(() => {
+        return target.close(interaction).then(() => {
             this.queues.delete(queue);
             if (this.queues.size === 0) {
                 removeQueueListener(QueueEvent.GameOver);
@@ -67,6 +67,12 @@ class QueueManager extends EventEmitter {
         const target = this.queues.get(queue);
         if (!target) throw new Error(`Queue ${queue} is not active`);
         target.voteCancel(gameId, interaction);
+    }
+
+    async close(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
+        const target = this.queues.get(queue);
+        if (!target) throw new Error(`Queue ${queue} is not active`);
+        await target.close(interaction);
     }
 }
 

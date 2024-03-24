@@ -61,8 +61,12 @@ export class Queue {
         return target;
     }
 
-    async close() {
-        
+    async close(interaction?: ChatInputCommandInteraction) {
+        if (this.games.size > 0 && !interaction) throw new Error(`Queue ${this.queueName} cannot be closed without an interaction sinze it has running games`); 
+
+        this.games.forEach(game => {
+            game.forceCancel(interaction!);
+        });
     }
 
     async updateMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {

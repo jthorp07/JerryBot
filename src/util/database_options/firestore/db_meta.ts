@@ -64,6 +64,19 @@ class MetaDataManager {
         });
     }
 
+    private fullToBase(full: FirestoreMetaData) {
+        const mapPool: ValorantMap[] = [];
+        full.mapPool.forEach(map => {
+            mapPool.push(map);
+        });
+        const base: FirestoreMetaDataBase = {
+            guildId: full.guildId,
+            currentSeason: full.currentSeason,
+            mapPool: mapPool
+        }
+        return base;
+    }
+
     private async getAllMetaData() {
         const roleSnap = await getDocs(this.roleCollection);
         const roleMap = new Map<ServerRole, FirestoreDiscordRole>();
@@ -80,27 +93,103 @@ class MetaDataManager {
         });
 
         const metaSnap = await getDoc(this.rootRef);
-        if (metaSnap.exists()) {
-
+        if (!metaSnap.exists()) {
+            this.cached = {
+                guildId: this.guildId,
+                currentSeason: 0,
+                roles: roleMap,
+                channels: channelMap,
+                mapPool: new Set(),
+            }
+        } else {
+            const data = metaSnap.data();
+            const mapPool = new Set<ValorantMap>();
+            data.mapPool.map(mapVal => mapPool.add(mapVal));
+            this.cached = {
+                guildId: data.guildId,
+                currentSeason: data.currentSeason,
+                roles: roleMap,
+                channels: channelMap,
+                mapPool: mapPool,
+            }
         }
-
     }
 
-    async getRole(role: ServerRole) {
+    getRole(role: ServerRole) {
         if (!this.cached) throw new Error("MetaData not fetched");
         return this.cached.roles.get(role);
     }
 
     async setRole(role: ServerRole, roleId: Snowflake) {
+        if (!this.cached) throw new Error("MetaData not fetched");
         const docRef = doc(this.roleCollection, role);
-        const data = { guildId: this.guildId, name: role, discordId: roleId };
+        const data = { name: role, discordId: roleId };
         return await setDoc(docRef, data).then(() => {
-            this.cached?.roles.set(role, data);
+            this.cached!.roles.set(role, data);
             return true;
         }).catch(err => {
             console.error(err);
             return false;
         });
+    }
+
+    getChannel(channel: ServerChannel) {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        return this.cached.channels.get(channel);
+    }
+
+    async setChannel(channel: ServerChannel, channelId: Snowflake) {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        const docRef = doc(this.channelCollection, channel);
+        const data = { name: channel, discordId: channelId };
+        return await setDoc(docRef, data).then(() => {
+            this.cached!.channels.set(channel, data);
+            return true;
+        }).catch(err => {
+            console.error(err);
+            return false;
+        });
+    }
+
+    getCurrentSeason() {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        return this.cached.currentSeason;
+    }
+
+    async setCurrentSeason(season: number) {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        this.cached.currentSeason = season;
+        const newWrite = this.fullToBase(this.cached);
+        await setDoc(this.rootRef, newWrite);
+    }
+
+    getMapPool() {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        const mapPool: ValorantMap[] = [];
+        this.cached.mapPool.forEach(map => { mapPool.push(map); });
+        return mapPool;
+    }
+
+    async addMap(map: ValorantMap) {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        if (this.cached.mapPool.has(map)) return;
+        this.cached.mapPool.add(map);
+        await setDoc(this.rootRef, this.fullToBase(this.cached))
+            .catch(err => {
+                this.cached!.mapPool.delete(map);
+                throw new Error("Failed to save map upstream");
+            });
+    }
+
+    async removeMap(map: ValorantMap) {
+        if (!this.cached) throw new Error("MetaData not fetched");
+        const result = this.cached.mapPool.delete(map);
+        if (!result) return;
+        await setDoc(this.rootRef, this.fullToBase(this.cached))
+            .catch(err => {
+                this.cached!.mapPool.add(map);
+                throw new Error("Failed to save map upstream");
+            });
     }
 }
 
