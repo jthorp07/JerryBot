@@ -1,6 +1,6 @@
 import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
 import { QueueEvent } from "./queue";
-import { FirebaseUserMmr, mmrManager } from "../database_options/firestore/db_mmr";
+import { FirebaseUserMmrLegacy, mmrManager } from "../database_options/firestore/db_queue_stats";
 import { emitToQueue } from "./queue_manager";
 
 export type QueuePlayer = {
@@ -36,7 +36,7 @@ export class QueueGame {
     }
 
     private async makeTeams(members: Snowflake[], interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        const players: FirebaseUserMmr[] = [];
+        const players: FirebaseUserMmrLegacy[] = [];
         const promises = [];
         for (const id of members) {
             promises.push((async () => {

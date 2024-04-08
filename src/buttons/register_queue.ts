@@ -1,6 +1,6 @@
 import { ButtonBuilder, ButtonStyle, GuildMember, GuildMemberRoleManager, Snowflake } from "discord.js";
 import { IButton, ICommandPermission } from "../types/discord_interactions";
-import { mmrManager } from "../util/database_options/firestore/db_mmr";
+import { mmrManager } from "../util/database_options/firestore/db_queue_stats";
 import { setPlayerMmr } from "../util/neatqueue/neatqueue";
 
 const queueRole = '1180001507828043798';

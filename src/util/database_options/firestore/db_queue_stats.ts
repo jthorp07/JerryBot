@@ -2,9 +2,10 @@ import { collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, update
 import { firestore, FirebaseCollection } from './db_root';
 import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
+import { WCAQueue } from '../../queue/queue_manager';
 config();
 
-export type FirebaseUserMmr = {
+export type FirebaseUserMmrLegacy = {
     decoupled: boolean,
     initialMMR: number,
     discordId: Snowflake,
@@ -12,6 +13,28 @@ export type FirebaseUserMmr = {
     seasonsPlayed: number,
     mmr: number,
     active: boolean,
+}
+
+type FirebaseUserProfile = {
+    discordId: Snowflake,
+    queueData: Map<WCAQueue, UserQueueStats>
+}
+
+type UserQueueStats = {
+    initialMmr: number,
+    mmr: number,
+    decoupled: boolean,
+    gamesPlayed: number,
+    seasonsPlayed: number,
+    active: boolean,
+}
+
+type QueueModerationStatus = {
+    punishmentType: "Warning" | "Ban",
+    issued: Date,
+    expiration: Date,
+    reason: string,
+    queue: WCAQueue,
 }
 
 export type FirebaseUserMmrOptions = {
@@ -30,8 +53,8 @@ class MmrManager {
 
     constructor() {
         this._collection = collection(firestore, FirebaseCollection.UserMMR).withConverter({
-            toFirestore: (data: FirebaseUserMmr) => data,
-            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmr 
+            toFirestore: (data: FirebaseUserMmrLegacy) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmrLegacy 
         });
     }
 
@@ -40,7 +63,7 @@ class MmrManager {
         return docSnaps.docs.map(doc => doc.data());
     }
 
-    async setUser(user: FirebaseUserMmr) {
+    async setUser(user: FirebaseUserMmrLegacy) {
         const docRef = doc(this._collection, user.discordId);
         await setDoc(docRef, user);
     }

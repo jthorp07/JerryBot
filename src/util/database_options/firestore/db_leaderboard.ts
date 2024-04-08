@@ -1,5 +1,5 @@
 import { QueryDocumentSnapshot, collection, getDocs, setDoc, doc, getDoc, deleteDoc, where, query } from "@firebase/firestore";
-import { mmrManager } from "./db_mmr";
+import { mmrManager } from "./db_queue_stats";
 import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
 
