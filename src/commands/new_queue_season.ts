@@ -33,11 +33,11 @@ const command: ICommand = {
 
 async function updateInitialMmr(lbUser: LeaderboardUser) {
     const discordId = lbUser.discordId;
-    const mmrUser = await mmrManager.getUser(discordId);
+    const mmrUser = await mmrManager.legacy_getUser(discordId);
     if (!mmrUser) throw new Error(`Failed to fetch user ${lbUser.discordId}`);
     const delta = mmrUser.mmr - mmrUser.initialMMR;
     const newMmr = (mmrUser.initialMMR + (delta / Math.max(2, Math.log2(Math.abs(delta)))));
-    await mmrManager.updateUser({
+    await mmrManager.legacy_updateUser({
         discordId: discordId,
         initialMMR: newMmr,
     });

@@ -2,6 +2,7 @@ import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteractio
 import { QueueGame } from "./queue_game";
 import { SetQueue } from "./set_queue";
 import { WCAQueue, addQueueListener } from "./queue_manager";
+import { queueMessage } from "../../messages/queue_message";
 
 export enum QueueEvent {
     Close="close",
@@ -11,23 +12,25 @@ export enum QueueEvent {
 export class Queue {
 
     private queue: SetQueue = new SetQueue();
-    private queueName: string;
+    private queueName: WCAQueue;
     private games: Map<number, QueueGame> = new Map();
     private gameSize: number;
     private locked: boolean = false;
     private nextGameId: number = 0;
     private channelId: Snowflake;
     private messageId: Snowflake;
+    private queueSeason: number | undefined;
 
 
-    constructor(queueName: string, channelId: Snowflake, messageId: Snowflake, gameSize?: number) {
+    constructor(queueName: WCAQueue, channelId: Snowflake, messageId: Snowflake, queueSeason?: number, gameSize?: number) {
         this.queueName = queueName;
         this.gameSize = gameSize || 10;
         this.channelId = channelId;
         this.messageId = messageId;
+        this.queueSeason = queueSeason;
     }
 
-    enqueue(id: Snowflake, interaction: ButtonInteraction) {
+    async enqueue(id: Snowflake, interaction: ButtonInteraction) {
         if (this.locked) throw new Error("lock");
         const result = this.queue.enqueue(id);
         if (result >= this.gameSize) {
@@ -43,12 +46,14 @@ export class Queue {
             this.nextGameId++;
             this.locked = false;
         }
-        this.updateMessage(interaction);
+        await this.updateMessage(interaction);
     }
 
-    dequeue(id: Snowflake) {
+    async dequeue(id: Snowflake, interaction: ButtonInteraction) {
         if (this.locked) throw new Error("lock");
-        return this.queue.dequeue(id);
+        const result = this.queue.dequeue(id);
+        await this.updateMessage(interaction);
+        return result;
     }
 
     getQueue() {
@@ -78,6 +83,8 @@ export class Queue {
         if (!message.editable) {
             throw new Error(`Message not editable for queue ${this.queueName}.\nMessage:\n${JSON.stringify(message)}`);
         }
+        const newMessage = queueMessage(this.queueName, this.queueSeason);
+        await message.edit(newMessage);
     }
 
     cancelGame(gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {

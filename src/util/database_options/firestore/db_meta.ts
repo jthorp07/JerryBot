@@ -1,23 +1,33 @@
+/**
+ * 
+ * Metadata Layout:
+ *  
+ *      ~/meta/                             [Meta]
+ *      ~/meta/{guildId}                    [Meta.guildId]
+ *                                          [Meta.mapPool]
+ * 
+ *      ~/meta/{guildId}/discord_channel/   [Meta.channels]
+ *      ~/meta/{guildId}discord_role/       [Meta.roles]
+ * 
+ */
 import { QueryDocumentSnapshot, collection, getDocs, getDoc, doc, query, where, setDoc, DocumentReference, CollectionReference } from "@firebase/firestore";
 import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
-import { EventEmitter } from "events";
+
 
 type FirestoreMetaDataBase = {
-    currentSeason: number,
     guildId: string,
     mapPool: ValorantMap[],
 }
 
 type FirestoreMetaData = {
-    currentSeason: number,
     guildId: string,
     roles: Map<ServerRole, FirestoreDiscordRole>,
     channels: Map<ServerChannel, FirestoreDiscordChannel>,
     mapPool: Set<ValorantMap>,
 }
 
-type ValorantMap = "Bind" | "Ascent" | "Split" | "Pearl" | "Fracture" | "Breeze" | "Lotus" | "Icebox"
+export type ValorantMap = "Bind" | "Ascent" | "Split" | "Pearl" | "Fracture" | "Breeze" | "Lotus" | "Icebox"
 
 type ServerRole =
     'queue_reg' | 'iron' | 'bronze' | 'silver' | 'gold' |
@@ -28,7 +38,7 @@ type FirestoreDiscordRole = {
     discordId: Snowflake,
 }
 
-type ServerChannel =
+export type ServerChannel =
     "queue" | "queue_stats" | "queue_leaderboard";
 
 type FirestoreDiscordChannel = {
@@ -71,7 +81,6 @@ class MetaDataManager {
         });
         const base: FirestoreMetaDataBase = {
             guildId: full.guildId,
-            currentSeason: full.currentSeason,
             mapPool: mapPool
         }
         return base;
@@ -96,7 +105,6 @@ class MetaDataManager {
         if (!metaSnap.exists()) {
             this.cached = {
                 guildId: this.guildId,
-                currentSeason: 0,
                 roles: roleMap,
                 channels: channelMap,
                 mapPool: new Set(),
@@ -107,7 +115,6 @@ class MetaDataManager {
             data.mapPool.map(mapVal => mapPool.add(mapVal));
             this.cached = {
                 guildId: data.guildId,
-                currentSeason: data.currentSeason,
                 roles: roleMap,
                 channels: channelMap,
                 mapPool: mapPool,
@@ -151,17 +158,6 @@ class MetaDataManager {
         });
     }
 
-    getCurrentSeason() {
-        if (!this.cached) throw new Error("MetaData not fetched");
-        return this.cached.currentSeason;
-    }
-
-    async setCurrentSeason(season: number) {
-        if (!this.cached) throw new Error("MetaData not fetched");
-        this.cached.currentSeason = season;
-        const newWrite = this.fullToBase(this.cached);
-        await setDoc(this.rootRef, newWrite);
-    }
 
     getMapPool() {
         if (!this.cached) throw new Error("MetaData not fetched");

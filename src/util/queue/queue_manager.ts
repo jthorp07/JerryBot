@@ -3,8 +3,8 @@ import { Queue, QueueEvent } from "./queue";
 import { EventEmitter } from "node:events";
 
 export enum WCAQueue {
-    CustomsNA="na_customs",
-    CustomsEU="eu_customs",
+    CustomsNA="NA Customs",
+    CustomsEU="EU Customs",
 }
 
 class QueueManager extends EventEmitter {
@@ -15,19 +15,19 @@ class QueueManager extends EventEmitter {
         super();
     }
 
-    enqueue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
+    async enqueue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
         const target = this.queues.get(queue);
         if (!target) throw new Error("invalid queue");
-        return target.enqueue(id, interaction);
+        return await target.enqueue(id, interaction);
     }
 
-    dequeue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
+    async dequeue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
         const target = this.queues.get(queue);
         if (!target) throw new Error("invalid queue");
-        return target.dequeue(id);        
+        return await target.dequeue(id, interaction);        
     }
 
-    startQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake) {
+    async startQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, interaction: ChatInputCommandInteraction, currentSeason?: number, gameSize?: number) {
         if (this.queues.size === 0) {
             addQueueListener(QueueEvent.GameOver, (gameId?: number, queueName?: WCAQueue, winningTeam?: 1 | 2) => {
                 if (!gameId || !queueName) {
@@ -42,7 +42,9 @@ class QueueManager extends EventEmitter {
         }
         const target = this.queues.get(queue);
         if (target) target.close();
-        this.queues.set(queue, new Queue(queue, channelId, messageId));
+        const newQueue = new Queue(queue, channelId, messageId, currentSeason, gameSize);
+        await newQueue.updateMessage(interaction)
+        this.queues.set(queue, newQueue);
     }
 
     stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {

@@ -4,6 +4,13 @@ import { WCAQueue, queueManager } from "../util/queue/queue_manager";
 
 const customId = "joinq" as const;
 
+/**
+ * 
+ * Joins a user to a queue
+ * 
+ * Status: Ready for testing
+ * 
+ */
 const button: IButton = {
     customId: customId,
     execute: async (interaction, idArgs) => {
@@ -14,8 +21,8 @@ const button: IButton = {
         }
         try {
             const queueName = idArgs[1] as WCAQueue;
-            queueManager.enqueue(interaction.user.id, queueName, interaction);
-            
+            await queueManager.enqueue(interaction.user.id, queueName, interaction);
+            await interaction.editReply({ content: "You're in! Make sure to leave the queue before it pops if you don't intend to participate."});
         } catch (err) {
             console.log(err);
             await interaction.editReply({ content: "Something went wrong and the command could not be completed"});
@@ -23,7 +30,8 @@ const button: IButton = {
         }
         
     },
-    button: (queue: WCAQueue) => {
+    button: (queue?: WCAQueue) => {
+        if (!queue) throw new Error("Button 'Join Queue' missing required param 'queue': WCAQueue");
         return new ButtonBuilder()
             .setCustomId(`${customId}:${queue}`)
             .setLabel("Join Queue")

@@ -73,7 +73,7 @@ class LeaderboardManager {
     private async makeLeaderboard(leaderboard: Leaderboard) {
         console.log("lb making")
         const newLbPartial: LeaderboardUserPartial[] = [];
-        const allUsers = await mmrManager.getAll();
+        const allUsers = await mmrManager.legacy_getAll();
         for (const user of allUsers) {
             if (!user.active) {
                 console.log(`User not active: id=${user.discordId}`);

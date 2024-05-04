@@ -42,7 +42,7 @@ const button: IButton = {
             return;
         }
 
-        let user = await mmrManager.getUser(interaction.user.id);
+        let user = await mmrManager.legacy_getUser(interaction.user.id);
         // if not exist get rank role
         if (!user) {
 
@@ -83,12 +83,12 @@ const button: IButton = {
                 mmr: roleMmr,
                 active: true,
             }
-            await mmrManager.setUser(user);
+            await mmrManager.legacy_setUser(user);
             
         } else {
             //set neatqueue mmr
             user.active = true;
-            await mmrManager.setUser(user);
+            await mmrManager.legacy_setUser(user);
         }
 
         // Unlock queue channel for user

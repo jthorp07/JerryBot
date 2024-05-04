@@ -40,7 +40,7 @@ export class QueueGame {
         const promises = [];
         for (const id of members) {
             promises.push((async () => {
-                const player = await mmrManager.getUser(id);
+                const player = await mmrManager.legacy_getUser(id);
                 if (!player) throw new Error("player does not exist");
                 players.push(player);
             }).call(this));
