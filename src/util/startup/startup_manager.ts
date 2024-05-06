@@ -5,6 +5,11 @@ export enum StartupEvent {
     LeaderboardReady = "leaderboard_ready",
 }
 
+/**
+ * TODO: 
+ * 
+ *  - expose eventManager.emit() somehow
+ */
 export class StartupService {
 
     private flags: Map<string, boolean> = new Map();
