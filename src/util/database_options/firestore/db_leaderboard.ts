@@ -2,6 +2,7 @@ import { QueryDocumentSnapshot, collection, getDocs, setDoc, doc, getDoc, delete
 import { mmrManager } from "./db_queue_stats";
 import { firestore, FirebaseCollection } from "./db_root";
 import { Snowflake } from "discord.js";
+import { leaderboardScore } from "../../queue/queue_utils";
 
 export type LeaderboardUser = {
     discordId: Snowflake,
@@ -41,7 +42,7 @@ class LeaderboardManager {
             console.log("cached lb");
             return this.cachedLeaderboard;
         } else {
-            console.log("make lb")
+            console.log("make lb");
             this.lastRefreshed = new Date(Date.now());
             await this.clearLeaderboard(leaderboard);
             await this.makeLeaderboard(leaderboard);
@@ -68,7 +69,7 @@ class LeaderboardManager {
         });
         await Promise.all(promises);
         console.log("lb cleared");
-    }
+    } 
 
     private async makeLeaderboard(leaderboard: Leaderboard) {
         console.log("lb making")
@@ -82,7 +83,7 @@ class LeaderboardManager {
             newLbPartial.push({
                 discordId: user.discordId,
                 gamesPlayed: user.gamesPlayed,
-                score: this.calculateLeaderboardScore(user.initialMMR, user.mmr),
+                score: leaderboardScore(user.initialMMR, user.mmr - user.initialMMR),
                 queue: "classic",
                 decoupled: user.decoupled
             });
@@ -98,11 +99,6 @@ class LeaderboardManager {
         });
         await Promise.all(promises);
         console.log("lb made");
-    }
-
-    private calculateLeaderboardScore(initialMmr: number, finalMmr: number) {
-        const deltaMmr = finalMmr - initialMmr;
-        return (deltaMmr * (deltaMmr < 0 ? 1 - (initialMmr / 10000) : 1 + (initialMmr / 10000))).toFixed(2) as unknown as number;
     }
 
     private leaderboardUserFromPartial(user: LeaderboardUserPartial, position: number): LeaderboardUser {

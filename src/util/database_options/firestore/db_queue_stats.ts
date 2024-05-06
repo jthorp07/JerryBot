@@ -1,4 +1,4 @@
-import { collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, updateDoc, query, where, setDoc, DocumentReference, CollectionReference } from 'firebase/firestore';
+import { collection, QueryDocumentSnapshot, getDocs, getDoc, DocumentSnapshot, doc, updateDoc, query, where, setDoc, DocumentReference, CollectionReference } from 'firebase/firestore';
 import { firestore, FirebaseCollection } from './db_root';
 import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
@@ -35,7 +35,7 @@ type FbQueue = {
 }
 
 
-type UserQueueStats = {
+export type UserQueueStats = {
     discordId: Snowflake,
     initialMmr: number,
     mmr: number,
@@ -135,15 +135,32 @@ class QueueStatsManager {
 
     }
 
+    /**
+     * Private method used to update an individual user's stats. Public methods that interact with
+     * user stats should call this method to make changes.
+     * 
+     * @param queue Queue to update user's stats in
+     * @param userId Discord ID of the target user
+     * @param active If a user is marked inactive, they will be excluded from end of season calculations and leaderloard requests
+     * @param mmrDelta The change to apply to the user's MMR. Negative values will result in lowering the user's MMR
+     * @param gamesPlayedDelta The change to apply to the user's 'games played' count for the current season
+     * @param gamesPlayedAllTimeDelta The change to apply to the user's 'games played' count over all seasons (should only be modified on season resets)
+     * @param seasonsPlayedDelta The change to apply to the user's number of seasons played
+     * @param initialMmrDelta The change to apply to the user's starting MMR. Negative values will result in lowering the user's starting MMR.
+     * @param _qRef An already verified queue document reference. If provided, will be used instead of making a new reference to prevent unnecessary reads.
+     * @param _qDoc An already verified queue document. If provided, will be used instead of making a new document to prevent unnecessary reads.
+     * @returns The updated user's stats
+     */
     private async updateUserStats(queue: WCAQueue, userId: Snowflake, active: boolean, mmrDelta: number = 0,
-        gamesPlayedDelta: number = 0, gamesPlayedAllTimeDelta: number = 0, seasonsPlayedDelta: number = 0, initialMmrDelta: number = 0) {
+            gamesPlayedDelta: number = 0, gamesPlayedAllTimeDelta: number = 0, seasonsPlayedDelta: number = 0, initialMmrDelta: number = 0,
+            _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>, _qDoc?: DocumentSnapshot<FbQueuePartial, FbQueuePartial>) {
 
-        const queueRef = doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
-        const queueDoc = await getDoc(queueRef);
+        const queueRef = _qRef ? _qRef : doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
+        const queueDoc = _qDoc ? _qDoc : await getDoc(queueRef);
         if (!queueDoc.exists()) {
             throw new Error("Cannot update stats: Queue does not exist.")
         }
-        const userStatsRef = doc(collection(queueRef, "user_stats"), userId) as DocumentReference<UserQueueStats, UserQueueStats>;
+        const userStatsRef = doc(collection(queueRef, FirebaseCollection.QueueUserStats), userId) as DocumentReference<UserQueueStats, UserQueueStats>;
         const userStatsDoc = await getDoc(userStatsRef);
         if (!userStatsDoc.exists()) {
             // Create new user
@@ -177,12 +194,36 @@ class QueueStatsManager {
         }
     }
 
+    /**
+     * Retrieves the stats of all users in the target queue.
+     * 
+     * @param queue The target queue
+     * @param activeOnly If true, will only return users who are active in the queue
+     * @param _qRef An already verified queue document reference. If provided, will be used instead of making a new reference to prevent unnecessary reads.
+     * @param _qDoc An already verified queue document. If provided, will be used instead of making a new document to prevent unnecessary reads.
+     * @returns 
+     */
+    async getAllUserStats(queue: WCAQueue, activeOnly: boolean = true, _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>, _qDoc?: DocumentSnapshot<FbQueuePartial, FbQueuePartial>) {
+        const queueRef = _qRef ? _qRef : doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
+        const queueDoc = _qDoc ? _qDoc : await getDoc(queueRef);
+        if (!queueDoc.exists()) {
+            throw new Error("Cannot update stats: Queue does not exist.")
+        }
+        const userStatCollection = collection(queueRef, FirebaseCollection.QueueUserStats).withConverter({
+            toFirestore: (data: UserQueueStats) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as UserQueueStats
+        });
+        const userStatsQuery = activeOnly ? await getDocs(query(userStatCollection, where("active", "==", true))) : await getDocs(userStatCollection);
+        const userStats = userStatsQuery.docs.map(doc => doc.data());
+        return userStats;
+    }
+
     async addUserGameResult(queue: WCAQueue, userId: Snowflake, deltaMmr: number) {
         await this.updateUserStats(queue, userId, true, deltaMmr, 1);
     }
 
-    async endOfSeasonCalculations(queue: WCAQueue) {
-        
+    async updateUserNewSeason(queue: WCAQueue, userId: Snowflake, newMmr: number, gamesPlayed: number) {
+        await this.updateUserStats(queue, userId, false, 0, NaN, gamesPlayed, 1);
     }
 
     async legacy_getAll() {

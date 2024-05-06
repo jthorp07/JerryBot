@@ -6,6 +6,7 @@ config();
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
     QueueStats = 'queue_stats',
+    QueueUserStats = 'queue_user_stats',
     QueueModeration = 'queue_mod',
     MetaData = 'meta',
     TenmansLeaderboard = 'tens_leaderboard',

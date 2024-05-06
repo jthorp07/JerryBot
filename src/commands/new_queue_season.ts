@@ -3,6 +3,7 @@ import { ICommand, ICommandPermission } from "../types/discord_interactions";
 import { mmrManager, FirebaseUserMmrLegacy } from "../util/database_options/firestore/db_queue_stats";
 import { LeaderboardUser, leaderboardManager } from "../util/database_options/firestore/db_leaderboard";
 import { WCAQueue, queueManager } from "../util/queue/queue_manager";
+import { mmrAdjustment } from "../util/queue/queue_utils";
 
 const command: ICommand = {
     data: new SlashCommandBuilder()
@@ -19,6 +20,8 @@ const command: ICommand = {
     execute: async (interaction) => {
 
         await interaction.reply({ content: "In progress..." });
+
+        // Close queue on Discord's
         await queueManager.close(WCAQueue.CustomsNA, interaction);
         const leaderboard = await leaderboardManager.getLeaderboard("classic");
         const promises: Promise<any>[] = [];
@@ -36,7 +39,7 @@ async function updateInitialMmr(lbUser: LeaderboardUser) {
     const mmrUser = await mmrManager.legacy_getUser(discordId);
     if (!mmrUser) throw new Error(`Failed to fetch user ${lbUser.discordId}`);
     const delta = mmrUser.mmr - mmrUser.initialMMR;
-    const newMmr = (mmrUser.initialMMR + (delta / Math.max(2, Math.log2(Math.abs(delta)))));
+    const newMmr = mmrAdjustment(mmrUser.initialMMR, delta);
     await mmrManager.legacy_updateUser({
         discordId: discordId,
         initialMMR: newMmr,
