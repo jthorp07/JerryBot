@@ -8,6 +8,13 @@ export type QueuePlayer = {
     mmr: number;
 }
 
+export enum QueueGameStatus {
+    WaitingForPlayers="Waiting for players",
+    PregameVoting="Pre-Game Votes",
+    InGame="In Game",
+    
+}
+
 const MatchmakingConfig = {
     maxSwaps: 20,
     minSwaps: 5,

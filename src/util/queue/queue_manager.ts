@@ -1,6 +1,7 @@
 import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
 import { Queue, QueueEvent } from "./queue";
 import { EventEmitter } from "node:events";
+import { queueRoot } from "../database_options/firestore/db_queue_root";
 
 export enum WCAQueue {
     CustomsNA="NA Customs",
@@ -41,22 +42,19 @@ class QueueManager extends EventEmitter {
             });
         }
         const target = this.queues.get(queue);
-        if (target) target.close();
+        if (target) throw new Error(`Queue ${queue} is already active`);
         const newQueue = new Queue(queue, channelId, messageId, currentSeason, gameSize);
         await newQueue.updateMessage(interaction)
         this.queues.set(queue, newQueue);
     }
 
-    stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
+    async stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
         const target = this.queues.get(queue);
-        if (!target) return;
-        return target.close(interaction).then(() => {
-            this.queues.delete(queue);
-            if (this.queues.size === 0) {
-                removeQueueListener(QueueEvent.GameOver);
-            }
-            return;
-        });
+        if (!target) throw new Error(`Queue ${queue} is not active`);
+        await target.deleteMessage(interaction);
+        await target.close(interaction);
+        await queueRoot.deactivateQueue(queue);
+        this.queues.delete(queue);
     }
 
     cancelGame(queue: WCAQueue, gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {
@@ -69,12 +67,6 @@ class QueueManager extends EventEmitter {
         const target = this.queues.get(queue);
         if (!target) throw new Error(`Queue ${queue} is not active`);
         target.voteCancel(gameId, interaction);
-    }
-
-    async close(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) throw new Error(`Queue ${queue} is not active`);
-        await target.close(interaction);
     }
 }
 

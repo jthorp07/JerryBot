@@ -1,7 +1,7 @@
-import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Interaction, Snowflake } from "discord.js";
+import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
 import { QueueGame } from "./queue_game";
 import { SetQueue } from "./set_queue";
-import { WCAQueue, addQueueListener } from "./queue_manager";
+import { WCAQueue } from "./queue_manager";
 import { queueMessage } from "../../messages/queue_message";
 
 export enum QueueEvent {
@@ -69,9 +69,13 @@ export class Queue {
     async close(interaction?: ChatInputCommandInteraction) {
         if (this.games.size > 0 && !interaction) throw new Error(`Queue ${this.queueName} cannot be closed without an interaction since it has running games`); 
 
+        // Ensure there are no running games in the queue
         this.games.forEach(game => {
             game.forceCancel(interaction!);
         });
+
+        // TODO: Should queued users be informed that the queue closed? Otherwise, at this point the method can return and the queue manager can delete this queue from main memory
+
     }
 
     async updateMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
@@ -83,8 +87,20 @@ export class Queue {
         if (!message.editable) {
             throw new Error(`Message not editable for queue ${this.queueName}.\nMessage:\n${JSON.stringify(message)}`);
         }
-        const newMessage = queueMessage(this.queueName, this.queueSeason);
+        const newMessage = queueMessage(this.queueName, this.queue.getQueue(),this.queueSeason);
         await message.edit(newMessage);
+    }
+
+    async deleteMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
+        const channel = (await (interaction.guild?.channels.fetch(this.channelId)));
+        if (!channel?.isTextBased()) {
+            throw new Error(`Failed to fetch a text-based channel in queue ${this.queueName}.\nFetched:\n${JSON.stringify(channel)}`);
+        }
+        const message = await channel.messages.fetch(this.messageId);
+        if (!message.deletable) {
+            throw new Error(`Message not deletable for queue ${this.queueName}.\nMessage:\n${JSON.stringify(message)}`);
+        }
+        await message.delete();
     }
 
     cancelGame(gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {

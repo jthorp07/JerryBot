@@ -1,5 +1,4 @@
 import { Snowflake } from "discord.js";
-import { EventEmitter } from "events";
 
 /**
  * An array-based FIFO queue in which all enqueued items are unique

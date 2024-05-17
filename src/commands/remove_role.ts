@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
-import { leaderboardManager } from "../util/database_options/firestore/db_leaderboard";
+import { leaderboardManager } from "../util/database_options/firestore/db_queue_leaderboard";
+import { WCAQueue } from "../util/queue/queue_manager";
 
 const command: ICommand = {
     data: new SlashCommandBuilder()
@@ -15,7 +16,7 @@ const command: ICommand = {
     execute: async (interaction) => {
         await interaction.reply({ content: 'Removing role from all users...' });
         const role = interaction.options.getRole('role', true).id;
-        const lastLeaderboard = await leaderboardManager.getLeaderboard("classic");
+        const lastLeaderboard = await leaderboardManager.getLeaderboard(WCAQueue.CustomsNA, "classic");
         for (const user of lastLeaderboard) {           
             interaction.guild?.members.fetch(user.discordId).then(member => member.roles.remove(role)).catch((err) => {if (err) console.error(err)});  
         }

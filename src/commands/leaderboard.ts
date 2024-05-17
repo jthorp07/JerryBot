@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
-import { LeaderboardUser, leaderboardManager } from "../util/database_options/firestore/db_leaderboard";
+import { LeaderboardUser, leaderboardManager } from "../util/database_options/firestore/db_queue_leaderboard";
+import { WCAQueue } from "../util/queue/queue_manager";
 
 
 const modes = new Map<string, (lb: LeaderboardUser[]) => string[]>();
@@ -13,6 +14,14 @@ const command: ICommand = {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
         .setDescription('Displays the leaderboard')
+        .addStringOption(option =>
+            option.setName('queue')
+                .setDescription('The queue to grab the leaderboard for')
+                .setRequired(true)
+                .setChoices(
+                    { name: "NA Customs", value: "na" },
+                    { name: "EU Customs", value: "eu" },
+                ))
         .addStringOption(option =>
             option.setName('mode')
                 .setDescription('The type of leaderboard to display')
@@ -27,7 +36,7 @@ const command: ICommand = {
             await interaction.editReply({ content: 'Invalid mode selected' });
             return;
         }
-        const leaderboard = await leaderboardManager.getLeaderboard("classic");
+        const leaderboard = await leaderboardManager.getLeaderboard(WCAQueue.CustomsNA, "classic");
         const messages = method(leaderboard);
         for (const message of messages) {
             if (!message || message.length == 0) continue;
@@ -35,7 +44,7 @@ const command: ICommand = {
         }
         await interaction.deleteReply();
     },
-    permissions: ICommandPermission.BOT_ADMIN,
+    permissions: ICommandPermission.ALL,
 }
 
 function competitionLeaderboard(lb: LeaderboardUser[]) {

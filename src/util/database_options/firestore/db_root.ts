@@ -1,17 +1,22 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { DocumentReference, collection, doc, getFirestore } from 'firebase/firestore';
 import { config } from "dotenv";
+import { Snowflake } from 'discord.js';
+import { FirestoreMetaDataBase } from './db_meta';
 config();
 
 export enum FirebaseCollection {
     UserMMR = 'user_mmr',
+    QueueRoot = 'queue',
     QueueStats = 'queue_stats',
     QueueUserStats = 'queue_user_stats',
     QueueModeration = 'queue_mod',
+    QueueLeaderboard = 'queue_leaderboard',
     MetaData = 'meta',
     TenmansLeaderboard = 'tens_leaderboard',
     DiscordChannel = 'discord_channel',
-    DiscordRole = 'discord_role'
+    DiscordRole = 'discord_role',
+    Guilds = 'guild'
 }
 
 const firebaseConfig = {
@@ -24,5 +29,14 @@ const firebaseConfig = {
     measurementId: "G-VS9JMB9ZG7"
 };
 
+class FirebaseRoot {
+    doc;
+
+    constructor(guildId: Snowflake) {
+        this.doc = doc(collection(firestore, FirebaseCollection.Guilds), guildId) as DocumentReference<FirestoreMetaDataBase, FirestoreMetaDataBase>;
+    }
+}
+
 const firebaseApp = initializeApp(firebaseConfig);
 export const firestore = getFirestore(firebaseApp);
+export const root = new FirebaseRoot(process.env.WORTHY_SERVER || "710741097126821970");

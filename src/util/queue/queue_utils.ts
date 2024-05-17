@@ -18,13 +18,15 @@ export function endOfSeasonCalculations (userStats: UserQueueStats[]) {
             newMmr: newMmr,
             finalScore: finalScore,
             discordId: user.discordId,
-            decoupled: user.decoupled
+            decoupled: user.decoupled,
+            newlyDecoupled: false,
+            gamesPlayed: user.gamesPlayed,
         }
         
         // Decoupling calculations
         if (!user.decoupled) {
             if (user.gamesPlayedAllTime + user.gamesPlayed >= GAMES_PLAYED_DECOUPLE_THRESHOLD) {
-                newlyDecoupled.push(user.discordId);
+                newStats.newlyDecoupled = true;
                 newStats.decoupled = true;
             }
         }

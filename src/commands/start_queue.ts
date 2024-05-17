@@ -23,11 +23,15 @@ const command: ICommand = {
                     // makeQueueOptions()
                 ))
         .addIntegerOption(option =>
-            option.setName("season")
+            option.setName("seasonovr")
+                .setDescription("Overrides the \"newseason\" option")
+                .setRequired(false)
+                .setMinValue(1))
+        .addIntegerOption(option =>
+            option.setName("newseason")
                 .setDescription("The season the queue is in")
                 .setRequired(false)
-                .setMinValue(1)
-        ) as SlashCommandBuilder,
+                .setMinValue(1)) as SlashCommandBuilder,
     execute: async (interaction) => {
         await interaction.reply({ content: "The queue is starting. Once it is fully prepared, the queue message will be updated.", ephemeral: true });
         const queue = interaction.options.getString("queue", true) as WCAQueue;

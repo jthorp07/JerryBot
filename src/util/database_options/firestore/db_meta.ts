@@ -11,11 +11,11 @@
  * 
  */
 import { QueryDocumentSnapshot, collection, getDocs, getDoc, doc, query, where, setDoc, DocumentReference, CollectionReference } from "@firebase/firestore";
-import { firestore, FirebaseCollection } from "./db_root";
+import { FirebaseCollection, root } from "./db_root";
 import { Snowflake } from "discord.js";
 
 
-type FirestoreMetaDataBase = {
+export type FirestoreMetaDataBase = {
     guildId: string,
     mapPool: ValorantMap[],
 }
@@ -50,22 +50,18 @@ class MetaDataManager {
 
     private cached: FirestoreMetaData | undefined;
     private guildId: Snowflake;
-    private rootRef: DocumentReference<FirestoreMetaDataBase, FirestoreMetaDataBase>;
+    private root;
     private roleCollection: CollectionReference<FirestoreDiscordRole, FirestoreDiscordRole>;
     private channelCollection: CollectionReference<FirestoreDiscordChannel, FirestoreDiscordChannel>;
 
     constructor(guildId: Snowflake) {
         this.guildId = guildId;
-        const metaCollection = collection(firestore, FirebaseCollection.MetaData).withConverter({
-            toFirestore: (data: FirestoreMetaDataBase) => data,
-            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreMetaDataBase
-        });
-        this.rootRef = doc(metaCollection, guildId);
-        this.roleCollection = collection(this.rootRef, FirebaseCollection.DiscordRole).withConverter({
+        this.root = root;
+        this.roleCollection = collection(this.root.doc, FirebaseCollection.DiscordRole).withConverter({
             toFirestore: (data: FirestoreDiscordRole) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordRole
         });
-        this.channelCollection = collection(this.rootRef, FirebaseCollection.DiscordChannel).withConverter({
+        this.channelCollection = collection(this.root.doc, FirebaseCollection.DiscordChannel).withConverter({
             toFirestore: (data: FirestoreDiscordChannel) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirestoreDiscordChannel
         });
@@ -101,7 +97,7 @@ class MetaDataManager {
             channelMap.set(channel.name, channel);
         });
 
-        const metaSnap = await getDoc(this.rootRef);
+        const metaSnap = await getDoc(this.root.doc);
         if (!metaSnap.exists()) {
             this.cached = {
                 guildId: this.guildId,
@@ -170,7 +166,7 @@ class MetaDataManager {
         if (!this.cached) throw new Error("MetaData not fetched");
         if (this.cached.mapPool.has(map)) return;
         this.cached.mapPool.add(map);
-        await setDoc(this.rootRef, this.fullToBase(this.cached))
+        await setDoc(this.root.doc, this.fullToBase(this.cached))
             .catch(err => {
                 this.cached!.mapPool.delete(map);
                 throw new Error("Failed to save map upstream");
@@ -181,7 +177,7 @@ class MetaDataManager {
         if (!this.cached) throw new Error("MetaData not fetched");
         const result = this.cached.mapPool.delete(map);
         if (!result) return;
-        await setDoc(this.rootRef, this.fullToBase(this.cached))
+        await setDoc(this.root.doc, this.fullToBase(this.cached))
             .catch(err => {
                 this.cached!.mapPool.add(map);
                 throw new Error("Failed to save map upstream");

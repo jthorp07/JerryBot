@@ -15,5 +15,10 @@
     "node_modules",
     "legacy",
     "**/__tests__/*"
-  ]
+  ],
+  "typedocOptions": {
+    "entryPoints": ["./src"],
+    "entryPointStrategy": "expand",
+    "out": "docs"
+  }
 }

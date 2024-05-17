@@ -1,8 +1,10 @@
-import { collection, QueryDocumentSnapshot, getDocs, getDoc, DocumentSnapshot, doc, updateDoc, query, where, setDoc, DocumentReference, CollectionReference } from 'firebase/firestore';
+import { collection, QueryDocumentSnapshot, getDocs, getDoc, DocumentSnapshot, doc, updateDoc, query, where, setDoc, DocumentReference, CollectionReference, deleteDoc } from 'firebase/firestore';
 import { firestore, FirebaseCollection } from './db_root';
 import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
 import { WCAQueue } from '../../queue/queue_manager';
+import { queueRoot, FbQueuePartial } from './db_queue_root';
+import { NeatQueueApiLeaderboardUser, getLastSeason } from '../../neatqueue/neatqueue';
 config();
 
 export type FirebaseUserMmrLegacy = {
@@ -15,26 +17,6 @@ export type FirebaseUserMmrLegacy = {
     active: boolean,
 }
 
-
-type FbQueuePartial = {
-    queue: WCAQueue,
-    active: boolean,
-    season: number,
-    channelId: Snowflake,
-    messageId: Snowflake,
-}
-
-
-type FbQueue = {
-    queue: WCAQueue,
-    active: boolean,
-    season: number,
-    channelId: Snowflake,
-    messageId: Snowflake,
-    userStats: Map<Snowflake, UserQueueStats>
-}
-
-
 export type UserQueueStats = {
     discordId: Snowflake,
     initialMmr: number,
@@ -46,6 +28,7 @@ export type UserQueueStats = {
     active: boolean,
 }
 
+// TODO: Likely to be moved to db_queue_moderation.ts (QueueModerationManager)
 type QueueModerationStatus = {
     punishmentType: "Warning" | "Ban",
     issued: Date,
@@ -64,75 +47,18 @@ export type FirebaseUserMmrOptions = {
     active?: boolean,
 }
 
-class QueueStatsManager {
+export class QueueStatsManager {
 
     private _collection_legacy;
-    private rootRef: DocumentReference;
+    private root;
 
-    constructor(guildId: Snowflake) {
+    constructor() {
 
         this._collection_legacy = collection(firestore, FirebaseCollection.UserMMR).withConverter({
             toFirestore: (data: FirebaseUserMmrLegacy) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmrLegacy
         });
-        const _collection = collection(firestore, FirebaseCollection.QueueStats).withConverter({
-            toFirestore: (data: FbQueuePartial) => data,
-            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FbQueuePartial
-        });
-        this.rootRef = doc(_collection, guildId);
-    }
-
-    /**
-     * Marks the target queue as active and updates its season, channelId, and messageId values as necessary.
-     * 
-     * @param queue The queue to activate
-     * @param channelId The channel the queue is hosted in
-     * @param messageId The message being used as the queue interface
-     * @param newSeason If true, increments the queue's season number
-     * @param resetSeason [OPTIONAL: Default=false]: If true, sets the queue's season number to 0. Overrides newSeason.
-     */
-    async activateQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, newSeason: boolean, resetSeason: boolean = false) {
-
-        const queueRef = doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
-        const queueDoc = await getDoc(queueRef);
-        if (!queueDoc.exists()) {
-            // Create queue doc
-            await setDoc(queueRef, {
-                queue: queue,
-                active: true,
-                season: 0,
-                channelId: channelId,
-                messageId: messageId,
-            });
-        } else {
-            // Reactivate existing queue
-            await setDoc(queueRef, {
-                queue: queue,
-                active: true,
-                season: resetSeason ? 0 : newSeason ? queueDoc.data().season + 1 : queueDoc.data().season,
-                channelId: channelId,
-                messageId: messageId,
-            });
-        }
-    }
-
-
-    /**
-     * Marks the target queue as inactive. In order to reactivate, 
-     * 
-     * @param queue The queue to deactivate
-     */
-    async deactivateQueue(queue: WCAQueue) {
-
-        const queueRef = doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
-        const queueDoc = await getDoc(queueRef);
-        if (!queueDoc.exists()) {
-            throw new Error("Cannot deactivate queue: Queue does not exist.")
-        }
-        await updateDoc(queueRef, {
-            active: false,
-        });
-
+        this.root = queueRoot;
     }
 
     /**
@@ -146,27 +72,22 @@ class QueueStatsManager {
      * @param gamesPlayedDelta The change to apply to the user's 'games played' count for the current season
      * @param gamesPlayedAllTimeDelta The change to apply to the user's 'games played' count over all seasons (should only be modified on season resets)
      * @param seasonsPlayedDelta The change to apply to the user's number of seasons played
-     * @param initialMmrDelta The change to apply to the user's starting MMR. Negative values will result in lowering the user's starting MMR.
+     * @param newInitialMmr The new initial MMR to apply to the user. If not supplied or negative, initial MMR will be unchanged.
      * @param _qRef An already verified queue document reference. If provided, will be used instead of making a new reference to prevent unnecessary reads.
-     * @param _qDoc An already verified queue document. If provided, will be used instead of making a new document to prevent unnecessary reads.
      * @returns The updated user's stats
      */
     private async updateUserStats(queue: WCAQueue, userId: Snowflake, active: boolean, mmrDelta: number = 0,
-            gamesPlayedDelta: number = 0, gamesPlayedAllTimeDelta: number = 0, seasonsPlayedDelta: number = 0, initialMmrDelta: number = 0,
-            _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>, _qDoc?: DocumentSnapshot<FbQueuePartial, FbQueuePartial>) {
+        gamesPlayedDelta: number = 0, gamesPlayedAllTimeDelta: number = 0, seasonsPlayedDelta: number = 0, newInitialMmr: number = -1,
+        _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>) {
 
-        const queueRef = _qRef ? _qRef : doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
-        const queueDoc = _qDoc ? _qDoc : await getDoc(queueRef);
-        if (!queueDoc.exists()) {
-            throw new Error("Cannot update stats: Queue does not exist.")
-        }
+        const queueRef = _qRef ? _qRef : (await this.root.getQueue(queue)).ref;
         const userStatsRef = doc(collection(queueRef, FirebaseCollection.QueueUserStats), userId) as DocumentReference<UserQueueStats, UserQueueStats>;
         const userStatsDoc = await getDoc(userStatsRef);
         if (!userStatsDoc.exists()) {
             // Create new user
             const newUser: UserQueueStats = {
                 discordId: userId,
-                initialMmr: initialMmrDelta,
+                initialMmr: newInitialMmr,
                 mmr: mmrDelta,
                 decoupled: false,
                 gamesPlayed: gamesPlayedDelta,
@@ -181,7 +102,7 @@ class QueueStatsManager {
             const oldData = userStatsDoc.data();
             const updatedUser: UserQueueStats = {
                 discordId: userId,
-                initialMmr: oldData.initialMmr + initialMmrDelta,
+                initialMmr: newInitialMmr < 0 ? oldData.initialMmr : newInitialMmr,
                 mmr: oldData.mmr + mmrDelta,
                 decoupled: oldData.decoupled,
                 gamesPlayed: isNaN(gamesPlayedDelta) ? 0 : oldData.gamesPlayed + gamesPlayedDelta,
@@ -200,15 +121,11 @@ class QueueStatsManager {
      * @param queue The target queue
      * @param activeOnly If true, will only return users who are active in the queue
      * @param _qRef An already verified queue document reference. If provided, will be used instead of making a new reference to prevent unnecessary reads.
-     * @param _qDoc An already verified queue document. If provided, will be used instead of making a new document to prevent unnecessary reads.
-     * @returns 
+     * @returns The stats of all users in the queue, or the stats of all active users in the queue
      */
-    async getAllUserStats(queue: WCAQueue, activeOnly: boolean = true, _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>, _qDoc?: DocumentSnapshot<FbQueuePartial, FbQueuePartial>) {
-        const queueRef = _qRef ? _qRef : doc(this.rootRef, queue, queue) as DocumentReference<FbQueuePartial, FbQueuePartial>;
-        const queueDoc = _qDoc ? _qDoc : await getDoc(queueRef);
-        if (!queueDoc.exists()) {
-            throw new Error("Cannot update stats: Queue does not exist.")
-        }
+    async getAllUserStats(queue: WCAQueue, activeOnly: boolean = true, _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>) {
+        const queueRef = _qRef ? _qRef : (await this.root.getQueue(queue)).ref;
+
         const userStatCollection = collection(queueRef, FirebaseCollection.QueueUserStats).withConverter({
             toFirestore: (data: UserQueueStats) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as UserQueueStats
@@ -218,12 +135,31 @@ class QueueStatsManager {
         return userStats;
     }
 
+    /**
+     * Retrieves the stats of a user in the target queue.
+     * 
+     * @param queue The target queue
+     * @param userId Discord ID of target user
+     * @param _qRef An already verified queue document reference. If provided, will be used instead of making a new reference to prevent unnecessary reads.
+     * @returns 
+     */
+    async getUserStats(queue: WCAQueue, userId: Snowflake, _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>) {
+        const queueRef = _qRef ? _qRef : (await this.root.getQueue(queue)).ref;
+        const userStatCollection = collection(queueRef, FirebaseCollection.QueueUserStats).withConverter({
+            toFirestore: (data: UserQueueStats) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as UserQueueStats
+        });
+        const userStatsQuery = await getDoc(doc(userStatCollection, userId));
+        const userStats = userStatsQuery.exists() ? userStatsQuery.data() : undefined;
+        return userStats;
+    }
+
     async addUserGameResult(queue: WCAQueue, userId: Snowflake, deltaMmr: number) {
         await this.updateUserStats(queue, userId, true, deltaMmr, 1);
     }
 
-    async updateUserNewSeason(queue: WCAQueue, userId: Snowflake, newMmr: number, gamesPlayed: number) {
-        await this.updateUserStats(queue, userId, false, 0, NaN, gamesPlayed, 1);
+    async updateUserNewSeason(queue: WCAQueue, userId: Snowflake, newMmr: number, gamesPlayed: number, _qRef?: DocumentReference<FbQueuePartial, FbQueuePartial>) {
+        await this.updateUserStats(queue, userId, false, 0, NaN, gamesPlayed, 1, newMmr, _qRef);
     }
 
     async legacy_getAll() {
@@ -251,9 +187,74 @@ class QueueStatsManager {
         return docSnap.exists() ? docSnap.data() : undefined;
     }
 
+    legacyUserMmrToUserQueueStats(user: FirebaseUserMmrLegacy, gamesPlayedAllTime: number): UserQueueStats {
+        return {
+            discordId: user.discordId,
+            initialMmr: user.initialMMR,
+            mmr: user.mmr,
+            decoupled: user.decoupled,
+            gamesPlayed: gamesPlayedAllTime,
+            gamesPlayedAllTime: user.gamesPlayed,
+            seasonsPlayed: user.seasonsPlayed,
+            active: user.active,
+        }
+    }
+
+    async legacy_migrate(users: FirebaseUserMmrLegacy[]) {
+
+        console.log("Fetching Refs")
+        const refs = await this.root.getQueue(WCAQueue.CustomsNA);
+        const queueRef = refs.ref;
+        const userStatCollection = collection(queueRef, FirebaseCollection.QueueUserStats).withConverter({
+            toFirestore: (data: UserQueueStats) => data,
+            fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as UserQueueStats
+        });
+
+        console.log("Fetching NeatQueue user data");
+        const nqUserData = await getLastSeason("1180382139712286791", "710741097126821970");
+        console.log("Mapping NeatQueue user data");
+        const nqUserMap = new Map<Snowflake, NeatQueueApiLeaderboardUser>();
+        for (const nqUser of nqUserData.alltime) {
+            nqUserMap.set(nqUser.id, nqUser);
+        }
+
+        console.log("Adding user data to new schema");
+        const userUploadPromises: Promise<any>[] = [];
+        for (const oldUser of users) {
+
+            const nqData = nqUserMap.get(oldUser.discordId);
+            if (!nqData) {
+                console.log(`Missing NeatQueue data for user ${oldUser.discordId}. Skipping`);
+                continue;
+            }
+
+            const newUser = this.legacyUserMmrToUserQueueStats(oldUser, nqData.data.wins + nqData.data.losses);
+            const newUserDocRef = doc(userStatCollection, oldUser.discordId);
+            userUploadPromises.push(setDoc(newUserDocRef, newUser));
+        }
+        await Promise.all(userUploadPromises);
+
+        console.log("Validating data in new schema");
+        const newData = await getDocs(userStatCollection);
+        if (newData.docs.length != users.length) {
+            console.log(`New and old data is not consistent (new length = ${newData.docs.length}, old length = ${users.length}). Aborting.`);
+            return false;
+        }
+        return true;
+
+        // console.log("Deleting data from old schema");
+        // const userDeletePromises: Promise<any>[] = [];
+        // for (const oldUser of users) {
+
+        //     const oldUserDocRef = doc(this._collection_legacy, oldUser.discordId);
+        //     userDeletePromises.push(deleteDoc(oldUserDocRef));
+        // }
+        // await Promise.all(userDeletePromises);
+    }
+
 }
 
-export const mmrManager = new QueueStatsManager("710741097126821970");
+export const mmrManager = new QueueStatsManager();
 // Example of using query
 
 // export async function getUserByDiscordId(discordId: Snowflake) {
