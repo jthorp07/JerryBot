@@ -1,7 +1,7 @@
 import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
 import { QueueEvent } from "./queue";
 import { FirebaseUserMmrLegacy, mmrManager } from "../database_options/firestore/db_queue_stats";
-import { emitToQueue } from "./queue_manager";
+import { queueManager } from "./queue_manager";
 
 export type QueuePlayer = {
     discordId: Snowflake;
@@ -144,11 +144,11 @@ export class QueueGame {
     }
 
     private async cancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        emitToQueue(QueueEvent.GameOver, this.id);
+        queueManager.emit(QueueEvent.GameOver, this.id);
     }
 
     async emitEndGame(winningTeam: 1 | 2) {
-        emitToQueue(QueueEvent.GameOver, this.id, this.queueName, winningTeam);
+        queueManager.emit(QueueEvent.GameOver, this.id, this.queueName, winningTeam);
     }
 
     getId() {

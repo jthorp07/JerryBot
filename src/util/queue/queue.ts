@@ -3,6 +3,7 @@ import { QueueGame } from "./queue_game";
 import { SetQueue } from "./set_queue";
 import { WCAQueue } from "./queue_manager";
 import { queueMessage } from "../../messages/queue_message";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
 
 export enum QueueEvent {
     Close="close",
@@ -11,9 +12,9 @@ export enum QueueEvent {
 
 export class Queue {
 
-    private queue: SetQueue = new SetQueue();
+    private queue: SetQueue;
     private queueName: WCAQueue;
-    private games: Map<number, QueueGame> = new Map();
+    private games: Map<number, QueueGame>;
     private gameSize: number;
     private locked: boolean = false;
     private nextGameId: number = 0;
@@ -23,6 +24,8 @@ export class Queue {
 
 
     constructor(queueName: WCAQueue, channelId: Snowflake, messageId: Snowflake, queueSeason?: number, gameSize?: number) {
+        this.queue = new SetQueue(25);
+        this.games = new Map();
         this.queueName = queueName;
         this.gameSize = gameSize || 10;
         this.channelId = channelId;
@@ -80,14 +83,24 @@ export class Queue {
 
     async updateMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
         const channel = (await (interaction.guild?.channels.fetch(this.channelId)));
-        if (!channel?.isTextBased()) {
-            throw new Error(`Failed to fetch a text-based channel in queue ${this.queueName}.\nFetched:\n${JSON.stringify(channel)}`);
+        if (!channel || !channel.isTextBased()) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingRecoverable,
+                `Failed to fetch a text-based channel in queue ${this.queueName}.\nFetched:\n${JSON.stringify(channel)}`
+            );
+            return e;
         }
         const message = await channel.messages.fetch(this.messageId);
-        if (!message.editable) {
-            throw new Error(`Message not editable for queue ${this.queueName}.\nMessage:\n${JSON.stringify(message)}`);
+        if (!message) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingRecoverable,
+                `Message not editable for queue ${this.queueName}.\nMessage Object:\n${JSON.stringify(message)}`
+            )
+            return e;
         }
-        const newMessage = queueMessage(this.queueName, this.queue.getQueue(),this.queueSeason);
+        const newMessage = queueMessage(this.queueName, this.queue.getQueue(), this.queueSeason);
         await message.edit(newMessage);
     }
 

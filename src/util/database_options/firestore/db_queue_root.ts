@@ -30,22 +30,23 @@ class QueueRoot {
      * @param channelId The channel the queue is hosted in
      * @param messageId The message being used as the queue interface
      * @param newSeason If true, increments the queue's season number
-     * @param resetSeason [OPTIONAL: Default=false]: If true, sets the queue's season number to 0. Overrides newSeason.
+     * @param seasonOverride [OPTIONAL: Default=false]: If true, sets the queue's season number to 0. Overrides newSeason.
      */
-    async activateQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, newSeason: boolean, resetSeason: boolean = false) {
+    async activateQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, newSeason: boolean, seasonOverride?: number) {
 
-        const refs = await this.getQueue(queue);
+        const refs = await this.getQueue(queue, true);
         const queueRef = refs.ref;
         const queueDoc = refs.doc!;
-
-        // Reactivate existing queue
-        await setDoc(queueRef, {
+        const updatedQueue: FbQueuePartial = {
             queue: queue,
             active: true,
-            season: resetSeason ? 0 : newSeason ? queueDoc.data()!.season + 1 : queueDoc.data()!.season,
+            season: seasonOverride ? seasonOverride : newSeason ? queueDoc.data()!.season + 1 : queueDoc.data()!.season,
             channelId: channelId,
             messageId: messageId,
-        });
+        }
+        // Reactivate existing queue
+        await setDoc(queueRef, updatedQueue);
+        return updatedQueue;
     }
 
     /**

@@ -26,7 +26,7 @@ export class SetQueue {
         }
         if (++this.length > this.capacity || this.capacity == -1) {
             this.length--;
-            throw new Error("capacity");
+            throw new Error(`Capacity error: Enqueue would result in capacity over ${this.capacity}`);
         }
         this.length = this.queue.push(user);
         return this.length;
@@ -63,6 +63,6 @@ export class SetQueue {
     }
 
     getQueue() {
-        return this.queue as Snowflake[];
+        return this.queue;
     }
 }

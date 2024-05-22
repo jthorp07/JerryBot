@@ -2,18 +2,19 @@ import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "disco
 import { Queue, QueueEvent } from "./queue";
 import { EventEmitter } from "node:events";
 import { queueRoot } from "../database_options/firestore/db_queue_root";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
 
 export enum WCAQueue {
     CustomsNA="NA Customs",
     CustomsEU="EU Customs",
 }
 
-class QueueManager extends EventEmitter {
+class QueueManager {
 
     private queues: Map<WCAQueue, Queue> = new Map();
+    private events: EventEmitter = new EventEmitter();
     
     constructor() {
-        super();
     }
 
     async enqueue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
@@ -24,13 +25,20 @@ class QueueManager extends EventEmitter {
 
     async dequeue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
         const target = this.queues.get(queue);
-        if (!target) throw new Error("invalid queue");
+        if (!target) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `Queue ${queue} is not active`,
+            );
+            return e;
+        }
         return await target.dequeue(id, interaction);        
     }
 
     async startQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, interaction: ChatInputCommandInteraction, currentSeason?: number, gameSize?: number) {
         if (this.queues.size === 0) {
-            addQueueListener(QueueEvent.GameOver, (gameId?: number, queueName?: WCAQueue, winningTeam?: 1 | 2) => {
+            this.addListener(QueueEvent.GameOver, (gameId?: number, queueName?: WCAQueue, winningTeam?: 1 | 2) => {
                 if (!gameId || !queueName) {
                     throw new Error(`Event ${QueueEvent.GameOver} requires callback parameters 'gameId' {number} and 'queueName' {WCAQueue}`);
                 }
@@ -44,16 +52,22 @@ class QueueManager extends EventEmitter {
         const target = this.queues.get(queue);
         if (target) throw new Error(`Queue ${queue} is already active`);
         const newQueue = new Queue(queue, channelId, messageId, currentSeason, gameSize);
-        await newQueue.updateMessage(interaction)
+        await newQueue.updateMessage(interaction);
         this.queues.set(queue, newQueue);
     }
 
     async stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
         const target = this.queues.get(queue);
-        if (!target) throw new Error(`Queue ${queue} is not active`);
+        if (!target) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `Queue ${queue} is not active`,
+            );
+            return e;
+        } 
         await target.deleteMessage(interaction);
         await target.close(interaction);
-        await queueRoot.deactivateQueue(queue);
         this.queues.delete(queue);
     }
 
@@ -68,10 +82,15 @@ class QueueManager extends EventEmitter {
         if (!target) throw new Error(`Queue ${queue} is not active`);
         target.voteCancel(gameId, interaction);
     }
+
+    addListener(event: QueueEvent, callback: (...args: any[]) => void) {
+        this.events.on(event, callback);
+    }
+
+    emit(event: QueueEvent, ...args: any[]) {
+        this.events.emit(event, args);
+    }
 }
 
 
 export const queueManager = new QueueManager();
-export const emitToQueue = queueManager.emit;
-export const addQueueListener = queueManager.on;
-export const removeQueueListener = queueManager.removeAllListeners;

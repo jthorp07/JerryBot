@@ -1,6 +1,8 @@
 import { SlashCommandBuilder } from "discord.js";
 import { ICommand, ICommandPermission } from "../types/discord_interactions";
 import { WCAQueue, queueManager } from "../util/queue/queue_manager";
+import { queueRoot } from "../util/database_options/firestore/db_queue_root";
+import { JerryErrorType } from "../types/jerry_error";
 
 /**
  * ADMIN ONLY:
@@ -23,10 +25,18 @@ const command: ICommand = {
                     // makeQueueOptions()
                 )) as SlashCommandBuilder,
     execute: async (interaction) => {
-        await interaction.reply({ content: "The queue is starting. Once it is fully prepared, the queue message will be updated.", ephemeral: true });
+        await interaction.reply({ content: "The queue being cleaned up. When it is fully closed, this response will update!", ephemeral: true });
         const queue = interaction.options.getString("queue", true) as WCAQueue;
-        await queueManager.stopQueue(queue, interaction);
-        await interaction.editReply({ content: "All done! Users should now be able to queue up!" });
+        const err = await queueManager.stopQueue(queue, interaction);
+        if (err && err.type == JerryErrorType.IllegalStateError) {
+            await interaction.editReply({ content: err.message });
+            err.recover();
+            return;
+        } else if (err) {
+            err.throw();
+        }
+        await queueRoot.deactivateQueue(queue);
+        await interaction.editReply({ content: "All done! The queue is closed!" });
     },
     permissions: ICommandPermission.BOT_ADMIN,
 }

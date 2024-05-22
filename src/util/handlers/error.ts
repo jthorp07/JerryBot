@@ -6,7 +6,7 @@ const eventHandler: IEventHandler = {
     handlerFactory(client, checkPerms) {
         return async (error: Error) => {
             // TODO: Implement
-            console.error(`[Error]: ${error.name}  -  ${error.message}`)
+            console.error(`[ClientError]: ${JSON.stringify(error)}`)
             return;
         }
     },

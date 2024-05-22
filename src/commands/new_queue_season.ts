@@ -7,6 +7,7 @@ import { endOfSeasonCalculations, mmrAdjustment } from "../util/queue/queue_util
 import { FbQueuePartial, queueRoot } from "../util/database_options/firestore/db_queue_root";
 import { DocumentReference } from "firebase/firestore";
 import { queueMessage } from "../messages/queue_message";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../types/jerry_error";
 
 // Because discord only allows fully lowercase alphabetic strings for values we can't use the user readable strings in the WCAQueue enum as values
 const customNa = "na" as const;
@@ -69,23 +70,39 @@ const command: ICommand = {
         }
         await Promise.all(promises);
         if (!refs.doc) {
-            await interaction.editReply({ content: "All done! However, there was an error preventing the queue from being reopened.\nError: QUEUE_DATA_DOC" });
+            const e = new JerryError(
+                JerryErrorType.InternalError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `Expected a DocumentSnapshot for queue ${queue}`
+            );
+            await interaction.editReply({ content: `All done! However, there was an error preventing the queue from being reopened.\nError: ${e.message}` });
+            e.recover();
             return;
         }
         const queueData = refs.doc.data();
         if (!queueData) {
-            await interaction.editReply({ content: "All done! However, there was an error preventing the queue from being reopened.\nError: QUEUE_DATA_FETCH" });
+            const e = new JerryError(
+                JerryErrorType.DatabaseReadError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `Failed to fetch document data for queue ${queue}`
+            );
+            await interaction.editReply({ content: `All done! However, there was an error preventing the queue from being reopened.\nError: ${e.message}` });
+            e.recover();
             return;
         }
-        const queueMsg = queueMessage(queue, queueData.season + 1);
         const channel = await interaction.guild?.channels.fetch(queueData.channelId);
         if (!channel || !channel.isTextBased()) {
-            await interaction.editReply({ content: "All done! However, there was an error preventing the queue from being reopened.\nError: CHANNEL_FETCH" });
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `Failed to fetch a text-based channel for queue ${queue}`
+            );
+            await interaction.editReply({ content: `All done! However, there was an error preventing the queue from being reopened.\nError: ${e.message}` });
+            e.recover();
             return;
         }
         const sentMessage = await channel.send({ content: "Preparing queue..." });
         await queueManager.startQueue(queue, sentMessage.channelId, sentMessage.id, interaction, queueData.season + 1);
-        await sentMessage.edit(queueMsg);
         await interaction.editReply({ content: "All done! End of season calculations have been completed and the queue has been reopened for the next season." })
     },
     permissions: ICommandPermission.BOT_ADMIN
