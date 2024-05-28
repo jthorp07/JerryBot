@@ -1,8 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, updateDoc, query, where } from 'firebase/firestore';
-import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
-config();
 
 export type FirebaseUserMMR = {
     documentId: string | null,
