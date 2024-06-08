@@ -1,11 +1,12 @@
 import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder } from "discord.js";
 import { WCAQueue } from "../util/queue/queue_manager";
-import { QueuePlayer } from "../util/queue/queue_game";
+import { QueueGameStatus, QueuePlayer } from "../util/queue/queue_game";
 import forceCancelGameButton from "../buttons/force_cancel_game";
 import voteCancelGameButton from "../buttons/cancel_game";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../types/jerry_error";
 
 
-export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, teamOne: QueuePlayer[], teamTwo: QueuePlayer[], status: number) {
+export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, teamOne: QueuePlayer[], teamTwo: QueuePlayer[], status: QueueGameStatus) {
     const teamOneValue = parseTeamString(teamOne);
     const teamTwoValue = parseTeamString(teamTwo);
     const gameEmbed = new EmbedBuilder()
@@ -13,7 +14,7 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
         .setFields(
             {
                 name: "**Status**",
-                value: "Map Vote",
+                value: status,
                 inline: false,
             },
             { 
@@ -29,10 +30,30 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
 
         );
 
+    const voteCancelBtn = voteCancelGameButton.button(queue, gameId);
+    if (voteCancelBtn instanceof JerryError) {
+        const e = new JerryError(
+            JerryErrorType.InternalError,
+            JerryErrorRecoverability.SeeUnderlying,
+            `Game message for game ${gameId} in queue ${queue} cannot be made due to a missing component`,
+            voteCancelBtn
+        );
+        return e;
+    }
+    const forceCancelBtn = forceCancelGameButton.button(queue, gameId);
+    if (forceCancelBtn instanceof JerryError) {
+        const e = new JerryError(
+            JerryErrorType.InternalError,
+            JerryErrorRecoverability.SeeUnderlying,
+            `Game message for game ${gameId} in queue ${queue} cannot be made due to a missing component`,
+            forceCancelBtn
+        );
+        return e;
+    }
     const buttonRow = new ActionRowBuilder<ButtonBuilder>()
             .setComponents(
-                voteCancelGameButton.button(queue, gameId),
-                forceCancelGameButton.button(queue, gameId),
+                voteCancelBtn,
+                forceCancelBtn,
             );
 
     const mapRow = new ActionRowBuilder<StringSelectMenuBuilder>()

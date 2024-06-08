@@ -5,6 +5,7 @@ import { Snowflake } from "discord.js";
 import { leaderboardScore } from "../../queue/queue_utils";
 import { WCAQueue } from "../../queue/queue_manager";
 import { queueRoot, FbQueuePartial } from "./db_queue_root";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../../types/jerry_error";
 
 export type LeaderboardUser = {
     discordId: Snowflake,
@@ -77,9 +78,34 @@ class QueueLeaderboardManager {
         }
     }
 
+    async getUser(queue: WCAQueue, userId: Snowflake) {
+        const qRefs = await this.root.getQueue(queue);
+        const docRef = doc(
+            collection(qRefs.ref, FirebaseCollection.QueueLeaderboard).withConverter({
+                toFirestore: (data: LeaderboardUser) => data,
+                fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as LeaderboardUser
+            }), 
+            userId
+        );
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+            const e = new JerryError(
+                JerryErrorType.DatabaseReadError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `User ${userId} not found on database`
+            );
+        }
+    }
+
     private async setUser(queue: WCAQueue, user: LeaderboardUser) {
         const qRefs = await this.root.getQueue(queue);
-        const docRef = doc(collection(qRefs.ref, FirebaseCollection.QueueLeaderboard), user.discordId);
+        const docRef = doc(
+            collection(qRefs.ref, FirebaseCollection.QueueLeaderboard).withConverter({
+                toFirestore: (data: LeaderboardUser) => data,
+                fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as LeaderboardUser
+            }), 
+            user.discordId
+        );
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             throw new Error(`User Already Exists: id=${user.discordId}`);

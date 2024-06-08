@@ -1,7 +1,8 @@
-import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
-import { QueueEvent } from "./queue";
+import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
 import { FirebaseUserMmrLegacy, mmrManager } from "../database_options/firestore/db_queue_stats";
-import { queueManager } from "./queue_manager";
+import { WCAQueue, queueManager } from "./queue_manager";
+import { gameMessage } from "../../messages/game_message";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
 
 export type QueuePlayer = {
     discordId: Snowflake;
@@ -9,10 +10,10 @@ export type QueuePlayer = {
 }
 
 export enum QueueGameStatus {
-    WaitingForPlayers="Waiting for players",
-    PregameVoting="Pre-Game Votes",
-    InGame="In Game",
-    
+    WaitingForPlayers = "Waiting for players",
+    PregameVoting = "Pre-Game Votes",
+    InGame = "In Game",
+
 }
 
 const MatchmakingConfig = {
@@ -25,23 +26,157 @@ export class QueueGame {
 
     private id: number;
     private players: Snowflake[];
+    private channelId: Snowflake;
+    private messageId: Snowflake;
+    private status: QueueGameStatus = QueueGameStatus.WaitingForPlayers;
     private teamOne: QueuePlayer[] = [];
     private teamTwo: QueuePlayer[] = [];
     private cancelVotes: Snowflake[] = [];
     private winVotes: Snowflake[] = [];
     private teamOneVotes: number = 0;
-    private queueName: string;
+    private queueName: WCAQueue;
 
-    constructor(players: Snowflake[], id: number, queueName: string) {
+    constructor(players: Snowflake[], id: number, queueName: WCAQueue, channelId: Snowflake, messageId: Snowflake) {
         this.id = id;
         this.players = players;
         this.queueName = queueName;
+        this.channelId = channelId;
+        this.messageId = messageId;
     }
 
+    /**
+     * 
+     * @param interaction 
+     */
     async init(interaction: ButtonInteraction | ChatInputCommandInteraction) {
         await this.makeTeams(this.players, interaction);
     }
 
+
+    async updateMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
+
+        const channel = await interaction.guild?.channels.fetch(this.channelId);
+        if (!channel) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Game ${this.id} in queue ${this.queueName} failed to fetch channel ${this.channelId}.`
+            );
+            return e;
+        }
+        if (!channel.isTextBased()) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Channel ${this.channelId} is not text-based for game ${this.id} in queue ${this.queueName}.`
+            );
+            return e;
+        }
+        const message = await channel.messages.fetch(this.messageId);
+        if (!message) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Game ${this.id} in queue ${this.queueName} failed to fetch message ${this.messageId}.`
+            );
+            return e;
+        }
+        const newMessage = gameMessage(this.queueName, this.queueName, this.id, this.teamOne, this.teamTwo, this.status);
+        if (newMessage instanceof JerryError) {
+            const e = new JerryError(
+                JerryErrorType.InternalError,
+                JerryErrorRecoverability.SeeUnderlying,
+                `Game ${this.id} in queue ${this.queueName} failed to create new message payload`,
+                newMessage
+            );
+            return e;
+        }
+        try {
+            return await message.edit(newMessage);
+        } catch (err) {
+            return new JerryError(
+                JerryErrorType.DiscordAPIError,
+                JerryErrorRecoverability.SeeUnderlying,
+                `Game ${this.id} in queue ${this.queueName} failed to edit message.`,
+                err instanceof Error ? err : new Error("How did we get here?")
+            );
+        }
+    }
+
+
+    async deleteMessage(interaction: ChatInputCommandInteraction | ButtonInteraction | AnySelectMenuInteraction) {
+        const channel = await interaction.guild?.channels.fetch(this.channelId);
+        if (!channel) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Game ${this.id} in queue ${this.queueName} failed to fetch channel ${this.channelId}.`
+            );
+            return e;
+        }
+        if (!channel.isTextBased()) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Channel ${this.channelId} is not text-based for game ${this.id} in queue ${this.queueName}.`
+            );
+            return e;
+        }
+        const message = await channel.messages.fetch(this.messageId);
+        if (!message) {
+            const e = new JerryError(
+                JerryErrorType.DiscordFailedFetchError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Game ${this.id} in queue ${this.queueName} failed to fetch message ${this.messageId}.`
+            );
+            return e;
+        }
+        try {
+            const result = await message.delete();
+            await channel.delete();
+            return result;
+        } catch (err) {
+            return new JerryError(
+                JerryErrorType.DiscordAPIError,
+                JerryErrorRecoverability.SeeUnderlying,
+                `Game ${this.id} in queue ${this.queueName} failed to edit message.`,
+                err instanceof Error ? err : new Error("How did we get here?")
+            );
+        }
+    }
+
+
+    async endGame(winningTeam: 1 | 2, interaction: ButtonInteraction) {
+        //TODO: Team win logic
+        const promises: Promise<any>[] = [];
+        for (let i = 0; i < 5; i++) {
+            promises.push()
+        }
+
+    }
+
+    getId() {
+        return this.id;
+    }
+
+    async voteWin(id: Snowflake, team: 1 | 2, interaction: ButtonInteraction) {
+        if (!this.winVotes.includes(id)) {
+            this.winVotes.push(id);
+            team === 1 ? this.teamOneVotes++ : null;
+        }
+        if (this.winVotes.length > 5) {
+            await this.endGame(this.teamOneVotes > 5 ? 1 : 2, interaction);
+        }
+    }
+
+    voteCancel(id: Snowflake, interaction: ButtonInteraction | ChatInputCommandInteraction) {
+        if (!this.cancelVotes.includes(id)) this.cancelVotes.push(id);
+        if (this.cancelVotes.length >= 5) this.cancel(interaction);
+    }
+
+    forceCancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
+        this.cancel(interaction);
+    }
     private async makeTeams(members: Snowflake[], interaction: ButtonInteraction | ChatInputCommandInteraction) {
         const players: FirebaseUserMmrLegacy[] = [];
         const promises = [];
@@ -144,33 +279,8 @@ export class QueueGame {
     }
 
     private async cancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        queueManager.emit(QueueEvent.GameOver, this.id);
+        queueManager.deleteGame(this.queueName, this.id, interaction);
     }
 
-    async emitEndGame(winningTeam: 1 | 2) {
-        queueManager.emit(QueueEvent.GameOver, this.id, this.queueName, winningTeam);
-    }
 
-    getId() {
-        return this.id;
-    }
-
-    voteWin(id: Snowflake, team: 1 | 2) {
-        if (!this.winVotes.includes(id)) {
-            this.winVotes.push(id);
-            team === 1 ? this.teamOneVotes++ : null;
-        }
-        if (this.winVotes.length > 5) {
-            this.emitEndGame(this.teamOneVotes > 5 ? 1 : 2)
-        }
-    }
-
-    voteCancel(id: Snowflake, interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        if (!this.cancelVotes.includes(id)) this.cancelVotes.push(id);
-        if (this.cancelVotes.length >= 5) this.cancel(interaction);
-    }
-
-    forceCancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        this.cancel(interaction);
-    }
 }

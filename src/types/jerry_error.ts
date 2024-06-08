@@ -4,6 +4,7 @@ export enum JerryErrorType {
     DatabaseError = "DB",
     DatabaseReadError = "DB_READ",
     DatabaseWriteError = "DB_WRITE",
+    DiscordAPIError = "DISC_API",
     DiscordMissingArgError = "DISC_ARG_MISSING",
     DiscordFailedFetchError = "DISC_FETCH",
     DiscordFailedPostError = "DISC_POST",
@@ -13,6 +14,7 @@ export enum JerryErrorRecoverability {
     NonBreakingRecoverable = "nBR",
     BreakingRecoverable = "BR",
     BreakingNonRecoverable = "BnR",
+    SeeUnderlying = "SU",
 }
 
 export class JerryError {

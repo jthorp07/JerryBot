@@ -1,4 +1,5 @@
 import { Snowflake } from "discord.js";
+import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
 
 /**
  * An array-based FIFO queue in which all enqueued items are unique
@@ -22,11 +23,23 @@ export class SetQueue {
      */
     enqueue(user: Snowflake) {
         for (const queuedUser of this.queue) {
-            if (user == queuedUser) throw new Error("duplicate");
+            if (user == queuedUser) {
+                const e = new JerryError(
+                    JerryErrorType.IllegalStateError,
+                    JerryErrorRecoverability.BreakingRecoverable,
+                    `User ${user} already in queue`
+                );
+                return e;
+            }
         }
         if (++this.length > this.capacity || this.capacity == -1) {
             this.length--;
-            throw new Error(`Capacity error: Enqueue would result in capacity over ${this.capacity}`);
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.BreakingRecoverable,
+                `Capacity error: Enqueue would result in capacity over ${this.capacity}`
+            )
+            return e;
         }
         this.length = this.queue.push(user);
         return this.length;

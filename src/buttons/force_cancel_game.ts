@@ -15,7 +15,7 @@ const button: IButton = {
         try {
             const queueName = idArgs[1] as WCAQueue;
             const gameId = parseInt(idArgs[2]);
-            queueManager.cancelGame(queueName, gameId, interaction);
+            queueManager.deleteGame(queueName, gameId, interaction);
         } catch (err) {
             console.log(err);
             return;

@@ -1,5 +1,6 @@
 import { Snowflake } from "discord.js";
 import { UserQueueStats } from "../database_options/firestore/db_queue_stats";
+import { QueuePlayer } from "./queue_game";
 
 const GAMES_PLAYED_DECOUPLE_THRESHOLD = 10 as const;
 
@@ -47,4 +48,8 @@ export function mmrAdjustment (oldMmr: number, deltaMmr: number) {
 
 export function leaderboardScore (oldMmr: number, deltaMmr: number) {
     return (deltaMmr * (deltaMmr < 0 ? 1 - (oldMmr / 10000) : 1 + (oldMmr / 10000))).toFixed(2) as unknown as number
+}
+
+export function endOfGameCalculations(winners: QueuePlayer[], losers: QueuePlayer[]) {
+
 }
