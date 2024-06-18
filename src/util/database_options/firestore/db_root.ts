@@ -6,7 +6,7 @@ import { FirestoreMetaDataBase } from './db_meta';
 config();
 
 export enum FirebaseCollection {
-    UserMMR = 'user_mmr',
+    UserMmr = 'user_mmr',
     QueueRoot = 'queue',
     QueueStats = 'queue_stats',
     QueueUserStats = 'queue_user_stats',

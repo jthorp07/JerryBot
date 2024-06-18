@@ -54,7 +54,7 @@ export class QueueStatsManager {
 
     constructor() {
 
-        this._collection_legacy = collection(firestore, FirebaseCollection.UserMMR).withConverter({
+        this._collection_legacy = collection(firestore, FirebaseCollection.UserMmr).withConverter({
             toFirestore: (data: FirebaseUserMmrLegacy) => data,
             fromFirestore: (snapshot: QueryDocumentSnapshot) => snapshot.data() as FirebaseUserMmrLegacy
         });

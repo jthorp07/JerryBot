@@ -27,12 +27,12 @@ type FirestoreMetaData = {
     mapPool: Set<ValorantMap>,
 }
 
-export type ValorantMap = "Bind" | "Ascent" | "Split" | "Pearl" | "Fracture" | "Breeze" | "Lotus" | "Icebox";
-type ValorantRole = 'iron' | 'bronze' | 'silver' | 'gold' |
-    'platinum' | 'diamond' | 'ascendant' | 'immortal' | 'radiant' | 'unranked'
+export type ValorantMap = "Bind" | "Ascent" | "Split" | "Pearl" | "Fracture" | "Breeze" | "Lotus" | "Icebox" | "Abyss";
+type ValorantRole = "iron" | "bronze" | "silver" | "gold" |
+    "platinum" | "diamond" | "ascendant" | "immortal" | "radiant" | "unranked"
 
 type ServerRole =
-    'queue_reg' | ValorantRole;
+    "queue_reg" | ValorantRole;
 
 type FirestoreDiscordRole = {
     name: ServerRole,
