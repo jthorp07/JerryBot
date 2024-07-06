@@ -1,8 +1,6 @@
-import { collection, QueryDocumentSnapshot, getDocs, getDoc, addDoc, doc, updateDoc, query, where, setDoc } from 'firebase/firestore';
+import { collection, QueryDocumentSnapshot, getDocs, getDoc, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { firestore, FirebaseCollection } from './db_root';
-import { config } from 'dotenv';
 import { Snowflake } from 'discord.js';
-config();
 
 export type FirebaseUserMmr = {
     decoupled: boolean,

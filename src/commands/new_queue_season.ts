@@ -23,7 +23,7 @@ const command: ICommand = {
                 .setDescription('The channel the NeatQueue queue is hosted in')
                 .setRequired(true)) as SlashCommandBuilder,
     execute: async (interaction) => {
-        await interaction.reply({content:"In progress..."});    
+        await interaction.reply({content:"Not yet implemented."});    
     },
     permissions: ICommandPermission.BOT_ADMIN
 }

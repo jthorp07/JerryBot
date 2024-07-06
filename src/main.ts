@@ -1,12 +1,9 @@
 import { Client, GatewayIntentBits } from "discord.js";
-import { config } from "dotenv";
 import { exit } from "process";
 import { setEventHandlers } from "./util";
 import { initPerms } from "./util/permissions/permissions";
 
-
-config();
-const TOKEN = process.env.TOKEN_DEV;
+const TOKEN = process.env.TOKEN;
 const USE_CUSTOM_PERMS = process.env.USE_CUSTOM_PERMISSIONS === "TRUE" ? true : false;
 
 // Holy crap that's a lot of intention :flushed:

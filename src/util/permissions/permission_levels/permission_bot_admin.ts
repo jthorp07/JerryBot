@@ -1,8 +1,6 @@
-import { config } from "dotenv";
 import { ICommandPermission } from "../../../types/discord_interactions";
 import { IPermission } from "../permissions";
 import { Interaction } from "discord.js";
-config();
 
 const perm: IPermission = {
     permLevel: ICommandPermission.BOT_ADMIN,

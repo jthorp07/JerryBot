@@ -1,6 +1,4 @@
 import { Snowflake } from "discord.js";
-import { config } from "dotenv";
-config();
 
 const token = process.env.NEATQUEUE_API_TOKEN || '';
 const worthyGuildId = process.env.WORTHY_SERVER || '';

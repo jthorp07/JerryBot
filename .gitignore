@@ -1,12 +1,16 @@
 # Universal ignores
-
 config.json
 /node_modules
-.env
+.env*
 /legacy
 /bot
 bot.zip
+/docs
+/test
 
 # Jack's Ignores
 test.js
 /SQL_Deployment
+design.md
+ssh-key-2024-05-22.key
+ssh-key-2024-05-22.key.pub
