@@ -1,7 +1,6 @@
-import { ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
+import { ButtonInteraction, ChatInputCommandInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js";
 import { Queue, QueueEvent } from "./queue";
 import { EventEmitter } from "node:events";
-import { queueRoot } from "../database_options/firestore/db_queue_root";
 import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
 
 export enum WCAQueue {
@@ -26,14 +25,9 @@ class QueueManager {
      * @returns The number of users now in the queue or an error indicating why target user could not be enqueued
      */
     async enqueue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) {
-            const e = new JerryError(
-                JerryErrorType.IllegalStateError,
-                JerryErrorRecoverability.BreakingRecoverable,
-                `Queue ${queue} is not active.`
-            );
-            return e;
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
         }
         return await target.enqueue(id, interaction);
     }
@@ -47,14 +41,9 @@ class QueueManager {
      * @returns True if target user was successfully dequeued. False if target user was not dequeued. Otherwise, an error indicating what went wrong attempting to dequeue the user.
      */
     async dequeue(id: Snowflake, queue: WCAQueue, interaction: ButtonInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) {
-            const e = new JerryError(
-                JerryErrorType.IllegalStateError,
-                JerryErrorRecoverability.NonBreakingRecoverable,
-                `Queue ${queue} is not active`,
-            );
-            return e;
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
         }
         return await target.dequeue(id, interaction);        
     }
@@ -72,8 +61,8 @@ class QueueManager {
      */
     async startQueue(queue: WCAQueue, channelId: Snowflake, messageId: Snowflake, interaction: ChatInputCommandInteraction, currentSeason?: number, gameSize?: number) {
 
-        const target = this.queues.get(queue);
-        if (target) {
+        const target = this.getQueue(queue);
+        if (target instanceof Queue) {
             const e = new JerryError(
                 JerryErrorType.InternalError, 
                 JerryErrorRecoverability.NonBreakingRecoverable, 
@@ -86,45 +75,69 @@ class QueueManager {
         this.queues.set(queue, newQueue);
     }
 
+    /**
+     * Stops target queue in process memory
+     * 
+     * @param queue Target queue
+     * @param interaction Interaction requesting queue stop
+     * @returns An error if one occurs
+     */
     async stopQueue(queue: WCAQueue, interaction: ChatInputCommandInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) {
-            const e = new JerryError(
-                JerryErrorType.IllegalStateError,
-                JerryErrorRecoverability.NonBreakingRecoverable,
-                `Queue ${queue} is not active`,
-            );
-            return e;
-        } 
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
+        }
         await target.deleteMessage(interaction);
         await target.close(interaction);
         this.queues.delete(queue);
     }
 
+
     /**
+     * Deletes target game in target queue.
      * 
-     * 
-     * @param queue 
-     * @param gameId 
-     * @param interaction 
+     * @param queue Target queue
+     * @param gameId Target game
+     * @param interaction Interaction resulting in game deletion
      */
     deleteGame(queue: WCAQueue, gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) throw new Error(`Queue ${queue} is not active`);
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
+        }
         target.cancelGame(gameId, interaction);
     }
 
+    /**
+     * Sends target queue a request to vote cancel target game.
+     * 
+     * @param queue Target queue
+     * @param gameId Target game
+     * @param interaction Interaction requesting the vote
+     * @returns An error if one occurs
+     */
     voteCancel(queue: WCAQueue, gameId: number, interaction: ButtonInteraction) {
-        const target = this.queues.get(queue);
-        if (!target) {
-            const e = new JerryError(
-                JerryErrorType.IllegalStateError,
-                JerryErrorRecoverability.BreakingRecoverable,
-                `Queue ${queue} is not active`
-            );
-            return e;
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
         }
-        target.voteCancel(gameId, interaction);
+        return target.voteCancel(gameId, interaction);
+    }
+
+    /**
+     * Sends a request to target queue to vote for a team to win target game.
+     * 
+     * @param queue Target queue
+     * @param gameId Target game
+     * @param interaction Interaction requesting the vote
+     * @returns An error if one occurs
+     */
+    voteWin(queue: WCAQueue, gameId: number, interaction: StringSelectMenuInteraction) {
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
+        }
+        return target.voteWin(gameId, interaction);
     }
 
     // For now, no events here
@@ -136,6 +149,26 @@ class QueueManager {
     // emit(event: QueueEvent, ...args: any[]) {
     //     this.events.emit(event, args);
     // }
+
+    /**
+     * Retrieves target queue or an error if target queue
+     * is not active
+     * 
+     * @param queue Target queue
+     * @returns Target queue or an error
+     */
+    private getQueue(queue: WCAQueue) {
+        const target = this.queues.get(queue);
+        if (!target) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.BreakingNonRecoverable,
+                `Queue ${queue} is not active.`
+            );
+            return e;
+        }
+        return target;
+    }
 }
 
 

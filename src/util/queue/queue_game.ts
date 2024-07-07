@@ -1,4 +1,4 @@
-import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Snowflake } from "discord.js";
+import { AnySelectMenuInteraction, ButtonInteraction, ChatInputCommandInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js";
 import { FirebaseUserMmrLegacy, mmrManager } from "../database_options/firestore/db_queue_stats";
 import { WCAQueue, queueManager } from "./queue_manager";
 import { gameMessage } from "../../messages/game_message";
@@ -146,7 +146,7 @@ export class QueueGame {
     }
 
 
-    async endGame(winningTeam: 1 | 2, interaction: ButtonInteraction) {
+    async endGame(winningTeam: 1 | 2, interaction: ButtonInteraction | StringSelectMenuInteraction) {
         //TODO: Team win logic
         const promises: Promise<any>[] = [];
         for (let i = 0; i < 5; i++) {
@@ -159,7 +159,7 @@ export class QueueGame {
         return this.id;
     }
 
-    async voteWin(id: Snowflake, team: 1 | 2, interaction: ButtonInteraction) {
+    async voteWin(id: Snowflake, team: 1 | 2, interaction: ButtonInteraction | StringSelectMenuInteraction) {
         if (!this.winVotes.includes(id)) {
             this.winVotes.push(id);
             team === 1 ? this.teamOneVotes++ : null;
@@ -169,6 +169,13 @@ export class QueueGame {
         }
     }
 
+    /**
+     * Adds the user's vote to the vote cancel list if applicable,
+     * then cancels the game if enough cancel votes have been received.
+     * 
+     * @param id Id of the user voting to cancel
+     * @param interaction Interaction making the vote cancel request
+     */
     voteCancel(id: Snowflake, interaction: ButtonInteraction | ChatInputCommandInteraction) {
         if (!this.cancelVotes.includes(id)) this.cancelVotes.push(id);
         if (this.cancelVotes.length >= 5) this.cancel(interaction);
@@ -177,6 +184,7 @@ export class QueueGame {
     forceCancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
         this.cancel(interaction);
     }
+
     private async makeTeams(members: Snowflake[], interaction: ButtonInteraction | ChatInputCommandInteraction) {
         const players: FirebaseUserMmrLegacy[] = [];
         const promises = [];
@@ -270,17 +278,47 @@ export class QueueGame {
             if (hasDoneMaxSwaps || (isWithinBalanceThreshold && hasDoneMinSwaps)) break;
         }
 
-        // Pop game message
-
+        // Update game message
+        const result = await this.updateMessage(interaction);
+        if (result instanceof JerryError) {
+            queueManager.deleteGame(this.queueName, this.id, interaction);
+            result.throw();
+        }
     }
+
 
     private deltaDifference(swappeeOne: number, swappeeTwo: number, avg_diff: number, teamSize: number) {
         return avg_diff - ((2 * swappeeOne) / teamSize) + ((2 * swappeeTwo) / teamSize);
     }
 
-    private async cancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        queueManager.deleteGame(this.queueName, this.id, interaction);
+    private avgDifference(teamOne: QueuePlayer[], teamTwo: QueuePlayer[], teamSize: number) {
+        let t1_avg = 0;
+        let t2_avg = 0;
+        let avg_diff = 0;
+
+        // Avg calc
+        for (let i = 0; i < teamSize; i++) {
+            t1_avg += this.teamOne[i].mmr;
+            t2_avg += this.teamTwo[i].mmr;
+        }
+        t1_avg = t1_avg / teamSize;
+        t2_avg = t2_avg / teamSize;
+        avg_diff = t1_avg - t2_avg;
+        return avg_diff;
     }
 
-
+    /**
+     * Deletes the game's message in accordance with its cancellation,
+     * then briefly sends a message to the channel informing users that
+     * the game has been cancelled.
+     * 
+     * @param interaction Interaction that resulted in cancellation
+     */
+    private async cancel(interaction: ButtonInteraction | ChatInputCommandInteraction) {
+        await this.deleteMessage(interaction);
+        const message = await interaction.channel?.send({ content: "This game has been cancelled." });
+        if (message) {
+            setTimeout(() => message.delete(), 20 * 1000);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-import { AnySelectMenuInteraction, ButtonInteraction, CategoryChannel, ChannelType, ChatInputCommandInteraction, Snowflake } from "discord.js";
+import { AnySelectMenuInteraction, ButtonInteraction, CategoryChannel, ChannelType, ChatInputCommandInteraction, Snowflake, StringSelectMenuInteraction } from "discord.js";
 import { QueueGame } from "./queue_game";
 import { SetQueue } from "./set_queue";
 import { WCAQueue } from "./queue_manager";
@@ -96,13 +96,34 @@ export class Queue {
             }
             const gameChannel = await interaction.guild?.channels.create({
                 type: ChannelType.GuildText,
-                name: `${this.queueName.toLowerCase().replaceAll(" ", "-")}`,
+                name: `${this.queueName.toLowerCase().replaceAll(" ", "-")}-game-${gameId}`,
                 parent: gameCategory
             });
             if (!gameChannel) {
-
+                const e = new JerryError(
+                    JerryErrorType.DiscordFailedPostError,
+                    JerryErrorRecoverability.BreakingNonRecoverable,
+                    `Queue ${this.queueName} failed to create a channel for game ${gameId}.`
+                );
+                for (const player in players) {
+                    this.queue.enqueue(player);
+                }
+                return e;
             }
-            this.games.set(1, new QueueGame(players, gameId, this.queueName));
+            const gameMessage = await gameChannel.send({ content: `Preparing for game ${gameId} in queue ${this.queueName}`});
+            if (!gameMessage) {
+                const e = new JerryError(
+                    JerryErrorType.DiscordFailedPostError,
+                    JerryErrorRecoverability.BreakingNonRecoverable,
+                    `Queue ${this.queueName} failed to create a message for game ${gameId}.`
+                );
+                await gameChannel.delete();
+                for (const player in players) {
+                    this.queue.enqueue(player);
+                }
+                return e;
+            }
+            this.games.set(1, new QueueGame(players, gameId, this.queueName, gameChannel.id, gameMessage.id));
             this.nextGameId++;
             this.locked = false;
         }
@@ -135,9 +156,16 @@ export class Queue {
         return this.queue.getQueue() as Snowflake[];
     }
 
-    getGame(id: number) {
+    private getGame(id: number) {
         const target = this.games.get(id);
-        if (!target) throw new Error(`Queue ${this.queueName} does not have a game with ID ${id}.`);
+        if (!target) {
+            const e = new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.BreakingRecoverable,
+                `Queue ${this.queueName} does not have an active game with ID ${id}.`
+            );
+            return e;
+        }
         return target;
     }
 
@@ -199,22 +227,41 @@ export class Queue {
     }
 
     cancelGame(gameId: number, interaction: ButtonInteraction | ChatInputCommandInteraction) {
-        const target = this.games.get(gameId);
-        if (!target) {
-            const e = new JerryError(
-                JerryErrorType.IllegalStateError,
-                JerryErrorRecoverability.BreakingRecoverable,
-                `Queue ${this.queueName} does not have an active game with ID ${gameId}.`
-            );
-            return e;
+        const target = this.getGame(gameId);
+        if (target instanceof JerryError) {
+            return target;
         }
         target.forceCancel(interaction);
         return this.games.delete(gameId);
     }
 
+    /**
+     * Sends target game a vote cancel request.
+     * 
+     * @param gameId Target game
+     * @param interaction Interaction requesting the vote
+     * @returns An error if one occurs
+     */
     voteCancel(gameId: number, interaction: ButtonInteraction) {
-        const target = this.games.get(gameId);
-        if (!target) throw new Error(`Queue ${this.queueName} does not have an active game with ID ${gameId}`);
+        const target = this.getGame(gameId);
+        if (target instanceof JerryError) {
+            return target;
+        }
         target.voteCancel(interaction.user.id, interaction);
+    }
+
+    /**
+     * Sends a request to target game to vote for a team to win
+     * 
+     * @param gameId Target game
+     * @param interaction Interaction requesting the vote
+     * @returns An error if one occurs
+     */
+    voteWin(gameId: number, interaction: StringSelectMenuInteraction) {
+        const target = this.getGame(gameId);
+        if (target instanceof JerryError) {
+            return target;
+        }
+        target.voteWin(interaction.user.id, parseInt(interaction.values[0]) as 1 | 2, interaction)
     }
 }

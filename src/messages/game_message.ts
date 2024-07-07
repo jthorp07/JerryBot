@@ -3,6 +3,7 @@ import { WCAQueue } from "../util/queue/queue_manager";
 import { QueueGameStatus, QueuePlayer } from "../util/queue/queue_game";
 import forceCancelGameButton from "../buttons/force_cancel_game";
 import voteCancelGameButton from "../buttons/cancel_game";
+import voteWinSelectMenu from "../selectmenus/queue_vote_win";
 import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../types/jerry_error";
 
 
@@ -50,18 +51,30 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
         );
         return e;
     }
+    const voteWinMenu = voteWinSelectMenu.selectMenu(queue, gameId);
+    if (!(voteWinMenu instanceof StringSelectMenuBuilder)) {
+        if (voteWinMenu instanceof JerryError) return voteWinMenu;
+        const e = new JerryError(
+            JerryErrorType.InternalError,
+            JerryErrorRecoverability.BreakingNonRecoverable,
+            `Game message for game ${gameId} in queue ${queue} cannot be made due to a missing component`
+        );
+        return e;
+    }
     const buttonRow = new ActionRowBuilder<ButtonBuilder>()
             .setComponents(
                 voteCancelBtn,
                 forceCancelBtn,
             );
 
-    const mapRow = new ActionRowBuilder<StringSelectMenuBuilder>()
-            .setComponents();
+    const selectMenusRow = new ActionRowBuilder<StringSelectMenuBuilder>()
+            .setComponents(
+                voteWinMenu,
+            );
 
     return {
         embeds: [gameEmbed],
-        components: [buttonRow, mapRow],
+        components: [buttonRow, selectMenusRow],
     }
 }
 
