@@ -87,7 +87,7 @@ export async function updateDynamicLeaderboard(channelId: Snowflake, guildId: Sn
             discordId: user.id,
             decoupled: prevMmr.decoupled,
             score: leaderboardScore,
-            gamesPlayed: (user.data.totalgames | 0) + prevMmr.gamesPlayed
+            gamesPlayed: (user.data.totalgames | 0) /* + prevMmr.gamesPlayed */
         }
         promises.push(addUserToLeaderboard(finalLeaderboardScore, true));
     }
