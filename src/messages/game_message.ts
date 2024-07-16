@@ -4,14 +4,16 @@ import { QueueGameStatus, QueuePlayer } from "../util/queue/queue_game";
 import forceCancelGameButton from "../buttons/force_cancel_game";
 import voteCancelGameButton from "../buttons/cancel_game";
 import voteWinSelectMenu from "../selectmenus/queue_vote_win";
+import voteMapSelectMenu from "../selectmenus/queue_vote_map";
 import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../types/jerry_error";
+import { ValorantMap } from "../util/database_options/firestore/db_meta";
 
 
-export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, teamOne: QueuePlayer[], teamTwo: QueuePlayer[], status: QueueGameStatus) {
+export function gameMessage(queue: WCAQueue, gameId: number, teamOne: QueuePlayer[], teamTwo: QueuePlayer[], status: QueueGameStatus, maps: ValorantMap[] = ["Bind"], chosenMap?: ValorantMap) {
     const teamOneValue = parseTeamString(teamOne);
     const teamTwoValue = parseTeamString(teamTwo);
     const gameEmbed = new EmbedBuilder()
-        .setTitle(`Queue ${queueName} | Game ${gameId}`)
+        .setTitle(`Queue ${queue} | Game ${gameId}`)
         .setFields(
             {
                 name: "**Status**",
@@ -28,7 +30,11 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
                 value: teamTwoValue,
                 inline: true,
             },
-
+            {
+                name: "**Map**",
+                value: chosenMap ? chosenMap : "Map vote in progress",
+                inline: false,
+            }
         );
 
     const voteCancelBtn = voteCancelGameButton.button(queue, gameId);
@@ -61,6 +67,16 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
         );
         return e;
     }
+    const voteMapMenu = voteMapSelectMenu.selectMenu(queue, gameId, maps);
+    if (!(voteMapMenu instanceof StringSelectMenuBuilder)) {
+        if (voteMapMenu instanceof JerryError) return voteMapMenu;
+        const e = new JerryError(
+            JerryErrorType.InternalError,
+            JerryErrorRecoverability.BreakingNonRecoverable,
+            `Game message for game ${gameId} in queue ${queue} cannot be made due to a missing component`
+        );
+        return e;
+    }
     const buttonRow = new ActionRowBuilder<ButtonBuilder>()
             .setComponents(
                 voteCancelBtn,
@@ -69,12 +85,12 @@ export function gameMessage(queue: WCAQueue, queueName: string, gameId: number, 
 
     const selectMenusRow = new ActionRowBuilder<StringSelectMenuBuilder>()
             .setComponents(
-                voteWinMenu,
+                status == QueueGameStatus.PregameVoting ? voteMapMenu : voteWinMenu,
             );
 
     return {
         embeds: [gameEmbed],
-        components: [buttonRow, selectMenusRow],
+        components: status == QueueGameStatus.WaitingForPlayers ? [buttonRow] : [buttonRow, selectMenusRow],
     }
 }
 

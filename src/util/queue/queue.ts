@@ -4,7 +4,7 @@ import { SetQueue } from "./set_queue";
 import { WCAQueue } from "./queue_manager";
 import { queueMessage } from "../../messages/queue_message";
 import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
-import { metaDataManager } from "../database_options/firestore/db_meta";
+import { metaDataManager, ValorantMap } from "../database_options/firestore/db_meta";
 
 export enum QueueEvent {
     Close="close",
@@ -263,5 +263,16 @@ export class Queue {
             return target;
         }
         target.voteWin(interaction.user.id, parseInt(interaction.values[0]) as 1 | 2, interaction)
+    }
+
+
+    
+    voteMap(gameId: number, interaction: StringSelectMenuInteraction) {
+        const target = this.getGame(gameId);
+        if (target instanceof JerryError) {
+            return target;
+        }
+        const map: ValorantMap = interaction.values[0].charAt(0).toUpperCase().concat(interaction.values[0].substring(1)) as ValorantMap;
+        target.voteMap(interaction.user.id, map, interaction)
     }
 }

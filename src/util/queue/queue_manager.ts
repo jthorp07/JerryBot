@@ -140,6 +140,16 @@ class QueueManager {
         return target.voteWin(gameId, interaction);
     }
 
+
+    
+    voteMap(queue: WCAQueue, gameId: number, interaction: StringSelectMenuInteraction) {
+        const target = this.getQueue(queue);
+        if (target instanceof JerryError) {
+            return target;
+        }
+        return target.voteMap(gameId, interaction);
+    }
+
     // For now, no events here
 
     // addListener(event: QueueEvent, callback: (...args: any[]) => void) {

@@ -3,6 +3,7 @@ import { FirebaseUserMmrLegacy, mmrManager } from "../database_options/firestore
 import { WCAQueue, queueManager } from "./queue_manager";
 import { gameMessage } from "../../messages/game_message";
 import { JerryError, JerryErrorRecoverability, JerryErrorType } from "../../types/jerry_error";
+import { metaDataManager, ValorantMap } from "../database_options/firestore/db_meta";
 
 export type QueuePlayer = {
     discordId: Snowflake;
@@ -33,8 +34,11 @@ export class QueueGame {
     private teamTwo: QueuePlayer[] = [];
     private cancelVotes: Snowflake[] = [];
     private winVotes: Snowflake[] = [];
+    private mapVotes: Snowflake[] = [];
     private teamOneVotes: number = 0;
     private queueName: WCAQueue;
+    private mapVoteMap: Map<ValorantMap, number> = new Map();
+    private matchMap?: ValorantMap;
 
     constructor(players: Snowflake[], id: number, queueName: WCAQueue, channelId: Snowflake, messageId: Snowflake) {
         this.id = id;
@@ -81,7 +85,8 @@ export class QueueGame {
             );
             return e;
         }
-        const newMessage = gameMessage(this.queueName, this.queueName, this.id, this.teamOne, this.teamTwo, this.status);
+        const mapPool = metaDataManager.getMapPool();
+        const newMessage = gameMessage(this.queueName, this.id, this.teamOne, this.teamTwo, this.status, mapPool, this.matchMap);
         if (newMessage instanceof JerryError) {
             const e = new JerryError(
                 JerryErrorType.InternalError,
@@ -163,10 +168,63 @@ export class QueueGame {
         if (!this.winVotes.includes(id)) {
             this.winVotes.push(id);
             team === 1 ? this.teamOneVotes++ : null;
+        } else {
+            return new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `User ${id} has already voted for a winning team in game ${this.id} in queue ${this.queueName}`
+            );
         }
         if (this.winVotes.length > 5) {
             await this.endGame(this.teamOneVotes > 5 ? 1 : 2, interaction);
         }
+    }
+
+    voteMap(id: Snowflake, map: ValorantMap, interaction: StringSelectMenuInteraction) {
+        if (!this.mapVotes.includes(id)) {
+            this.mapVotes.push(id);
+        } else {
+            return new JerryError(
+                JerryErrorType.IllegalStateError,
+                JerryErrorRecoverability.NonBreakingRecoverable,
+                `User ${id} has already voted for a map in game ${this.id} in queue ${this.queueName}`
+            );
+        }
+
+        const oldCount = this.mapVoteMap.get(map);
+        const newCount = oldCount ? oldCount + 1 : 1;
+        this.mapVoteMap.set(map, newCount);
+        if (newCount >= 5) {
+            // Map wins! Set map and update status
+            this.matchMap = map;
+            this.status = QueueGameStatus.InGame
+            this.updateMessage(interaction);
+        } else if (this.mapVotes.length > 6) {
+            // Check all counts: If a map has a definite win OR tie, it wins
+            let remainingPossibleVotes = 10;
+            let currentLeadVotes = 0;
+            let runnerUpVotes = 0;
+            let currentMap: ValorantMap;
+
+            for (const vote of this.mapVoteMap) {
+                if (vote[1] > currentLeadVotes) {
+                    currentMap = vote[0];
+                    runnerUpVotes = currentLeadVotes;
+                    currentLeadVotes = vote[1];
+                } else if (vote[1] > runnerUpVotes) {
+                    runnerUpVotes = vote[1];
+                }
+                remainingPossibleVotes -= vote[1];
+
+                if (remainingPossibleVotes + runnerUpVotes < currentLeadVotes) {
+                    // Current map wins
+                    this.matchMap = currentMap!;
+                    this.status = QueueGameStatus.InGame;
+                    this.updateMessage(interaction);
+                }
+            }
+        }
+
     }
 
     /**
