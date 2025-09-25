@@ -5,8 +5,8 @@ const eventHandler: IEventHandler = {
     event: Events.ClientReady,
     handlerFactory: (client) => {
         return async () => {
-            client.user?.setActivity('over your Discord server!', {
-                type: ActivityType.Watching,
+            client.user?.setActivity('VALORANT with w0rthyTV\'s awesome coaching!', {
+                type: ActivityType.Competing,
             });
             console.log('[Bot]: Ready')
         }

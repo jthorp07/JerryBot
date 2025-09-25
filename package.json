@@ -8,6 +8,7 @@
     "bot-dev": "dotenvx run -f .env.PUB -f .env.DEV -- node bot/main.js",
     "deploy-local-dev": "dotenvx run -f .env.DEV -- node bot/deploy_dev_commands.js",
     "deploy-global-dev": "dotenvx run -f .env.DEV -- node bot/deploy_commands_global.js",
+    "deploy-global-prod": "dotenvx run -f .env.PROD -- node bot/deploy_commands_global.js",
     "clear-dev": "node bot/clear_local_guild_commands.js",
     "build": "rm -rf ./bot/ && tsc"
   },
@@ -24,6 +25,6 @@
   },
   "dependencies": {
     "discord.js": "^14.13.0",
-    "firebase": "^10.6.0"
+    "jerry-bot": "file:"
   }
 }
